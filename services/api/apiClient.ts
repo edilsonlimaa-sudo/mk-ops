@@ -44,8 +44,18 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
 
     // Se recebeu 401 (token expirado)
+    // _retry = true significa que já tentamos refresh
+    // _refreshedToken = true significa que token acabou de ser renovado
+    // Se ambos true, é 401 de permissão, não de token expirado
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+      
+      // Se request tinha token recém-renovado e ainda deu 401,
+      // é erro de autorização (sem permissão), não token expirado
+      if (originalRequest._refreshedToken) {
+        console.log('⚠️ 401 após token refresh - possível erro de autorização');
+        return Promise.reject(error);
+      }
 
       // Se já está renovando, adiciona à fila de espera
       if (isRefreshing) {
@@ -111,6 +121,10 @@ apiClient.interceptors.response.use(
 
         // Atualiza header da request original com novo token
         originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        
+        // Marca que esta request foi feita com token recém-renovado
+        // Se receber 401 de novo, é falta de permissão, não token expirado
+        originalRequest._refreshedToken = true;
 
         // Retenta a request original
         return apiClient(originalRequest);
@@ -171,6 +185,11 @@ apiClient.interceptors.response.use(
 export const clearTokenCache = () => {
   cachedToken = null;
   refreshAttempts = 0;
+};
+
+// Função para atualizar cache de token (usada pelo login e checkAuth)
+export const updateTokenCache = (token: string | null) => {
+  cachedToken = token;
 };
 
 export default apiClient;

@@ -9,7 +9,7 @@ interface AuthState {
   login: (ipMkAuth: string, clientId: string, clientSecret: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
-  updateToken: (token: string) => void;
+  updateToken: (token: string, ipMkAuth?: string) => void;
 }
 
 // Flag global para prevenir múltiplos logins simultâneos
@@ -33,6 +33,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     
     try {
       const token = await authService.login({ ipMkAuth, clientId, clientSecret });
+      
+      // Atualiza cache após login manual
+      try {
+        const apiClientModule = await import('@/services/api/apiClient');
+        if ('updateTokenCache' in apiClientModule) {
+          (apiClientModule as any).updateTokenCache(token);
+        }
+      } catch (cacheError) {
+        console.log('⚠️ Não foi possível atualizar cache:', cacheError);
+      }
+      
       set({
         token,
         ipMkAuth,
@@ -47,8 +58,24 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  updateToken: (token: string) => {
-    set({ token });
+  updateToken: (token: string, ipMkAuth?: string) => {
+    // Atualiza cache quando token muda
+    try {
+      import('@/services/api/apiClient').then((apiClientModule) => {
+        if ('updateTokenCache' in apiClientModule) {
+          (apiClientModule as any).updateTokenCache(token);
+        }
+      });
+    } catch (error) {
+      console.log('⚠️ Não foi possível atualizar cache:', error);
+    }
+    
+    // Atualiza Zustand (ipMkAuth opcional para quando credenciais mudam)
+    if (ipMkAuth) {
+      set({ token, ipMkAuth });
+    } else {
+      set({ token });
+    }
   },
 
   logout: async () => {
@@ -81,6 +108,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       const ipMkAuth = await authService.getIpMkAuth();
       
       if (token && ipMkAuth) {
+        // Popula cache com token restaurado
+        try {
+          const apiClientModule = await import('@/services/api/apiClient');
+          if ('updateTokenCache' in apiClientModule) {
+            (apiClientModule as any).updateTokenCache(token);
+          }
+        } catch (cacheError) {
+          console.log('⚠️ Não foi possível atualizar cache:', cacheError);
+        }
+        
         set({
           token,
           ipMkAuth,
