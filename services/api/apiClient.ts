@@ -50,6 +50,14 @@ apiClient.interceptors.response.use(
         const { authService } = await import('./auth.service');
         await authService.logout();
         
+        // Redireciona para login (usuário deletado ou credenciais inválidas)
+        try {
+          const { router } = await import('expo-router');
+          router.replace('/login');
+        } catch (routerError) {
+          console.log('⚠️ Não foi possível redirecionar:', routerError);
+        }
+        
         throw refreshError;
       } finally {
         isRefreshing = false;
