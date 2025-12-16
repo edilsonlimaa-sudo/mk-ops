@@ -1,6 +1,11 @@
-import { ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useAuthStore } from '../stores/useAuthStore';
 
 export default function Index() {
+  const router = useRouter();
+  const { isAuthenticated, logout, ipMkAuth } = useAuthStore();
+
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-6">
@@ -10,10 +15,30 @@ export default function Index() {
           <Text className="text-lg text-gray-600">Com NativeWind/Tailwind ✅</Text>
         </View>
 
-        {/* Card Azul */}
-        <View className="bg-blue-500 rounded-2xl p-6 mb-4 shadow-lg">
-          <Text className="text-white text-2xl font-bold mb-2">Pronto para começar</Text>
-          <Text className="text-blue-100">React Native + Expo + TypeScript</Text>
+        {/* Auth Status Card */}
+        <View className={`rounded-2xl p-6 mb-4 shadow-lg ${isAuthenticated ? 'bg-green-500' : 'bg-blue-500'}`}>
+          <Text className="text-white text-2xl font-bold mb-2">
+            {isAuthenticated ? '🔓 Autenticado' : '🔐 Não autenticado'}
+          </Text>
+          <Text className="text-white text-opacity-90 mb-4">
+            {isAuthenticated ? `Conectado em: ${ipMkAuth}` : 'Faça login para começar'}
+          </Text>
+          
+          {isAuthenticated ? (
+            <TouchableOpacity
+              onPress={logout}
+              className="bg-white bg-opacity-20 rounded-lg px-4 py-3 active:opacity-70"
+            >
+              <Text className="text-white text-center font-semibold">Fazer Logout</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => router.push('/login')}
+              className="bg-white rounded-lg px-4 py-3 active:opacity-70"
+            >
+              <Text className="text-blue-500 text-center font-semibold">Ir para Login</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Card Branco com Pills */}
@@ -34,7 +59,7 @@ export default function Index() {
 
         {/* Footer */}
         <View className="mt-8 mb-12 items-center">
-          <Text className="text-gray-500 text-sm">Próximo: Autenticação 🔐</Text>
+          <Text className="text-gray-500 text-sm">Sistema de autenticação implementado ✅</Text>
         </View>
       </View>
     </ScrollView>
