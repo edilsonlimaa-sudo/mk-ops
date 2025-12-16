@@ -52,13 +52,17 @@ class AuthService {
         throw new Error('Token não encontrado na resposta');
       }
       
-      console.log('💾 Salvando token:', token.substring(0, 30) + '...');
+      console.log('💾 Salvando token e credenciais:', token.substring(0, 30) + '...');
       
-      // Salva o token no SecureStore
+      // Salva o token
       await setItemAsync('authToken', token);
       
-      // Salva também o IP para usar nas próximas requisições
+      // Salva IP e credenciais para auto-refresh
       await setItemAsync('ipMkAuth', ipMkAuth);
+      await setItemAsync('clientId', clientId);
+      await setItemAsync('clientSecret', clientSecret);
+      
+      console.log('✅ Credenciais salvas para auto-refresh');
       
       return token;
     } catch (error) {
@@ -89,6 +93,8 @@ class AuthService {
   async logout(): Promise<void> {
     await deleteItemAsync('authToken');
     await deleteItemAsync('ipMkAuth');
+    await deleteItemAsync('clientId');
+    await deleteItemAsync('clientSecret');
   }
 
   async getToken(): Promise<string | null> {
@@ -102,6 +108,21 @@ class AuthService {
   async isAuthenticated(): Promise<boolean> {
     const token = await this.getToken();
     return !!token;
+  }
+
+  /**
+   * Verifica se o token expirou (60 minutos)
+   */
+  async getSavedCredentials(): Promise<LoginCredentials | null> {
+    const ipMkAuth = await getItemAsync('ipMkAuth');
+    const clientId = await getItemAsync('clientId');
+    const clientSecret = await getItemAsync('clientSecret');
+    
+    if (!ipMkAuth || !clientId || !clientSecret) {
+      return null;
+    }
+    
+    return { ipMkAuth, clientId, clientSecret };
   }
 }
 
