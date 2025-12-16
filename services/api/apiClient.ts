@@ -9,7 +9,24 @@ const apiClient = axios.create({
 let isRefreshing = false;
 
 // Fila de requests pendentes aguardando o refresh completar
-let pendingRequests: ((token: string) => void)[] = [];
+type PendingRequestCallback = (token?: string, error?: any) => void;
+let pendingRequests: PendingRequestCallback[] = [];
+
+// Interceptor de request: injeta token automaticamente
+apiClient.interceptors.request.use(
+  async (config) => {
+    // Importa getItemAsync apenas quando necessário
+    const { getItemAsync } = await import('expo-secure-store');
+    const token = await getItemAsync('authToken');
+    
+    if (token && config.headers) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Interceptor de resposta: detecta 401 e refaz login automaticamente
 apiClient.interceptors.response.use(
@@ -24,10 +41,14 @@ apiClient.interceptors.response.use(
       // Se já está renovando, adiciona à fila de espera
       if (isRefreshing) {
         console.log('⏳ Request aguardando renovação de token...');
-        return new Promise((resolve) => {
-          pendingRequests.push((token: string) => {
-            originalRequest.headers['Authorization'] = `Bearer ${token}`;
-            resolve(apiClient(originalRequest));
+        return new Promise((resolve, reject) => {
+          pendingRequests.push((token, error) => {
+            if (error) {
+              reject(error);
+            } else if (token) {
+              originalRequest.headers['Authorization'] = `Bearer ${token}`;
+              resolve(apiClient(originalRequest));
+            }
           });
         });
       }
@@ -53,6 +74,14 @@ apiClient.interceptors.response.use(
 
         console.log('✅ Token renovado automaticamente!');
 
+        // Atualiza Zustand store com novo token
+        try {
+          const { useAuthStore } = await import('@/stores/useAuthStore');
+          useAuthStore.getState().updateToken(newToken);
+        } catch (storeError) {
+          console.log('⚠️ Não foi possível atualizar Zustand store:', storeError);
+        }
+
         // Processa todas as requests que estavam aguardando
         pendingRequests.forEach((callback) => callback(newToken));
         pendingRequests = [];
@@ -65,7 +94,8 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         console.log('❌ Erro ao renovar token:', refreshError);
         
-        // Limpa a fila de requests pendentes
+        // Rejeita todas as requests que estavam aguardando
+        pendingRequests.forEach((callback) => callback(undefined, refreshError));
         pendingRequests = [];
         
         // Detecta se é erro de rede (offline) - NÃO desloga nesse caso

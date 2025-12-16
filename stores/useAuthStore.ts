@@ -9,7 +9,11 @@ interface AuthState {
   login: (ipMkAuth: string, clientId: string, clientSecret: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  updateToken: (token: string) => void;
 }
+
+// Flag global para prevenir múltiplos logins simultâneos
+let isLoggingIn = false;
 
 export const useAuthStore = create<AuthState>((set) => ({
   token: null,
@@ -18,7 +22,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: false,
 
   login: async (ipMkAuth: string, clientId: string, clientSecret: string) => {
+    // Previne múltiplos logins simultâneos (debounce)
+    if (isLoggingIn) {
+      console.log('⏳ Login já em andamento, ignorando...');
+      return;
+    }
+    
+    isLoggingIn = true;
     set({ isLoading: true });
+    
     try {
       const token = await authService.login({ ipMkAuth, clientId, clientSecret });
       set({
@@ -30,7 +42,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       set({ isLoading: false });
       throw error;
+    } finally {
+      isLoggingIn = false;
     }
+  },
+
+  updateToken: (token: string) => {
+    set({ token });
   },
 
   logout: async () => {
