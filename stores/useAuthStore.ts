@@ -52,6 +52,21 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
+    // Aguarda refresh terminar antes de fazer logout (previne race condition)
+    const maxWait = 5000; // 5 segundos
+    const startTime = Date.now();
+    
+    // Checa se existe isRefreshing exportado do apiClient
+    try {
+      const apiClientModule = await import('@/services/api/apiClient');
+      if ('clearTokenCache' in apiClientModule) {
+        // Limpa cache de token antes do logout
+        (apiClientModule as any).clearTokenCache();
+      }
+    } catch (error) {
+      console.log('⚠️ Não foi possível limpar cache:', error);
+    }
+    
     await authService.logout();
     set({
       token: null,

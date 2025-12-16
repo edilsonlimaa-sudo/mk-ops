@@ -8,6 +8,13 @@ const apiClient = axios.create({
 // Flag para evitar múltiplos re-logins simultâneos
 let isRefreshing = false;
 
+// Cache de token em memória para evitar ler SecureStore em toda request
+let cachedToken: string | null = null;
+
+// Contador de tentativas de refresh para prevenir loop infinito
+let refreshAttempts = 0;
+const MAX_REFRESH_ATTEMPTS = 3;
+
 // Fila de requests pendentes aguardando o refresh completar
 type PendingRequestCallback = (token?: string, error?: any) => void;
 let pendingRequests: PendingRequestCallback[] = [];
@@ -15,12 +22,14 @@ let pendingRequests: PendingRequestCallback[] = [];
 // Interceptor de request: injeta token automaticamente
 apiClient.interceptors.request.use(
   async (config) => {
-    // Importa getItemAsync apenas quando necessário
-    const { getItemAsync } = await import('expo-secure-store');
-    const token = await getItemAsync('authToken');
+    // Usa cache se disponível, senão lê do SecureStore
+    if (!cachedToken) {
+      const { getItemAsync } = await import('expo-secure-store');
+      cachedToken = await getItemAsync('authToken');
+    }
     
-    if (token && config.headers) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+    if (cachedToken && config.headers) {
+      config.headers['Authorization'] = `Bearer ${cachedToken}`;
     }
     
     return config;
@@ -56,7 +65,15 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        console.log('🔄 Token expirado, reautenticando automaticamente...');
+        // Previne loop infinito de refresh
+        refreshAttempts++;
+        if (refreshAttempts > MAX_REFRESH_ATTEMPTS) {
+          console.log('❌ Máximo de tentativas de refresh atingido');
+          refreshAttempts = 0;
+          throw new Error('Token refresh falhou após múltiplas tentativas');
+        }
+
+        console.log(`🔄 Token expirado, reautenticando automaticamente (tentativa ${refreshAttempts})...`);
 
         // Importa authService apenas quando necessário (evita import circular)
         const { authService } = await import('./auth.service');
@@ -73,6 +90,12 @@ apiClient.interceptors.response.use(
         const newToken = await authService.login(credentials);
 
         console.log('✅ Token renovado automaticamente!');
+
+        // Atualiza cache de token em memória
+        cachedToken = newToken;
+        
+        // Reset contador de tentativas após sucesso
+        refreshAttempts = 0;
 
         // Atualiza Zustand store com novo token
         try {
@@ -94,6 +117,9 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         console.log('❌ Erro ao renovar token:', refreshError);
         
+        // Limpa cache de token
+        cachedToken = null;
+        
         // Rejeita todas as requests que estavam aguardando
         pendingRequests.forEach((callback) => callback(undefined, refreshError));
         pendingRequests = [];
@@ -114,7 +140,14 @@ apiClient.interceptors.response.use(
         
         // Se não é erro de rede, é credencial inválida ou usuário deletado
         const { authService } = await import('./auth.service');
+        
+        // Reset contador antes de logout
+        refreshAttempts = 0;
+        
         await authService.logout();
+        
+        // Limpa cache após logout
+        cachedToken = null;
         
         // Redireciona para login (usuário deletado ou credenciais inválidas)
         try {
@@ -133,5 +166,11 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Função para limpar cache de token (usada pelo logout)
+export const clearTokenCache = () => {
+  cachedToken = null;
+  refreshAttempts = 0;
+};
 
 export default apiClient;
