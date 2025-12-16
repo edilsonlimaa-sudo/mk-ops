@@ -2,6 +2,8 @@ import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { tokenRefreshManager } from '../token/tokenRefreshManager';
 import { handleRefreshFailure } from './helpers/errorRecoveryHandler';
 import { isNetworkError } from './helpers/networkErrorDetector';
+import { enqueueRequest } from './helpers/requestQueueManager';
+import { retryWithNewToken } from './helpers/requestRetrier';
 import { refreshToken } from './helpers/tokenRefresher';
 
 /**
@@ -31,20 +33,7 @@ export const tokenRefreshErrorHandler = async (error: AxiosError) => {
 
     // Se já está renovando, adiciona à fila de espera
     if (tokenRefreshManager.getIsRefreshing()) {
-      console.log('⏳ Request aguardando renovação de token...');
-      return new Promise((resolve, reject) => {
-        tokenRefreshManager.addPendingRequest((token, error) => {
-          if (error) {
-            reject(error);
-          } else if (token) {
-            originalRequest.headers['Authorization'] = `Bearer ${token}`;
-            // Importa dinamicamente para evitar circular dependency
-            import('../apiClient').then(({ default: apiClient }) => {
-              resolve(apiClient(originalRequest));
-            });
-          }
-        });
-      });
+      return enqueueRequest(originalRequest);
     }
 
     tokenRefreshManager.setIsRefreshing(true);
@@ -68,15 +57,8 @@ export const tokenRefreshErrorHandler = async (error: AxiosError) => {
       // Processa todas as requests que estavam aguardando
       tokenRefreshManager.resolveAllPending(newToken);
 
-      // Atualiza header da request original com novo token
-      originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-
-      // Marca que esta request foi feita com token recém-renovado
-      originalRequest._refreshedToken = true;
-
-      // Retenta a request original
-      const { default: apiClient } = await import('../apiClient');
-      return apiClient(originalRequest);
+      // Retenta a request original com novo token
+      return retryWithNewToken(originalRequest, newToken);
     } catch (refreshError) {
       console.log('❌ Erro ao renovar token:', refreshError);
 
