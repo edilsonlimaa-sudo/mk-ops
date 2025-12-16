@@ -1,10 +1,12 @@
-import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { tokenCache } from '../token/tokenCache';
+import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { tokenRefreshManager } from '../token/tokenRefreshManager';
+import { handleRefreshFailure } from './helpers/errorRecoveryHandler';
+import { isNetworkError } from './helpers/networkErrorDetector';
+import { refreshToken } from './helpers/tokenRefresher';
 
 /**
  * Response Interceptor: Detecta 401 e faz refresh automático do token
- * Gerencia fila de requests pendentes e previne loops infinitos
+ * Orquestra helpers para gerenciar fila de requests e prevenir loops infinitos
  */
 export const tokenRefreshSuccessHandler = (response: AxiosResponse) => {
   return response;
@@ -57,36 +59,11 @@ export const tokenRefreshErrorHandler = async (error: AxiosError) => {
 
       tokenRefreshManager.incrementAttempts();
       console.log(
-        `🔄 Token expirado, reautenticando automaticamente (tentativa ${tokenRefreshManager.getAttempts})...`
+        `🔄 Token expirado, reautenticando automaticamente (tentativa ${tokenRefreshManager.getAttempts()})...`
       );
 
-      // Importa authService apenas quando necessário (evita import circular)
-      const { authService } = await import('../auth.service');
-
-      // Recupera credenciais salvas
-      const credentials = await authService.getSavedCredentials();
-      if (!credentials) {
-        console.log('❌ Credenciais não encontradas, redirecionando para login');
-        throw new Error('Credenciais não salvas');
-      }
-
-      // Re-loga usando credenciais salvas
-      const newToken = await authService.login(credentials);
-      console.log('✅ Token renovado automaticamente!');
-
-      // Atualiza cache de token em memória
-      tokenCache.set(newToken);
-
-      // Reset contador de tentativas após sucesso
-      tokenRefreshManager.resetAttempts();
-
-      // Atualiza Zustand store com novo token
-      try {
-        const { useAuthStore } = await import('@/stores/useAuthStore');
-        useAuthStore.getState().updateToken(newToken);
-      } catch (storeError) {
-        console.log('⚠️ Não foi possível atualizar Zustand store:', storeError);
-      }
+      // Faz refresh do token usando helper
+      const newToken = await refreshToken();
 
       // Processa todas as requests que estavam aguardando
       tokenRefreshManager.resolveAllPending(newToken);
@@ -103,44 +80,17 @@ export const tokenRefreshErrorHandler = async (error: AxiosError) => {
     } catch (refreshError) {
       console.log('❌ Erro ao renovar token:', refreshError);
 
-      // Limpa cache de token
-      tokenCache.clear();
-
       // Rejeita todas as requests que estavam aguardando
       tokenRefreshManager.rejectAllPending(refreshError);
 
       // Detecta se é erro de rede (offline) - NÃO desloga nesse caso
-      if (axios.isAxiosError(refreshError)) {
-        const isNetworkError =
-          refreshError.code === 'ECONNABORTED' ||
-          refreshError.code === 'ERR_NETWORK' ||
-          refreshError.message.includes('Network Error') ||
-          refreshError.message.includes('timeout');
-
-        if (isNetworkError) {
-          console.log('📡 Erro de rede detectado - preservando credenciais');
-          throw new Error('Sem conexão com a internet. Tente novamente.');
-        }
+      if (isNetworkError(refreshError)) {
+        console.log('📡 Erro de rede detectado - preservando credenciais');
+        throw new Error('Sem conexão com a internet. Tente novamente.');
       }
 
-      // Se não é erro de rede, é credencial inválida ou usuário deletado
-      const { authService } = await import('../auth.service');
-
-      // Reset contador antes de logout
-      tokenRefreshManager.resetAttempts();
-
-      await authService.logout();
-
-      // Limpa cache após logout
-      tokenCache.clear();
-
-      // Redireciona para login (usuário deletado ou credenciais inválidas)
-      try {
-        const { router } = await import('expo-router');
-        router.replace('/login');
-      } catch (routerError) {
-        console.log('⚠️ Não foi possível redirecionar:', routerError);
-      }
+      // Se não é erro de rede, faz logout e redireciona
+      await handleRefreshFailure();
 
       throw refreshError;
     } finally {
