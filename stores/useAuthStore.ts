@@ -43,16 +43,25 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   checkAuth: async () => {
-    const token = await authService.getToken();
-    const ipMkAuth = await authService.getIpMkAuth();
-    
-    if (token && ipMkAuth) {
-      set({
-        token,
-        ipMkAuth,
-        isAuthenticated: true,
-      });
-    } else {
+    try {
+      const token = await authService.getToken();
+      const ipMkAuth = await authService.getIpMkAuth();
+      
+      if (token && ipMkAuth) {
+        set({
+          token,
+          ipMkAuth,
+          isAuthenticated: true,
+        });
+      } else {
+        set({
+          token: null,
+          ipMkAuth: null,
+          isAuthenticated: false,
+        });
+      }
+    } catch (error) {
+      console.log('Erro ao verificar autenticação:', error);
       set({
         token: null,
         ipMkAuth: null,

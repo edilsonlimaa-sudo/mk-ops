@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import { deleteItemAsync, getItemAsync, setItemAsync } from 'expo-secure-store';
 
 interface LoginCredentials {
   ipMkAuth: string;
@@ -30,6 +30,9 @@ class AuthService {
       // URL da API
       const url = `https://${ipMkAuth}/api/`;
       
+      console.log('🔐 Fazendo login em:', url);
+      console.log('📝 Auth header:', `Basic ${base64Auth.substring(0, 20)}...`);
+      
       // Faz a requisição GET com Basic Auth
       const response = await axios.get<AuthResponse>(url, {
         headers: {
@@ -38,41 +41,62 @@ class AuthService {
         timeout: 10000, // 10 segundos
       });
       
-      // O token JWT vem na resposta
-      const token = response.data.token;
+      console.log('✅ Resposta:', response.status, response.data);
+      
+      // O token JWT vem direto na resposta (string) ou dentro de um objeto
+      const token = typeof response.data === 'string' 
+        ? response.data 
+        : response.data.token;
+      
+      if (!token) {
+        throw new Error('Token não encontrado na resposta');
+      }
+      
+      console.log('💾 Salvando token:', token.substring(0, 30) + '...');
       
       // Salva o token no SecureStore
-      await SecureStore.setItemAsync('authToken', token);
+      await setItemAsync('authToken', token);
       
       // Salva também o IP para usar nas próximas requisições
-      await SecureStore.setItemAsync('ipMkAuth', ipMkAuth);
+      await setItemAsync('ipMkAuth', ipMkAuth);
       
       return token;
     } catch (error) {
+      console.log('❌ Erro completo:', error);
+      
       if (axios.isAxiosError(error)) {
+        console.log('📡 Erro Axios:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          code: error.code,
+          message: error.message
+        });
+        
         if (error.response?.status === 401) {
           throw new Error('Credenciais inválidas');
         }
         if (error.code === 'ECONNABORTED') {
           throw new Error('Timeout: servidor não respondeu');
         }
-        throw new Error(error.response?.data?.error?.text || 'Erro ao autenticar');
+        throw new Error(error.response?.data?.error?.text || error.message || 'Erro ao autenticar');
       }
-      throw new Error('Erro desconhecido ao autenticar');
+      
+      console.log('⚠️ Erro não é do Axios:', error);
+      throw new Error(`Erro desconhecido: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async logout(): Promise<void> {
-    await SecureStore.deleteItemAsync('authToken');
-    await SecureStore.deleteItemAsync('ipMkAuth');
+    await deleteItemAsync('authToken');
+    await deleteItemAsync('ipMkAuth');
   }
 
   async getToken(): Promise<string | null> {
-    return await SecureStore.getItemAsync('authToken');
+    return await getItemAsync('authToken');
   }
 
   async getIpMkAuth(): Promise<string | null> {
-    return await SecureStore.getItemAsync('ipMkAuth');
+    return await getItemAsync('ipMkAuth');
   }
 
   async isAuthenticated(): Promise<boolean> {

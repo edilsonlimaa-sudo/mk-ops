@@ -1,10 +1,23 @@
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useAuthStore } from '../stores/useAuthStore';
 
 export default function Index() {
   const router = useRouter();
   const { isAuthenticated, logout, ipMkAuth } = useAuthStore();
+
+  // Redireciona para login se não estiver autenticado
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isAuthenticated]);
+
+  // Se não autenticado, não renderiza nada (já redirecionou)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
@@ -16,29 +29,20 @@ export default function Index() {
         </View>
 
         {/* Auth Status Card */}
-        <View className={`rounded-2xl p-6 mb-4 shadow-lg ${isAuthenticated ? 'bg-green-500' : 'bg-blue-500'}`}>
+        <View className="rounded-2xl p-6 mb-4 shadow-lg bg-green-500">
           <Text className="text-white text-2xl font-bold mb-2">
-            {isAuthenticated ? '🔓 Autenticado' : '🔐 Não autenticado'}
+            🔓 Autenticado
           </Text>
           <Text className="text-white text-opacity-90 mb-4">
-            {isAuthenticated ? `Conectado em: ${ipMkAuth}` : 'Faça login para começar'}
+            Conectado em: {ipMkAuth}
           </Text>
           
-          {isAuthenticated ? (
-            <TouchableOpacity
-              onPress={logout}
-              className="bg-white bg-opacity-20 rounded-lg px-4 py-3 active:opacity-70"
-            >
-              <Text className="text-white text-center font-semibold">Fazer Logout</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={() => router.push('/login')}
-              className="bg-white rounded-lg px-4 py-3 active:opacity-70"
-            >
-              <Text className="text-blue-500 text-center font-semibold">Ir para Login</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            onPress={logout}
+            className="bg-white bg-opacity-20 rounded-lg px-4 py-3 active:opacity-70"
+          >
+            <Text className="text-white text-center font-semibold">Fazer Logout</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Card Branco com Pills */}

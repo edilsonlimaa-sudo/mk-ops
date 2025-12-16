@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/stores/useAuthStore';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { z } from 'zod';
@@ -15,7 +16,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const router = useRouter();
-  const { login, isLoading } = useAuthStore();
+  const { login, isLoading, isAuthenticated } = useAuthStore();
 
   const {
     control,
@@ -29,6 +30,13 @@ export default function Login() {
       clientSecret: 'Client_Secret_137ae744f2ee12fef3a7eea070edbca3d0bb449e',
     },
   });
+
+  // Redireciona para home se já estiver autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/');
+    }
+  }, [isAuthenticated]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
