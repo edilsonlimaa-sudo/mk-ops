@@ -54,15 +54,24 @@ class AuthService {
       
       console.log('💾 Salvando token e credenciais:', token.substring(0, 30) + '...');
       
-      // Salva o token
-      await setItemAsync('authToken', token);
-      
-      // Salva IP e credenciais para auto-refresh
-      await setItemAsync('ipMkAuth', ipMkAuth);
-      await setItemAsync('clientId', clientId);
-      await setItemAsync('clientSecret', clientSecret);
-      
-      console.log('✅ Credenciais salvas para auto-refresh');
+      // Salva o token e credenciais - valida se salvou corretamente
+      try {
+        await setItemAsync('authToken', token);
+        await setItemAsync('ipMkAuth', ipMkAuth);
+        await setItemAsync('clientId', clientId);
+        await setItemAsync('clientSecret', clientSecret);
+        
+        // Valida que realmente salvou lendo de volta
+        const savedToken = await getItemAsync('authToken');
+        if (!savedToken) {
+          throw new Error('Falha ao salvar credenciais no SecureStore');
+        }
+        
+        console.log('✅ Credenciais salvas e validadas para auto-refresh');
+      } catch (saveError) {
+        console.error('❌ Erro ao salvar no SecureStore:', saveError);
+        throw new Error('Não foi possível salvar as credenciais de forma segura');
+      }
       
       return token;
     } catch (error) {

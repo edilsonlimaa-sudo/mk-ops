@@ -8,15 +8,30 @@ const apiClient = axios.create({
 // Flag para evitar múltiplos re-logins simultâneos
 let isRefreshing = false;
 
+// Fila de requests pendentes aguardando o refresh completar
+let pendingRequests: ((token: string) => void)[] = [];
+
 // Interceptor de resposta: detecta 401 e refaz login automaticamente
 apiClient.interceptors.response.use(
   (response) => response, // Sucesso, apenas retorna
   async (error) => {
     const originalRequest = error.config;
 
-    // Se recebeu 401 (token expirado) e ainda não tentou re-logar
-    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshing) {
+    // Se recebeu 401 (token expirado)
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+
+      // Se já está renovando, adiciona à fila de espera
+      if (isRefreshing) {
+        console.log('⏳ Request aguardando renovação de token...');
+        return new Promise((resolve) => {
+          pendingRequests.push((token: string) => {
+            originalRequest.headers['Authorization'] = `Bearer ${token}`;
+            resolve(apiClient(originalRequest));
+          });
+        });
+      }
+
       isRefreshing = true;
 
       try {
@@ -38,6 +53,10 @@ apiClient.interceptors.response.use(
 
         console.log('✅ Token renovado automaticamente!');
 
+        // Processa todas as requests que estavam aguardando
+        pendingRequests.forEach((callback) => callback(newToken));
+        pendingRequests = [];
+
         // Atualiza header da request original com novo token
         originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
 
@@ -46,7 +65,24 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         console.log('❌ Erro ao renovar token:', refreshError);
         
-        // Se falhou, usa authService.logout() para limpar tudo
+        // Limpa a fila de requests pendentes
+        pendingRequests = [];
+        
+        // Detecta se é erro de rede (offline) - NÃO desloga nesse caso
+        if (axios.isAxiosError(refreshError)) {
+          const isNetworkError = 
+            refreshError.code === 'ECONNABORTED' ||
+            refreshError.code === 'ERR_NETWORK' ||
+            refreshError.message.includes('Network Error') ||
+            refreshError.message.includes('timeout');
+          
+          if (isNetworkError) {
+            console.log('📡 Erro de rede detectado - preservando credenciais');
+            throw new Error('Sem conexão com a internet. Tente novamente.');
+          }
+        }
+        
+        // Se não é erro de rede, é credencial inválida ou usuário deletado
         const { authService } = await import('./auth.service');
         await authService.logout();
         
