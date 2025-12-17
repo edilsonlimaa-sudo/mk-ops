@@ -2,14 +2,14 @@ import { useClientes } from '@/hooks/useClientes';
 import { Cliente } from '@/services/api/cliente.service';
 import { useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 type FilterType = 'todos' | 'ativos' | 'bloqueados' | 'pppoe' | 'hotspot';
@@ -26,6 +26,7 @@ export default function ClientesScreen() {
     isError,
     error,
     refetch,
+    retryFailed,
     isRefetching,
   } = useClientes();
 
@@ -164,7 +165,7 @@ export default function ClientesScreen() {
           </Text>
           <TouchableOpacity
             className="bg-blue-500 px-6 py-3 rounded-lg"
-            onPress={() => refetch()}>
+            onPress={() => retryFailed()}>
             <Text className="text-white font-semibold">Tentar Novamente</Text>
           </TouchableOpacity>
         </View>
