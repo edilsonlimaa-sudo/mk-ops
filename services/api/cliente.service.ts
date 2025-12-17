@@ -41,14 +41,11 @@ export const listarClientes = async (
   page: number = 1,
   limite: number = 200
 ): Promise<ListarClientesResponse> => {
-  console.log(`📡 Fazendo request: /api/cliente/listar/limite=${limite}&pagina=${page}`);
-  
   const response = await apiClient.get<ListarClientesResponse>(
     `/api/cliente/listar/limite=${limite}&pagina=${page}`
   );
   
-  console.log('✅ Response status:', response.status);
-  console.log('📦 Response data:', JSON.stringify(response.data, null, 2));
+  console.log(`📡 GET /api/cliente/listar - Página ${page}/${response.data.total_paginas} - ${response.data.clientes.length} clientes`);
   
   return response.data;
 };

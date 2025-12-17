@@ -2,38 +2,28 @@ import { useClientes } from '@/hooks/useClientes';
 import { Cliente } from '@/services/api/cliente.service';
 import { useMemo, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function ClientesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const {
-    data,
+    allClientes,
+    totalClientes,
+    loadedClientes,
+    isLoadingAll,
     isLoading,
     isError,
     error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
     refetch,
     isRefetching,
   } = useClientes();
-
-  // Combina todas as páginas em uma lista única
-  const allClientes = useMemo(() => {
-    console.log('📦 Data completa:', JSON.stringify(data, null, 2));
-    console.log('📄 Primeira página:', JSON.stringify(data?.pages[0], null, 2));
-    const clientes = data?.pages.flatMap((page) => page.clientes) ?? [];
-    console.log('👥 Total de clientes combinados:', clientes.length);
-    console.log('🔍 Primeiro cliente:', JSON.stringify(clientes[0], null, 2));
-    return clientes;
-  }, [data]);
 
   // Filtra clientes baseado na busca
   const filteredClientes = useMemo(() => {
@@ -53,14 +43,9 @@ export default function ClientesScreen() {
     });
   }, [allClientes, searchQuery]);
 
-  const totalClientes = data?.pages[0]?.total_registros ?? 0;
-
   // Renderiza item da lista
   const renderClienteItem = ({ item }: { item: Cliente }) => {
-    console.log('🎨 Renderizando item:', JSON.stringify(item, null, 2));
-    
     if (!item) {
-      console.warn('⚠️ Item é null/undefined!');
       return null;
     }
     
@@ -144,7 +129,9 @@ export default function ClientesScreen() {
           <View>
             <Text className="text-3xl font-bold text-gray-900">Clientes</Text>
             <Text className="text-sm text-gray-500 mt-1">
-              {totalClientes.toLocaleString('pt-BR')} registros
+              {isLoadingAll 
+                ? `Carregando... ${loadedClientes} de ${totalClientes}` 
+                : `${totalClientes.toLocaleString('pt-BR')} registros`}
             </Text>
           </View>
         </View>
@@ -152,12 +139,23 @@ export default function ClientesScreen() {
         {/* Campo de busca */}
         <TextInput
           className="bg-gray-100 rounded-lg px-4 py-3 text-gray-900"
-          placeholder="Buscar por nome, CPF/CNPJ, email ou telefone..."
+          placeholder="Buscar por nome, CPF/CNPJ, email, login..."
           value={searchQuery}
           onChangeText={setSearchQuery}
           autoCapitalize="none"
           autoCorrect={false}
+          editable={!isLoadingAll}
         />
+        
+        {/* Aviso de carregamento */}
+        {isLoadingAll && (
+          <View className="flex-row items-center mt-2">
+            <ActivityIndicator size="small" color="#3b82f6" />
+            <Text className="text-xs text-blue-600 ml-2">
+              Carregando todos os clientes para busca completa...
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Lista de clientes */}
@@ -174,26 +172,24 @@ export default function ClientesScreen() {
             tintColor="#3b82f6"
           />
         }
-        // Infinite scroll
-        onEndReached={() => {
-          if (hasNextPage && !isFetchingNextPage && !searchQuery) {
-            fetchNextPage();
-          }
-        }}
+        // Infinite scroll - desabilitado, carregamento é automático agora
         onEndReachedThreshold={0.5}
         // Footer com loading
         ListFooterComponent={() => {
-          if (isFetchingNextPage) {
+          if (isLoadingAll) {
             return (
               <View className="py-4">
                 <ActivityIndicator size="small" color="#3b82f6" />
+                <Text className="text-center text-gray-500 text-xs mt-2">
+                  Carregando mais clientes...
+                </Text>
               </View>
             );
           }
-          if (!hasNextPage && filteredClientes.length > 0) {
+          if (!isLoadingAll && filteredClientes.length > 0) {
             return (
               <Text className="text-center text-gray-500 py-4">
-                Fim da lista
+                ✓ Todos os {totalClientes} clientes carregados
               </Text>
             );
           }
