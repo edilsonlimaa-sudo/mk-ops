@@ -1,0 +1,4 @@
+https://postman.mk-auth.com.br/
+client: Client_Id_4d1e692d668f91461077c08a16c5456b
+secret: Client_Secret_137ae744f2ee12fef3a7eea070edbca3d0bb449e
+ip_mk_auth: provedor.updata.com.br

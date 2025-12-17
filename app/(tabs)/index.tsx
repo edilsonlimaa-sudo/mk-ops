@@ -1,98 +1,56 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { logout, ipMkAuth } = useAuthStore();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  return (
+    <ScrollView className="flex-1 bg-gray-50">
+      <View className="p-6">
+        {/* Header */}
+        <View className="mb-8 mt-12">
+          <Text className="text-4xl font-bold text-gray-900 mb-2">MK-Auth Mobile</Text>
+          <Text className="text-lg text-gray-600">Com NativeWind/Tailwind ✅</Text>
+        </View>
+
+        {/* Auth Status Card */}
+        <View className="rounded-2xl p-6 mb-4 shadow-lg bg-green-500">
+          <Text className="text-white text-2xl font-bold mb-2">
+            🔓 Autenticado
+          </Text>
+          <Text className="text-white text-opacity-90 mb-4">
+            Conectado em: {ipMkAuth}
+          </Text>
+          
+          <TouchableOpacity
+            onPress={logout}
+            className="bg-white bg-opacity-20 rounded-lg px-4 py-3 active:opacity-70"
+          >
+            <Text className="text-white text-center font-semibold">Fazer Logout</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Card Branco com Pills */}
+        <View className="bg-white rounded-xl p-6 mb-4 shadow-md">
+          <Text className="text-xl font-semibold text-gray-800 mb-4">Bibliotecas instaladas</Text>
+          <View className="flex-row justify-between items-center">
+            <View className="bg-green-100 px-3 py-2 rounded-lg">
+              <Text className="text-green-700 text-xs font-medium">Zustand</Text>
+            </View>
+            <View className="bg-yellow-100 px-3 py-2 rounded-lg">
+              <Text className="text-yellow-700 text-xs font-medium">React Query</Text>
+            </View>
+            <View className="bg-red-100 px-3 py-2 rounded-lg">
+              <Text className="text-red-700 text-xs font-medium">Axios</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Footer */}
+        <View className="mt-8 mb-12 items-center">
+          <Text className="text-gray-500 text-sm">Sistema de autenticação implementado ✅</Text>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});

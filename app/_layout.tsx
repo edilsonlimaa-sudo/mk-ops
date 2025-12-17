@@ -1,4 +1,5 @@
 import { useAuthStore } from '@/stores/useAuthStore';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -8,6 +9,16 @@ import '../global.css';
 
 // Mantém splash screen visível até verificar autenticação
 SplashScreen.preventAutoHideAsync();
+
+// Configuração do React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 1000 * 60 * 5, // 5 minutos
+    },
+  },
+});
 
 export default function RootLayout() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
@@ -43,12 +54,13 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
-    </>
+    </QueryClientProvider>
   );
 }
