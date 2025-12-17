@@ -48,9 +48,9 @@ export const useClientes = () => {
 
           setAllPagesData(allClientes);
           console.log(`✅ Todas as ${totalPages} páginas carregadas`);
+          setIsLoadingAll(false);
         } catch (error) {
           console.error('❌ Erro ao carregar páginas:', error);
-        } finally {
           setIsLoadingAll(false);
         }
       } else {
@@ -69,9 +69,9 @@ export const useClientes = () => {
     if (allPagesData.length > 0) {
       return allPagesData;
     }
-    // Enquanto carrega demais páginas, mostra primeira
-    return firstPageQuery.data?.clientes ?? [];
-  }, [allPagesData, firstPageQuery.data]);
+    // Enquanto carrega, retorna vazio para não causar blink
+    return [];
+  }, [allPagesData]);
 
   // Metadados
   const totalClientes = firstPageQuery.data?.total_registros ?? 0;
@@ -82,7 +82,8 @@ export const useClientes = () => {
     totalClientes,
     loadedClientes,
     isLoadingAll,
-    isLoading: firstPageQuery.isLoading,
+    // Só considera carregado quando tiver dados OU quando firstPage carregar e não tiver múltiplas páginas
+    isLoading: firstPageQuery.isLoading || (allPagesData.length === 0 && firstPageQuery.isSuccess),
     isError: firstPageQuery.isError,
     error: firstPageQuery.error,
     refetch: async () => {

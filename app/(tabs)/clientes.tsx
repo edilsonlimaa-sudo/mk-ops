@@ -39,8 +39,13 @@ export default function ClientesScreen() {
     return { ativos, bloqueados, pppoe, hotspot };
   }, [allClientes]);
 
-  // Filtra clientes baseado na busca E filtro rápido
+  // Filtra clientes (apenas quando terminar de carregar)
   const filteredClientes = useMemo(() => {
+    // Durante o carregamento, retorna array vazio para não processar
+    if (isLoading || isLoadingAll) {
+      return [];
+    }
+
     let filtered = allClientes;
 
     // Aplica filtro rápido
@@ -78,7 +83,20 @@ export default function ClientesScreen() {
     }
 
     return filtered;
-  }, [allClientes, searchQuery, activeFilter]);
+  }, [allClientes, searchQuery, activeFilter, isLoading, isLoadingAll]);
+
+  // Skeleton loader
+  const renderSkeletonItem = () => (
+    <View className="bg-white rounded-xl p-4 mb-3">
+      <View className="flex-row justify-between items-start mb-2">
+        <View className="h-5 bg-gray-200 rounded w-3/4" />
+        <View className="h-5 bg-gray-200 rounded w-16" />
+      </View>
+      <View className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
+      <View className="h-4 bg-gray-200 rounded w-2/3 mb-2" />
+      <View className="h-4 bg-gray-200 rounded w-full" />
+    </View>
+  );
 
   // Renderiza item da lista
   const renderClienteItem = ({ item }: { item: Cliente }) => {
@@ -130,16 +148,6 @@ export default function ClientesScreen() {
     </TouchableOpacity>
     );
   };
-
-  // Loading inicial
-  if (isLoading) {
-    return (
-      <View className="flex-1 bg-gray-50 justify-center items-center">
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="text-gray-600 mt-4">Carregando clientes...</Text>
-      </View>
-    );
-  }
 
   // Estado de erro
   if (isError) {
@@ -274,7 +282,14 @@ export default function ClientesScreen() {
         </ScrollView>
 
         {/* Stats Overview - discreto */}
-        {!isLoadingAll && (
+        {(isLoading || isLoadingAll) ? (
+          <View className="flex-row justify-between mt-3 pt-3 border-t border-gray-100">
+            <View className="h-3 bg-gray-200 rounded w-16" />
+            <View className="h-3 bg-gray-200 rounded w-20" />
+            <View className="h-3 bg-gray-200 rounded w-16" />
+            <View className="h-3 bg-gray-200 rounded w-16" />
+          </View>
+        ) : allClientes.length > 0 ? (
           <View className="flex-row justify-between mt-3 pt-3 border-t border-gray-100">
             <Text className="text-xs text-gray-500">
               ✓ {stats.ativos} ativos
@@ -289,24 +304,21 @@ export default function ClientesScreen() {
               🌐 {stats.hotspot} Hotspot
             </Text>
           </View>
-        )}
-        
-        {/* Aviso de carregamento */}
-        {isLoadingAll && (
-          <View className="flex-row items-center mt-2">
-            <ActivityIndicator size="small" color="#3b82f6" />
-            <Text className="text-xs text-blue-600 ml-2">
-              Carregando todos os clientes para busca completa...
-            </Text>
-          </View>
-        )}
+        ) : null}
       </View>
 
       {/* Lista de clientes */}
-      <FlatList
-        data={filteredClientes}
-        renderItem={renderClienteItem}
-        keyExtractor={(item) => item.uuid}
+      {(isLoading || isLoadingAll || allClientes.length === 0) ? (
+        <ScrollView contentContainerStyle={{ padding: 16 }}>
+          {Array.from({ length: 8 }).map((_, index) => (
+            <View key={index}>{renderSkeletonItem()}</View>
+          ))}
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={filteredClientes}
+          renderItem={renderClienteItem}
+          keyExtractor={(item) => item.uuid}
         contentContainerStyle={{ padding: 16 }}
         // Pull to refresh
         refreshControl={
@@ -350,7 +362,8 @@ export default function ClientesScreen() {
             </Text>
           </View>
         )}
-      />
+        />
+      )}
     </View>
   );
 }
