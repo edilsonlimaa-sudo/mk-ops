@@ -149,21 +149,28 @@ export default function ClientesScreen() {
     );
   };
 
-  // Estado de erro
+  // Estado de erro (exceto quando não há registros)
   if (isError) {
-    return (
-      <View className="flex-1 bg-gray-50 justify-center items-center p-6">
-        <Text className="text-red-500 text-xl font-bold mb-2">❌ Erro</Text>
-        <Text className="text-gray-600 text-center mb-4">
-          {error instanceof Error ? error.message : 'Erro ao carregar clientes'}
-        </Text>
-        <TouchableOpacity
-          className="bg-blue-500 px-6 py-3 rounded-lg"
-          onPress={() => refetch()}>
-          <Text className="text-white font-semibold">Tentar Novamente</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar clientes';
+    const isEmptyState = errorMessage.toLowerCase().includes('registros nao encontrados') || 
+                         errorMessage.toLowerCase().includes('nenhum registro');
+    
+    if (!isEmptyState) {
+      return (
+        <View className="flex-1 bg-gray-50 justify-center items-center p-6">
+          <Text className="text-red-500 text-xl font-bold mb-2">❌ Erro</Text>
+          <Text className="text-gray-600 text-center mb-4">
+            {errorMessage}
+          </Text>
+          <TouchableOpacity
+            className="bg-blue-500 px-6 py-3 rounded-lg"
+            onPress={() => refetch()}>
+            <Text className="text-white font-semibold">Tentar Novamente</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    // Se for "sem registros", continua para renderizar lista vazia
   }
 
   return (
@@ -308,7 +315,7 @@ export default function ClientesScreen() {
       </View>
 
       {/* Lista de clientes */}
-      {(isLoading || isLoadingAll || allClientes.length === 0) ? (
+      {(isLoading || isLoadingAll) ? (
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           {Array.from({ length: 8 }).map((_, index) => (
             <View key={index}>{renderSkeletonItem()}</View>

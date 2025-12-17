@@ -7,6 +7,7 @@ export const useClientes = () => {
   const queryClient = useQueryClient();
   const [allPagesData, setAllPagesData] = useState<Cliente[]>([]);
   const [isLoadingAll, setIsLoadingAll] = useState(false);
+  const [isDataReady, setIsDataReady] = useState(false);
   const hasLoadedAll = useRef(false);
 
   // Primeira página - descobre total_paginas
@@ -48,14 +49,19 @@ export const useClientes = () => {
 
           setAllPagesData(allClientes);
           console.log(`✅ Todas as ${totalPages} páginas carregadas`);
-          setIsLoadingAll(false);
         } catch (error) {
-          console.error('❌ Erro ao carregar páginas:', error);
+          console.error('❌ Erro ao carregar páginas 2+:', error);
+          console.warn('⚠️ Usando apenas primeira página');
+          // Preserva primeira página em vez de perder tudo
+          setAllPagesData(firstPageQuery.data.clientes);
+        } finally {
           setIsLoadingAll(false);
+          setIsDataReady(true);
         }
       } else {
         // Só tem 1 página
         setAllPagesData(firstPageQuery.data.clientes);
+        setIsDataReady(true);
       }
     };
 
@@ -82,12 +88,12 @@ export const useClientes = () => {
     totalClientes,
     loadedClientes,
     isLoadingAll,
-    // Só considera carregado quando tiver dados OU quando firstPage carregar e não tiver múltiplas páginas
-    isLoading: firstPageQuery.isLoading || (allPagesData.length === 0 && firstPageQuery.isSuccess),
+    isLoading: firstPageQuery.isLoading || !isDataReady,
     isError: firstPageQuery.isError,
     error: firstPageQuery.error,
     refetch: async () => {
       hasLoadedAll.current = false;
+      setIsDataReady(false);
       setAllPagesData([]);
       await firstPageQuery.refetch();
     },
