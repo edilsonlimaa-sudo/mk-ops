@@ -1,5 +1,9 @@
 import axios from 'axios';
 import {
+  authErrorDetectorErrorHandler,
+  authErrorDetectorSuccessHandler,
+} from './interceptors/authErrorDetectorInterceptor';
+import {
   tokenInjectorErrorHandler,
   tokenInjectorInterceptor,
 } from './interceptors/tokenInjectorInterceptor';
@@ -21,7 +25,9 @@ const apiClient = axios.create({
 
 // Registra interceptor de request (injeção de token)
 apiClient.interceptors.request.use(tokenInjectorInterceptor, tokenInjectorErrorHandler);
-
+// Registra detector de erros de autenticação (converte 200 com erro em 401)
+// IMPORTANTE: Deve vir ANTES do tokenRefreshInterceptor para converter erro antes
+apiClient.interceptors.response.use(authErrorDetectorSuccessHandler, authErrorDetectorErrorHandler);
 // Registra interceptor de response (auto-refresh em 401)
 apiClient.interceptors.response.use(tokenRefreshSuccessHandler, tokenRefreshErrorHandler);
 
