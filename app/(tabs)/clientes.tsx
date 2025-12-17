@@ -29,6 +29,16 @@ export default function ClientesScreen() {
     isRefetching,
   } = useClientes();
 
+  // Calcula estatísticas
+  const stats = useMemo(() => {
+    const ativos = allClientes.filter((c) => c.bloqueado === 'nao').length;
+    const bloqueados = allClientes.filter((c) => c.bloqueado === 'sim').length;
+    const pppoe = allClientes.filter((c) => c.tipo === 'pppoe').length;
+    const hotspot = allClientes.filter((c) => c.tipo === 'hotspot').length;
+
+    return { ativos, bloqueados, pppoe, hotspot };
+  }, [allClientes]);
+
   // Filtra clientes baseado na busca E filtro rápido
   const filteredClientes = useMemo(() => {
     let filtered = allClientes;
@@ -152,15 +162,13 @@ export default function ClientesScreen() {
     <View className="flex-1 bg-gray-50">
       {/* Header fixo */}
       <View className="bg-white px-6 pt-12 pb-4 border-b border-gray-200">
-        <View className="flex-row justify-between items-center mb-4">
-          <View>
-            <Text className="text-3xl font-bold text-gray-900">Clientes</Text>
-            <Text className="text-sm text-gray-500 mt-1">
-              {isLoadingAll 
-                ? `Carregando... ${loadedClientes} de ${totalClientes}` 
-                : `${filteredClientes.length} de ${totalClientes}`}
-            </Text>
-          </View>
+        <View className="mb-4">
+          <Text className="text-3xl font-bold text-gray-900">Clientes</Text>
+          <Text className="text-sm text-gray-500 mt-1">
+            {isLoadingAll 
+              ? `Carregando... ${loadedClientes} de ${totalClientes}` 
+              : `${filteredClientes.length} de ${totalClientes}`}
+          </Text>
         </View>
 
         {/* Campo de busca */}
@@ -177,8 +185,8 @@ export default function ClientesScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          className="mt-4"
-          contentContainerStyle={{ paddingRight: 16 }}>
+          className="mt-4 -mx-6"
+          contentContainerStyle={{ paddingHorizontal: 24 }}>
           <TouchableOpacity
             className={`mr-2 px-4 py-2 rounded-full ${
               activeFilter === 'todos'
@@ -248,7 +256,7 @@ export default function ClientesScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`mr-2 px-4 py-2 rounded-full ${
+            className={`px-4 py-2 rounded-full ${
               activeFilter === 'hotspot'
                 ? 'bg-orange-500'
                 : 'bg-gray-200'
@@ -264,6 +272,24 @@ export default function ClientesScreen() {
             </Text>
           </TouchableOpacity>
         </ScrollView>
+
+        {/* Stats Overview - discreto */}
+        {!isLoadingAll && (
+          <View className="flex-row justify-between mt-3 pt-3 border-t border-gray-100">
+            <Text className="text-xs text-gray-500">
+              ✓ {stats.ativos} ativos
+            </Text>
+            <Text className="text-xs text-gray-500">
+              ✕ {stats.bloqueados} bloqueados
+            </Text>
+            <Text className="text-xs text-gray-500">
+              🔐 {stats.pppoe} PPPoE
+            </Text>
+            <Text className="text-xs text-gray-500">
+              🌐 {stats.hotspot} Hotspot
+            </Text>
+          </View>
+        )}
         
         {/* Aviso de carregamento */}
         {isLoadingAll && (
