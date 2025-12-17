@@ -34,14 +34,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const token = await authService.login({ ipMkAuth, clientId, clientSecret });
       
-      // Atualiza cache após login manual
+      // Configura baseURL e cache após login bem-sucedido
       try {
         const apiClientModule = await import('@/services/api/apiClient');
+        if ('setBaseURL' in apiClientModule) {
+          (apiClientModule as any).setBaseURL(ipMkAuth);
+        }
         if ('updateTokenCache' in apiClientModule) {
           (apiClientModule as any).updateTokenCache(token);
         }
       } catch (cacheError) {
-        console.log('⚠️ Não foi possível atualizar cache:', cacheError);
+        console.log('⚠️ Não foi possível configurar API client:', cacheError);
       }
       
       set({
@@ -108,14 +111,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       const ipMkAuth = await authService.getIpMkAuth();
       
       if (token && ipMkAuth) {
-        // Popula cache com token restaurado
+        // Configura baseURL e popula cache ao restaurar sessão
         try {
           const apiClientModule = await import('@/services/api/apiClient');
+          if ('setBaseURL' in apiClientModule) {
+            (apiClientModule as any).setBaseURL(ipMkAuth);
+          }
           if ('updateTokenCache' in apiClientModule) {
             (apiClientModule as any).updateTokenCache(token);
           }
         } catch (cacheError) {
-          console.log('⚠️ Não foi possível atualizar cache:', cacheError);
+          console.log('⚠️ Não foi possível configurar API client:', cacheError);
         }
         
         set({
