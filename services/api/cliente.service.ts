@@ -22,6 +22,8 @@ export interface Cliente {
   cidade: string;
   estado: string;
   cep: string;
+  bloqueado?: string; // "sim" | "nao"
+  cli_ativado?: string; // "s" | "n"
 }
 
 export interface ListarClientesResponse {

@@ -5,14 +5,18 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 
+type FilterType = 'todos' | 'ativos' | 'bloqueados' | 'pppoe' | 'hotspot';
+
 export default function ClientesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<FilterType>('todos');
   const {
     allClientes,
     totalClientes,
@@ -25,23 +29,46 @@ export default function ClientesScreen() {
     isRefetching,
   } = useClientes();
 
-  // Filtra clientes baseado na busca
+  // Filtra clientes baseado na busca E filtro rápido
   const filteredClientes = useMemo(() => {
-    if (!searchQuery.trim()) return allClientes;
-    
-    const query = searchQuery.toLowerCase();
-    return allClientes.filter((cliente) => {
-      if (!cliente) return false;
-      return (
-        cliente.nome?.toLowerCase().includes(query) ||
-        cliente.cpf_cnpj?.toLowerCase().includes(query) ||
-        cliente.email?.toLowerCase().includes(query) ||
-        cliente.login?.toLowerCase().includes(query) ||
-        cliente.endereco?.toLowerCase().includes(query) ||
-        cliente.cidade?.toLowerCase().includes(query)
-      );
-    });
-  }, [allClientes, searchQuery]);
+    let filtered = allClientes;
+
+    // Aplica filtro rápido
+    switch (activeFilter) {
+      case 'ativos':
+        filtered = filtered.filter((c) => c.bloqueado === 'nao');
+        break;
+      case 'bloqueados':
+        filtered = filtered.filter((c) => c.bloqueado === 'sim');
+        break;
+      case 'pppoe':
+        filtered = filtered.filter((c) => c.tipo === 'pppoe');
+        break;
+      case 'hotspot':
+        filtered = filtered.filter((c) => c.tipo === 'hotspot');
+        break;
+      default:
+        break;
+    }
+
+    // Aplica busca textual
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((cliente) => {
+        if (!cliente) return false;
+        return (
+          cliente.nome?.toLowerCase().includes(query) ||
+          cliente.cpf_cnpj?.toLowerCase().includes(query) ||
+          cliente.email?.toLowerCase().includes(query) ||
+          cliente.login?.toLowerCase().includes(query) ||
+          cliente.endereco?.toLowerCase().includes(query) ||
+          cliente.cidade?.toLowerCase().includes(query)
+        );
+      });
+    }
+
+    return filtered;
+  }, [allClientes, searchQuery, activeFilter]);
 
   // Renderiza item da lista
   const renderClienteItem = ({ item }: { item: Cliente }) => {
@@ -131,7 +158,7 @@ export default function ClientesScreen() {
             <Text className="text-sm text-gray-500 mt-1">
               {isLoadingAll 
                 ? `Carregando... ${loadedClientes} de ${totalClientes}` 
-                : `${totalClientes.toLocaleString('pt-BR')} registros`}
+                : `${filteredClientes.length} de ${totalClientes}`}
             </Text>
           </View>
         </View>
@@ -146,6 +173,97 @@ export default function ClientesScreen() {
           autoCorrect={false}
           editable={!isLoadingAll}
         />
+        {/* Filtros rápidos */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="mt-4"
+          contentContainerStyle={{ paddingRight: 16 }}>
+          <TouchableOpacity
+            className={`mr-2 px-4 py-2 rounded-full ${
+              activeFilter === 'todos'
+                ? 'bg-blue-500'
+                : 'bg-gray-200'
+            }`}
+            onPress={() => setActiveFilter('todos')}>
+            <Text
+              className={`text-sm font-medium ${
+                activeFilter === 'todos'
+                  ? 'text-white'
+                  : 'text-gray-700'
+              }`}>
+              Todos
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className={`mr-2 px-4 py-2 rounded-full ${
+              activeFilter === 'ativos'
+                ? 'bg-green-500'
+                : 'bg-gray-200'
+            }`}
+            onPress={() => setActiveFilter('ativos')}>
+            <Text
+              className={`text-sm font-medium ${
+                activeFilter === 'ativos'
+                  ? 'text-white'
+                  : 'text-gray-700'
+              }`}>
+              Ativos
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className={`mr-2 px-4 py-2 rounded-full ${
+              activeFilter === 'bloqueados'
+                ? 'bg-red-500'
+                : 'bg-gray-200'
+            }`}
+            onPress={() => setActiveFilter('bloqueados')}>
+            <Text
+              className={`text-sm font-medium ${
+                activeFilter === 'bloqueados'
+                  ? 'text-white'
+                  : 'text-gray-700'
+              }`}>
+              Bloqueados
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className={`mr-2 px-4 py-2 rounded-full ${
+              activeFilter === 'pppoe'
+                ? 'bg-purple-500'
+                : 'bg-gray-200'
+            }`}
+            onPress={() => setActiveFilter('pppoe')}>
+            <Text
+              className={`text-sm font-medium ${
+                activeFilter === 'pppoe'
+                  ? 'text-white'
+                  : 'text-gray-700'
+              }`}>
+              PPPoE
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className={`mr-2 px-4 py-2 rounded-full ${
+              activeFilter === 'hotspot'
+                ? 'bg-orange-500'
+                : 'bg-gray-200'
+            }`}
+            onPress={() => setActiveFilter('hotspot')}>
+            <Text
+              className={`text-sm font-medium ${
+                activeFilter === 'hotspot'
+                  ? 'text-white'
+                  : 'text-gray-700'
+              }`}>
+              Hotspot
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
         
         {/* Aviso de carregamento */}
         {isLoadingAll && (
