@@ -194,7 +194,7 @@ export default function ClientesScreen() {
           onChangeText={setSearchQuery}
           autoCapitalize="none"
           autoCorrect={false}
-          editable={!isLoadingAll}
+          editable={!isLoading}
         />
         {/* Filtros rápidos */}
         <ScrollView

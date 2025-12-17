@@ -19,8 +19,17 @@ export const useClientes = () => {
 
   // Quando primeira página carregar, dispara resto em paralelo
   useEffect(() => {
+    const abortController = new AbortController();
+    
     const loadRemainingPagesInParallel = async () => {
       if (!firstPageQuery.data || hasLoadedAll.current) return;
+      
+      // Valida se tem dados válidos
+      if (!firstPageQuery.data.clientes || !Array.isArray(firstPageQuery.data.clientes)) {
+        console.warn('⚠️ Dados da primeira página inválidos');
+        setIsDataReady(true);
+        return;
+      }
 
       const totalPages = firstPageQuery.data.total_paginas;
 
@@ -40,23 +49,37 @@ export const useClientes = () => {
           );
 
           const results = await Promise.all(promises);
+          
+          // Verifica se foi abortado
+          if (abortController.signal.aborted) {
+            console.log('❌ Carregamento cancelado (refetch)');
+            return;
+          }
 
           // Combina primeira página com as demais
           const allClientes = [
             ...firstPageQuery.data.clientes,
-            ...results.flatMap((r) => r.clientes),
+            ...results.flatMap((r) => r.clientes || []),
           ];
 
           setAllPagesData(allClientes);
           console.log(`✅ Todas as ${totalPages} páginas carregadas`);
         } catch (error) {
+          // Ignora erro se foi abortado
+          if (abortController.signal.aborted) {
+            console.log('❌ Carregamento cancelado (refetch)');
+            return;
+          }
+          
           console.error('❌ Erro ao carregar páginas 2+:', error);
           console.warn('⚠️ Usando apenas primeira página');
           // Preserva primeira página em vez de perder tudo
           setAllPagesData(firstPageQuery.data.clientes);
         } finally {
-          setIsLoadingAll(false);
-          setIsDataReady(true);
+          if (!abortController.signal.aborted) {
+            setIsLoadingAll(false);
+            setIsDataReady(true);
+          }
         }
       } else {
         // Só tem 1 página
@@ -68,6 +91,11 @@ export const useClientes = () => {
     if (firstPageQuery.isSuccess && !firstPageQuery.isFetching) {
       loadRemainingPagesInParallel();
     }
+    
+    // Cleanup: aborta requests pendentes se componente desmontar ou refetch
+    return () => {
+      abortController.abort();
+    };
   }, [firstPageQuery.data, firstPageQuery.isSuccess, firstPageQuery.isFetching, queryClient]);
 
   // Combina dados de todas as páginas
@@ -94,6 +122,7 @@ export const useClientes = () => {
     refetch: async () => {
       hasLoadedAll.current = false;
       setIsDataReady(false);
+      setIsLoadingAll(false);
       setAllPagesData([]);
       await firstPageQuery.refetch();
     },
