@@ -1,5 +1,12 @@
 import { authService } from '@/services/api/auth.service';
 import { create } from 'zustand';
+import { deleteItemAsync, getItemAsync, setItemAsync } from 'expo-secure-store';
+
+interface LoginCredentials {
+  ipMkAuth: string;
+  clientId: string;
+  clientSecret: string;
+}
 
 interface AuthState {
   token: string | null;
@@ -10,6 +17,7 @@ interface AuthState {
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   updateToken: (token: string, ipMkAuth?: string) => void;
+  getSavedCredentials: () => Promise<LoginCredentials | null>;
 }
 
 // Flag global para prevenir múltiplos logins simultâneos
@@ -33,6 +41,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     
     try {
       const token = await authService.login({ ipMkAuth, clientId, clientSecret });
+      
+      // Salva token e credenciais no SecureStore
+      await setItemAsync('authToken', token);
+      await setItemAsync('ipMkAuth', ipMkAuth);
+      await setItemAsync('clientId', clientId);
+      await setItemAsync('clientSecret', clientSecret);
       
       // Configura baseURL após login bem-sucedido
       try {
@@ -78,7 +92,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       console.log('⚠️ Não foi possível limpar estado da API:', error);
     }
     
-    await authService.logout();
+    // Limpa SecureStore
+    await deleteItemAsync('authToken');
+    await deleteItemAsync('ipMkAuth');
+    await deleteItemAsync('clientId');
+    await deleteItemAsync('clientSecret');
+    
     set({
       token: null,
       ipMkAuth: null,
@@ -88,8 +107,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   checkAuth: async () => {
     try {
-      const token = await authService.getToken();
-      const ipMkAuth = await authService.getIpMkAuth();
+      const token = await getItemAsync('authToken');
+      const ipMkAuth = await getItemAsync('ipMkAuth');
       
       if (token && ipMkAuth) {
         // Configura baseURL ao restaurar sessão
@@ -122,5 +141,17 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: false,
       });
     }
+  },
+
+  getSavedCredentials: async (): Promise<LoginCredentials | null> => {
+    const ipMkAuth = await getItemAsync('ipMkAuth');
+    const clientId = await getItemAsync('clientId');
+    const clientSecret = await getItemAsync('clientSecret');
+    
+    if (!ipMkAuth || !clientId || !clientSecret) {
+      return null;
+    }
+    
+    return { ipMkAuth, clientId, clientSecret };
   },
 }));

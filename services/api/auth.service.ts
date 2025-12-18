@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { deleteItemAsync, getItemAsync, setItemAsync } from 'expo-secure-store';
 
 interface LoginCredentials {
   ipMkAuth: string;
@@ -11,12 +10,20 @@ interface AuthResponse {
   token: string;
 }
 
+/**
+ * Auth Service - Responsável apenas por chamadas HTTP de autenticação
+ * Não gerencia persistência (SecureStore) - isso é responsabilidade do useAuthStore
+ */
 class AuthService {
   private async encodeBase64(str: string): Promise<string> {
     // No React Native, usamos btoa (disponível globalmente)
     return btoa(str);
   }
 
+  /**
+   * Faz login na API usando Basic Auth
+   * @returns Token JWT
+   */
   async login(credentials: LoginCredentials): Promise<string> {
     try {
       const { ipMkAuth, clientId, clientSecret } = credentials;
@@ -52,27 +59,6 @@ class AuthService {
         throw new Error('Token não encontrado na resposta');
       }
       
-      console.log('💾 Salvando token e credenciais:', token.substring(0, 30) + '...');
-      
-      // Salva o token e credenciais - valida se salvou corretamente
-      try {
-        await setItemAsync('authToken', token);
-        await setItemAsync('ipMkAuth', ipMkAuth);
-        await setItemAsync('clientId', clientId);
-        await setItemAsync('clientSecret', clientSecret);
-        
-        // Valida que realmente salvou lendo de volta
-        const savedToken = await getItemAsync('authToken');
-        if (!savedToken) {
-          throw new Error('Falha ao salvar credenciais no SecureStore');
-        }
-        
-        console.log('✅ Credenciais salvas e validadas para auto-refresh');
-      } catch (saveError) {
-        console.error('❌ Erro ao salvar no SecureStore:', saveError);
-        throw new Error('Não foi possível salvar as credenciais de forma segura');
-      }
-      
       return token;
     } catch (error) {
       console.log('❌ Erro completo:', error);
@@ -97,41 +83,6 @@ class AuthService {
       console.log('⚠️ Erro não é do Axios:', error);
       throw new Error(`Erro desconhecido: ${error instanceof Error ? error.message : String(error)}`);
     }
-  }
-
-  async logout(): Promise<void> {
-    await deleteItemAsync('authToken');
-    await deleteItemAsync('ipMkAuth');
-    await deleteItemAsync('clientId');
-    await deleteItemAsync('clientSecret');
-  }
-
-  async getToken(): Promise<string | null> {
-    return await getItemAsync('authToken');
-  }
-
-  async getIpMkAuth(): Promise<string | null> {
-    return await getItemAsync('ipMkAuth');
-  }
-
-  async isAuthenticated(): Promise<boolean> {
-    const token = await this.getToken();
-    return !!token;
-  }
-
-  /**
-   * Verifica se o token expirou (60 minutos)
-   */
-  async getSavedCredentials(): Promise<LoginCredentials | null> {
-    const ipMkAuth = await getItemAsync('ipMkAuth');
-    const clientId = await getItemAsync('clientId');
-    const clientSecret = await getItemAsync('clientSecret');
-    
-    if (!ipMkAuth || !clientId || !clientSecret) {
-      return null;
-    }
-    
-    return { ipMkAuth, clientId, clientSecret };
   }
 }
 

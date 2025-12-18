@@ -8,6 +8,14 @@ jest.mock('../../auth.service', () => ({
   },
 }));
 
+jest.mock('@/stores/useAuthStore', () => ({
+  useAuthStore: {
+    getState: jest.fn(() => ({
+      logout: jest.fn(),
+    })),
+  },
+}));
+
 jest.mock('expo-router', () => ({
   router: {
     replace: jest.fn(),
@@ -15,7 +23,7 @@ jest.mock('expo-router', () => ({
 }));
 
 describe('errorRecoveryHandler', () => {
-  let mockAuthService: any;
+  let mockUseAuthStore: any;
   let mockRouter: any;
 
   beforeEach(async () => {
@@ -23,7 +31,7 @@ describe('errorRecoveryHandler', () => {
     tokenRefreshManager.reset();
 
     // Importa mocks
-    mockAuthService = (await import('../../auth.service')).authService;
+    mockUseAuthStore = (await import('@/stores/useAuthStore')).useAuthStore;
     mockRouter = (await import('expo-router')).router;
   });
 
@@ -34,23 +42,24 @@ describe('errorRecoveryHandler', () => {
       tokenRefreshManager.incrementAttempts();
       expect(tokenRefreshManager.getAttempts()).toBe(2);
 
-      mockAuthService.logout.mockResolvedValue(undefined);
+      mockUseAuthStore.getState.mockReturnValue({ logout: jest.fn().mockResolvedValue(undefined) });
 
       await handleRefreshFailure();
 
       expect(tokenRefreshManager.getAttempts()).toBe(0);
     });
 
-    it('should call authService.logout', async () => {
-      mockAuthService.logout.mockResolvedValue(undefined);
+    it('should call useAuthStore.logout', async () => {
+      const mockLogout = jest.fn().mockResolvedValue(undefined);
+      mockUseAuthStore.getState.mockReturnValue({ logout: mockLogout });
 
       await handleRefreshFailure();
 
-      expect(mockAuthService.logout).toHaveBeenCalledTimes(1);
+      expect(mockLogout).toHaveBeenCalledTimes(1);
     });
 
     it('should redirect to /login after logout', async () => {
-      mockAuthService.logout.mockResolvedValue(undefined);
+      mockUseAuthStore.getState.mockReturnValue({ logout: jest.fn().mockResolvedValue(undefined) });
 
       await handleRefreshFailure();
 
@@ -58,7 +67,7 @@ describe('errorRecoveryHandler', () => {
     });
 
     it('should handle router redirect errors gracefully', async () => {
-      mockAuthService.logout.mockResolvedValue(undefined);
+      mockUseAuthStore.getState.mockReturnValue({ logout: jest.fn().mockResolvedValue(undefined) });
       mockRouter.replace.mockImplementation(() => {
         throw new Error('Router not available');
       });
@@ -67,7 +76,7 @@ describe('errorRecoveryHandler', () => {
 
       await handleRefreshFailure();
 
-      expect(mockAuthService.logout).toHaveBeenCalled();
+      expect(mockUseAuthStore.getState().logout).toHaveBeenCalled();
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('Não foi possível redirecionar'),
         expect.any(Error)
@@ -79,7 +88,9 @@ describe('errorRecoveryHandler', () => {
     it('should complete cleanup even if logout fails', async () => {
       tokenRefreshManager.incrementAttempts();
 
-      mockAuthService.logout.mockRejectedValue(new Error('Logout failed'));
+      mockUseAuthStore.getState.mockReturnValue({ 
+        logout: jest.fn().mockRejectedValue(new Error('Logout failed'))
+      });
 
       await expect(handleRefreshFailure()).rejects.toThrow('Logout failed');
 

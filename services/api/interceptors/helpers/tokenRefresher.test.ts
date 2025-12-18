@@ -4,7 +4,6 @@ import { refreshToken } from './tokenRefresher';
 // Mock dos módulos
 jest.mock('../../auth.service', () => ({
   authService: {
-    getSavedCredentials: jest.fn(),
     login: jest.fn(),
   },
 }));
@@ -13,6 +12,7 @@ jest.mock('@/stores/useAuthStore', () => ({
   useAuthStore: {
     getState: jest.fn(() => ({
       updateToken: jest.fn(),
+      getSavedCredentials: jest.fn(),
     })),
   },
 }));
@@ -32,24 +32,30 @@ describe('tokenRefresher', () => {
 
   describe('refreshToken', () => {
     it('should refresh token successfully and update cache', async () => {
-      const credentials = { ipMkAuth: 'mk.example.com', user: 'testuser', password: 'pass123' };
+      const credentials = { ipMkAuth: 'mk.example.com', clientId: 'test-client', clientSecret: 'test-secret' };
       const newToken = 'new-jwt-token-abc123';
 
-      mockAuthService.getSavedCredentials.mockResolvedValue(credentials);
+      mockUseAuthStore.getState.mockReturnValue({
+        updateToken: jest.fn(),
+        getSavedCredentials: jest.fn().mockResolvedValue(credentials),
+      });
       mockAuthService.login.mockResolvedValue(newToken);
 
       const result = await refreshToken();
 
       expect(result).toBe(newToken);
-      expect(mockAuthService.getSavedCredentials).toHaveBeenCalledTimes(1);
+      expect(mockUseAuthStore.getState().getSavedCredentials).toHaveBeenCalledTimes(1);
       expect(mockAuthService.login).toHaveBeenCalledWith(credentials);
     });
 
     it('should reset attempts counter after successful refresh', async () => {
-      const credentials = { ipMkAuth: 'mk.example.com', user: 'testuser', password: 'pass123' };
+      const credentials = { ipMkAuth: 'mk.example.com', clientId: 'test-client', clientSecret: 'test-secret' };
       const newToken = 'new-jwt-token-abc123';
 
-      mockAuthService.getSavedCredentials.mockResolvedValue(credentials);
+      mockUseAuthStore.getState.mockReturnValue({
+        updateToken: jest.fn(),
+        getSavedCredentials: jest.fn().mockResolvedValue(credentials),
+      });
       mockAuthService.login.mockResolvedValue(newToken);
 
       // Simula tentativas anteriores
@@ -63,13 +69,15 @@ describe('tokenRefresher', () => {
     });
 
     it('should update Zustand store with new token', async () => {
-      const credentials = { ipMkAuth: 'mk.example.com', user: 'testuser', password: 'pass123' };
+      const credentials = { ipMkAuth: 'mk.example.com', clientId: 'test-client', clientSecret: 'test-secret' };
       const newToken = 'new-jwt-token-abc123';
       const mockUpdateToken = jest.fn();
 
-      mockAuthService.getSavedCredentials.mockResolvedValue(credentials);
+      mockUseAuthStore.getState.mockReturnValue({ 
+        updateToken: mockUpdateToken,
+        getSavedCredentials: jest.fn().mockResolvedValue(credentials),
+      });
       mockAuthService.login.mockResolvedValue(newToken);
-      mockUseAuthStore.getState.mockReturnValue({ updateToken: mockUpdateToken });
 
       await refreshToken();
 
@@ -77,7 +85,10 @@ describe('tokenRefresher', () => {
     });
 
     it('should throw error when credentials are not found', async () => {
-      mockAuthService.getSavedCredentials.mockResolvedValue(null);
+      mockUseAuthStore.getState.mockReturnValue({
+        updateToken: jest.fn(),
+        getSavedCredentials: jest.fn().mockResolvedValue(null),
+      });
 
       await expect(refreshToken()).rejects.toThrow('Credenciais não salvas');
 
@@ -85,23 +96,39 @@ describe('tokenRefresher', () => {
     });
 
     it('should propagate login errors', async () => {
-      const credentials = { ipMkAuth: 'mk.example.com', user: 'testuser', password: 'wrongpass' };
+      const credentials = { ipMkAuth: 'mk.example.com', clientId: 'test-client', clientSecret: 'wrong-secret' };
 
-      mockAuthService.getSavedCredentials.mockResolvedValue(credentials);
+      mockUseAuthStore.getState.mockReturnValue({
+        updateToken: jest.fn(),
+        getSavedCredentials: jest.fn().mockResolvedValue(credentials),
+      });
       mockAuthService.login.mockRejectedValue(new Error('Invalid credentials'));
 
       await expect(refreshToken()).rejects.toThrow('Invalid credentials');
     });
 
     it('should continue even if Zustand store update fails', async () => {
-      const credentials = { ipMkAuth: 'mk.example.com', user: 'testuser', password: 'pass123' };
+      const credentials = { ipMkAuth: 'mk.example.com', clientId: 'test-client', clientSecret: 'test-secret' };
       const newToken = 'new-jwt-token-abc123';
 
-      mockAuthService.getSavedCredentials.mockResolvedValue(credentials);
-      mockAuthService.login.mockResolvedValue(newToken);
+      // Primeira chamada: retorna credenciais normalmente
+      // Segunda chamada: falha ao tentar atualizar
+      let callCount = 0;
       mockUseAuthStore.getState.mockImplementation(() => {
-        throw new Error('Store error');
+        callCount++;
+        if (callCount === 1) {
+          // Primeira chamada (getSavedCredentials)
+          return {
+            updateToken: jest.fn(),
+            getSavedCredentials: jest.fn().mockResolvedValue(credentials),
+          };
+        } else {
+          // Segunda chamada (updateToken) - lança erro
+          throw new Error('Store error');
+        }
       });
+      
+      mockAuthService.login.mockResolvedValue(newToken);
 
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 

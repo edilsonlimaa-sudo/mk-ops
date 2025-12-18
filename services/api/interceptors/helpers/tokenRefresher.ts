@@ -2,23 +2,24 @@ import { tokenRefreshManager } from '../../token/tokenRefreshManager';
 
 /**
  * Realiza refresh do token JWT
- * - Busca credenciais salvas
+ * - Busca credenciais salvas do store
  * - Faz login novamente
- * - Atualiza cache e Zustand store
+ * - Atualiza Zustand store
  * - Reseta contador de tentativas
  */
 export const refreshToken = async (): Promise<string> => {
-  // Importa authService dinamicamente para evitar circular dependency
+  // Importa useAuthStore dinamicamente para evitar circular dependency
+  const { useAuthStore } = await import('@/stores/useAuthStore');
   const { authService } = await import('../../auth.service');
 
-  // Recupera credenciais salvas
-  const credentials = await authService.getSavedCredentials();
+  // Recupera credenciais salvas do store
+  const credentials = await useAuthStore.getState().getSavedCredentials();
   if (!credentials) {
     console.log('❌ Credenciais não encontradas, redirecionando para login');
     throw new Error('Credenciais não salvas');
   }
 
-  // Re-loga usando credenciais salvas
+  // Re-loga usando credenciais salvas (apenas chamada HTTP)
   const newToken = await authService.login(credentials);
   console.log('✅ Token renovado automaticamente!');
 

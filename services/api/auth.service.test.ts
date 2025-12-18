@@ -1,27 +1,30 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
 import { authService } from './auth.service';
 
 // Mock modules
-jest.mock('expo-secure-store');
 jest.mock('axios');
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
+// Helper para criar AxiosError corretamente
+const createAxiosError = (props: any) => {
+  const error: any = new Error(props.message || 'Axios error');
+  error.isAxiosError = true;
+  error.config = {};
+  error.toJSON = () => ({});
+  Object.assign(error, props);
+  return error;
+};
+
 describe('authService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Mock SecureStore setItemAsync para retornar sucesso
-    (SecureStore.setItemAsync as jest.Mock).mockResolvedValue(undefined);
-    // Mock getItemAsync para validação interna do authService
-    (SecureStore.getItemAsync as jest.Mock).mockImplementation((key: string) => {
-      if (key === 'authToken') return Promise.resolve('jwt-token-response');
-      return Promise.resolve(null);
-    });
+    // Mock axios.isAxiosError para detectar nossos erros customizados
+    (axios.isAxiosError as any) = jest.fn((error: any) => error?.isAxiosError === true);
   });
 
   describe('login()', () => {
-    it('deve fazer login com credenciais válidas', async () => {
+    it('deve fazer login com credenciais válidas e retornar token', async () => {
       const credentials = {
         ipMkAuth: 'api.example.com',
         clientId: 'test-client',
@@ -43,14 +46,10 @@ describe('authService', () => {
           },
         })
       );
-      expect(SecureStore.setItemAsync).toHaveBeenCalledWith('authToken', 'jwt-token-response');
-      expect(SecureStore.setItemAsync).toHaveBeenCalledWith('ipMkAuth', 'api.example.com');
-      expect(SecureStore.setItemAsync).toHaveBeenCalledWith('clientId', 'test-client');
-      expect(SecureStore.setItemAsync).toHaveBeenCalledWith('clientSecret', 'test-secret');
       expect(token).toBe('jwt-token-response');
     });
 
-    it('deve validar que token retornado é string', async () => {
+    it('deve extrair token de objeto de resposta', async () => {
       const credentials = {
         ipMkAuth: 'api.example.com',
         clientId: 'client',
@@ -58,18 +57,60 @@ describe('authService', () => {
       };
 
       mockedAxios.get.mockResolvedValue({
-        data: { token: 'object-instead-of-string' },
+        data: { token: 'jwt-from-object' },
         status: 200,
       });
 
-      // Mock SecureStore para rejeitar quando receber não-string
-      (SecureStore.setItemAsync as jest.Mock).mockRejectedValueOnce(
-        new Error('Invalid value provided to SecureStore')
-      );
+      const token = await authService.login(credentials);
+
+      expect(token).toBe('jwt-from-object');
+    });
+
+    it('deve lançar erro quando token não está na resposta', async () => {
+      const credentials = {
+        ipMkAuth: 'api.example.com',
+        clientId: 'client',
+        clientSecret: 'secret',
+      };
+
+      mockedAxios.get.mockResolvedValue({
+        data: {},
+        status: 200,
+      });
 
       await expect(authService.login(credentials)).rejects.toThrow(
-        'Não foi possível salvar as credenciais de forma segura'
+        'Token não encontrado na resposta'
       );
+    });
+
+    it('deve lançar erro específico para 401', async () => {
+      const credentials = {
+        ipMkAuth: 'api.example.com',
+        clientId: 'client',
+        clientSecret: 'wrong-secret',
+      };
+
+      mockedAxios.get.mockRejectedValue(createAxiosError({
+        response: { status: 401 },
+        message: 'Request failed with status code 401',
+      }));
+
+      await expect(authService.login(credentials)).rejects.toThrow('Credenciais inválidas');
+    });
+
+    it('deve lançar erro específico para timeout', async () => {
+      const credentials = {
+        ipMkAuth: 'api.example.com',
+        clientId: 'client',
+        clientSecret: 'secret',
+      };
+
+      mockedAxios.get.mockRejectedValue(createAxiosError({
+        code: 'ECONNABORTED',
+        message: 'timeout of 10000ms exceeded',
+      }));
+
+      await expect(authService.login(credentials)).rejects.toThrow('Timeout: servidor não respondeu');
     });
 
     it('deve propagar erro de rede', async () => {
@@ -79,7 +120,9 @@ describe('authService', () => {
         clientSecret: 'secret',
       };
 
-      mockedAxios.get.mockRejectedValue(new Error('Network Error'));
+      mockedAxios.get.mockRejectedValue(createAxiosError({
+        message: 'Network Error',
+      }));
 
       await expect(authService.login(credentials)).rejects.toThrow('Network Error');
     });
@@ -104,92 +147,6 @@ describe('authService', () => {
           },
         })
       );
-    });
-  });
-
-  describe('logout()', () => {
-    it('deve deletar todas as chaves do SecureStore', async () => {
-      await authService.logout();
-
-      expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('authToken');
-      expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('ipMkAuth');
-      expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('clientId');
-      expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('clientSecret');
-      expect(SecureStore.deleteItemAsync).toHaveBeenCalledTimes(4);
-    });
-  });
-
-  describe('getSavedCredentials()', () => {
-    it('deve retornar credenciais salvas quando todas existem', async () => {
-      (SecureStore.getItemAsync as jest.Mock)
-        .mockResolvedValueOnce('https://saved.com') // ipMkAuth
-        .mockResolvedValueOnce('saved-client') // clientId
-        .mockResolvedValueOnce('saved-secret'); // clientSecret
-
-      const credentials = await authService.getSavedCredentials();
-
-      expect(credentials).toEqual({
-        ipMkAuth: 'https://saved.com',
-        clientId: 'saved-client',
-        clientSecret: 'saved-secret',
-      });
-    });
-
-    it('deve retornar null quando falta credencial', async () => {
-      (SecureStore.getItemAsync as jest.Mock)
-        .mockResolvedValueOnce('https://saved.com') // ipMkAuth
-        .mockResolvedValueOnce(null) // clientId - missing
-        .mockResolvedValueOnce('saved-secret'); // clientSecret
-
-      const credentials = await authService.getSavedCredentials();
-
-      expect(credentials).toBeNull();
-    });
-
-    it('deve retornar null quando nenhuma credencial existe', async () => {
-      (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
-
-      const credentials = await authService.getSavedCredentials();
-
-      expect(credentials).toBeNull();
-    });
-  });
-
-  describe('getToken()', () => {
-    it('deve retornar token quando existe', async () => {
-      (SecureStore.getItemAsync as jest.Mock).mockResolvedValue('my-jwt-token');
-
-      const token = await authService.getToken();
-
-      expect(token).toBe('my-jwt-token');
-      expect(SecureStore.getItemAsync).toHaveBeenCalledWith('authToken');
-    });
-
-    it('deve retornar null quando token não existe', async () => {
-      (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
-
-      const token = await authService.getToken();
-
-      expect(token).toBeNull();
-    });
-  });
-
-  describe('getIpMkAuth()', () => {
-    it('deve retornar ipMkAuth quando existe', async () => {
-      (SecureStore.getItemAsync as jest.Mock).mockResolvedValue('https://my-server.com');
-
-      const ip = await authService.getIpMkAuth();
-
-      expect(ip).toBe('https://my-server.com');
-      expect(SecureStore.getItemAsync).toHaveBeenCalledWith('ipMkAuth');
-    });
-
-    it('deve retornar null quando ipMkAuth não existe', async () => {
-      (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
-
-      const ip = await authService.getIpMkAuth();
-
-      expect(ip).toBeNull();
     });
   });
 });
