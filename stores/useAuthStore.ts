@@ -16,12 +16,8 @@ interface AuthState {
   login: (ipMkAuth: string, clientId: string, clientSecret: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
-  updateToken: (token: string, ipMkAuth?: string) => void;
   getSavedCredentials: () => Promise<LoginCredentials | null>;
 }
-
-// Flag global para prevenir múltiplos logins simultâneos
-let isLoggingIn = false;
 
 export const useAuthStore = create<AuthState>((set) => ({
   token: null,
@@ -30,13 +26,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: false,
 
   login: async (ipMkAuth: string, clientId: string, clientSecret: string) => {
-    // Previne múltiplos logins simultâneos (debounce)
-    if (isLoggingIn) {
-      console.log('⏳ Login já em andamento, ignorando...');
-      return;
-    }
-    
-    isLoggingIn = true;
     set({ isLoading: true });
     
     try {
@@ -67,17 +56,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       set({ isLoading: false });
       throw error;
-    } finally {
-      isLoggingIn = false;
-    }
-  },
-
-  updateToken: (token: string, ipMkAuth?: string) => {
-    // Atualiza Zustand (ipMkAuth opcional para quando credenciais mudam)
-    if (ipMkAuth) {
-      set({ token, ipMkAuth });
-    } else {
-      set({ token });
     }
   },
 
