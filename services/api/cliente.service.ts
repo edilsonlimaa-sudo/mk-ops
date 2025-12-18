@@ -1,7 +1,6 @@
 import apiClient from './apiClient';
 
-// Constantes
-export const CLIENTES_PAGE_SIZE = 500;
+export const CLIENTS_PAGE_SIZE = 500;
 
 export interface Cliente {
   uuid: string;
@@ -25,11 +24,11 @@ export interface Cliente {
   cidade: string;
   estado: string;
   cep: string;
-  bloqueado?: string; // "sim" | "nao"
-  cli_ativado?: string; // "s" | "n"
+  bloqueado?: string;
+  cli_ativado?: string;
 }
 
-export interface ListarClientesResponse {
+export interface ListClientsResponse {
   total_registros: number;
   consulta_atual: number;
   pagina_atual: number;
@@ -37,29 +36,36 @@ export interface ListarClientesResponse {
   clientes: Cliente[];
 }
 
-/**
- * Busca lista de clientes com paginação
- * @param page Número da página (1-based)
- * @param limite Quantidade de registros por página (padrão: 200)
- */
-export const listarClientes = async (
+const listClients = async (
   page: number = 1,
-  limite: number = 200
-): Promise<ListarClientesResponse> => {
-  const response = await apiClient.get<ListarClientesResponse>(
-    `/api/cliente/listar/limite=${limite}&pagina=${page}`
+  limit: number = CLIENTS_PAGE_SIZE
+): Promise<ListClientsResponse> => {
+  const response = await apiClient.get<ListClientsResponse>(
+    `/api/cliente/listar/limite=${limit}&pagina=${page}`
   );
-  
-  console.log(`📡 GET /api/cliente/listar - Página ${page}/${response.data.total_paginas} - ${response.data.clientes.length} clientes`);
-  
   return response.data;
 };
 
-/**
- * Busca detalhes de um cliente específico
- * @param id ID do cliente
- */
-export const buscarCliente = async (id: number): Promise<Cliente> => {
+export const listAllClients = async (): Promise<Cliente[]> => {
+  const firstPage = await listClients(1);
+  
+  if (firstPage.total_paginas === 1) {
+    return firstPage.clientes.sort((a, b) => a.nome.localeCompare(b.nome));
+  }
+  
+  const remainingPages = await Promise.all(
+    Array.from({ length: firstPage.total_paginas - 1 }, (_, i) => 
+      listClients(i + 2)
+    )
+  );
+  
+  return [
+    ...firstPage.clientes,
+    ...remainingPages.flatMap(p => p.clientes)
+  ].sort((a, b) => a.nome.localeCompare(b.nome));
+};
+
+export const getClient = async (id: number): Promise<Cliente> => {
   const response = await apiClient.get<Cliente>(`/api/cliente/show/${id}`);
   return response.data;
 };
