@@ -83,46 +83,52 @@ describe('authService', () => {
       );
     });
 
-    it('deve lançar erro específico para 401', async () => {
+    it('deve propagar AxiosError para 401', async () => {
       const credentials = {
         ipMkAuth: 'api.example.com',
         clientId: 'client',
         clientSecret: 'wrong-secret',
       };
 
-      mockedAxios.get.mockRejectedValue(createAxiosError({
+      const axiosError = createAxiosError({
         response: { status: 401 },
         message: 'Request failed with status code 401',
-      }));
+      });
 
-      await expect(authService.login(credentials)).rejects.toThrow('Credenciais inválidas');
+      mockedAxios.get.mockRejectedValue(axiosError);
+
+      await expect(authService.login(credentials)).rejects.toThrow('Request failed with status code 401');
     });
 
-    it('deve lançar erro específico para timeout', async () => {
+    it('deve propagar AxiosError para timeout', async () => {
       const credentials = {
         ipMkAuth: 'api.example.com',
         clientId: 'client',
         clientSecret: 'secret',
       };
 
-      mockedAxios.get.mockRejectedValue(createAxiosError({
+      const axiosError = createAxiosError({
         code: 'ECONNABORTED',
         message: 'timeout of 10000ms exceeded',
-      }));
+      });
 
-      await expect(authService.login(credentials)).rejects.toThrow('Timeout: servidor não respondeu');
+      mockedAxios.get.mockRejectedValue(axiosError);
+
+      await expect(authService.login(credentials)).rejects.toThrow('timeout of 10000ms exceeded');
     });
 
-    it('deve propagar erro de rede', async () => {
+    it('deve propagar AxiosError de rede', async () => {
       const credentials = {
         ipMkAuth: 'api.example.com',
         clientId: 'client',
         clientSecret: 'secret',
       };
 
-      mockedAxios.get.mockRejectedValue(createAxiosError({
+      const axiosError = createAxiosError({
         message: 'Network Error',
-      }));
+      });
+
+      mockedAxios.get.mockRejectedValue(axiosError);
 
       await expect(authService.login(credentials)).rejects.toThrow('Network Error');
     });
