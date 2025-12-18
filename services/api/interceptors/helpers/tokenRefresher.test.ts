@@ -1,4 +1,3 @@
-import { tokenCache } from '../../token/tokenCache';
 import { tokenRefreshManager } from '../../token/tokenRefreshManager';
 import { refreshToken } from './tokenRefresher';
 
@@ -24,7 +23,6 @@ describe('tokenRefresher', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    tokenCache.clear();
     tokenRefreshManager.reset();
 
     // Importa mocks
@@ -45,7 +43,6 @@ describe('tokenRefresher', () => {
       expect(result).toBe(newToken);
       expect(mockAuthService.getSavedCredentials).toHaveBeenCalledTimes(1);
       expect(mockAuthService.login).toHaveBeenCalledWith(credentials);
-      expect(tokenCache.get()).toBe(newToken);
     });
 
     it('should reset attempts counter after successful refresh', async () => {
@@ -85,7 +82,6 @@ describe('tokenRefresher', () => {
       await expect(refreshToken()).rejects.toThrow('Credenciais não salvas');
 
       expect(mockAuthService.login).not.toHaveBeenCalled();
-      expect(tokenCache.get()).toBeNull();
     });
 
     it('should propagate login errors', async () => {
@@ -95,8 +91,6 @@ describe('tokenRefresher', () => {
       mockAuthService.login.mockRejectedValue(new Error('Invalid credentials'));
 
       await expect(refreshToken()).rejects.toThrow('Invalid credentials');
-
-      expect(tokenCache.get()).toBeNull();
     });
 
     it('should continue even if Zustand store update fails', async () => {
@@ -114,7 +108,6 @@ describe('tokenRefresher', () => {
       const result = await refreshToken();
 
       expect(result).toBe(newToken);
-      expect(tokenCache.get()).toBe(newToken);
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('Não foi possível atualizar Zustand store'),
         expect.any(Error)

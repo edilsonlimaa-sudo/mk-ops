@@ -1,4 +1,3 @@
-import { tokenCache } from '../../token/tokenCache';
 import { tokenRefreshManager } from '../../token/tokenRefreshManager';
 import { handleRefreshFailure } from './errorRecoveryHandler';
 
@@ -21,7 +20,6 @@ describe('errorRecoveryHandler', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    tokenCache.clear();
     tokenRefreshManager.reset();
 
     // Importa mocks
@@ -30,18 +28,6 @@ describe('errorRecoveryHandler', () => {
   });
 
   describe('handleRefreshFailure', () => {
-    it('should clear token cache', async () => {
-      // Popula cache primeiro
-      tokenCache.set('old-token-123');
-      expect(tokenCache.get()).toBe('old-token-123');
-
-      mockAuthService.logout.mockResolvedValue(undefined);
-
-      await handleRefreshFailure();
-
-      expect(tokenCache.get()).toBeNull();
-    });
-
     it('should reset refresh attempts counter', async () => {
       // Simula tentativas anteriores
       tokenRefreshManager.incrementAttempts();
@@ -91,15 +77,13 @@ describe('errorRecoveryHandler', () => {
     });
 
     it('should complete cleanup even if logout fails', async () => {
-      tokenCache.set('old-token-123');
       tokenRefreshManager.incrementAttempts();
 
       mockAuthService.logout.mockRejectedValue(new Error('Logout failed'));
 
       await expect(handleRefreshFailure()).rejects.toThrow('Logout failed');
 
-      // Verifica que cache foi limpo mesmo com erro
-      expect(tokenCache.get()).toBeNull();
+      // Verifica que tentativas foram resetadas mesmo com erro
       expect(tokenRefreshManager.getAttempts()).toBe(0);
     });
   });

@@ -1,4 +1,3 @@
-import { tokenCache } from '../../token/tokenCache';
 import { tokenRefreshManager } from '../../token/tokenRefreshManager';
 
 /**
@@ -22,9 +21,6 @@ export const refreshToken = async (): Promise<string> => {
   // Re-loga usando credenciais salvas
   const newToken = await authService.login(credentials);
   console.log('✅ Token renovado automaticamente!');
-
-  // Atualiza cache de token em memória
-  tokenCache.set(newToken);
 
   // Reset contador de tentativas após sucesso
   tokenRefreshManager.resetAttempts();

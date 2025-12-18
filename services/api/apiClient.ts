@@ -11,7 +11,6 @@ import {
   tokenRefreshErrorHandler,
   tokenRefreshSuccessHandler,
 } from './interceptors/tokenRefreshInterceptor';
-import { tokenCache } from './token/tokenCache';
 import { tokenRefreshManager } from './token/tokenRefreshManager';
 
 /**
@@ -50,21 +49,12 @@ export const clearBaseURL = () => {
 };
 
 /**
- * Limpa cache de token e reseta estado de refresh
+ * Limpa estado de refresh e baseURL
  * Usado pelo logout para garantir limpeza completa
  */
-export const clearTokenCache = () => {
-  tokenCache.clear();
+export const clearApiState = () => {
   tokenRefreshManager.reset();
   clearBaseURL();
-};
-
-/**
- * Atualiza token no cache
- * Usado pelo login e checkAuth para popular cache
- */
-export const updateTokenCache = (token: string | null) => {
-  tokenCache.set(token);
 };
 
 export default apiClient;

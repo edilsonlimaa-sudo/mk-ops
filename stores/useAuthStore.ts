@@ -34,17 +34,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const token = await authService.login({ ipMkAuth, clientId, clientSecret });
       
-      // Configura baseURL e cache após login bem-sucedido
+      // Configura baseURL após login bem-sucedido
       try {
         const apiClientModule = await import('@/services/api/apiClient');
         if ('setBaseURL' in apiClientModule) {
           (apiClientModule as any).setBaseURL(ipMkAuth);
         }
-        if ('updateTokenCache' in apiClientModule) {
-          (apiClientModule as any).updateTokenCache(token);
-        }
-      } catch (cacheError) {
-        console.log('⚠️ Não foi possível configurar API client:', cacheError);
+      } catch (error) {
+        console.log('⚠️ Não foi possível configurar API client:', error);
       }
       
       set({
@@ -62,17 +59,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   updateToken: (token: string, ipMkAuth?: string) => {
-    // Atualiza cache quando token muda
-    try {
-      import('@/services/api/apiClient').then((apiClientModule) => {
-        if ('updateTokenCache' in apiClientModule) {
-          (apiClientModule as any).updateTokenCache(token);
-        }
-      });
-    } catch (error) {
-      console.log('⚠️ Não foi possível atualizar cache:', error);
-    }
-    
     // Atualiza Zustand (ipMkAuth opcional para quando credenciais mudam)
     if (ipMkAuth) {
       set({ token, ipMkAuth });
@@ -82,19 +68,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    // Aguarda refresh terminar antes de fazer logout (previne race condition)
-    const maxWait = 5000; // 5 segundos
-    const startTime = Date.now();
-    
-    // Checa se existe isRefreshing exportado do apiClient
+    // Limpa estado do API client
     try {
       const apiClientModule = await import('@/services/api/apiClient');
-      if ('clearTokenCache' in apiClientModule) {
-        // Limpa cache de token antes do logout
-        (apiClientModule as any).clearTokenCache();
+      if ('clearApiState' in apiClientModule) {
+        (apiClientModule as any).clearApiState();
       }
     } catch (error) {
-      console.log('⚠️ Não foi possível limpar cache:', error);
+      console.log('⚠️ Não foi possível limpar estado da API:', error);
     }
     
     await authService.logout();
@@ -111,17 +92,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       const ipMkAuth = await authService.getIpMkAuth();
       
       if (token && ipMkAuth) {
-        // Configura baseURL e popula cache ao restaurar sessão
+        // Configura baseURL ao restaurar sessão
         try {
           const apiClientModule = await import('@/services/api/apiClient');
           if ('setBaseURL' in apiClientModule) {
             (apiClientModule as any).setBaseURL(ipMkAuth);
           }
-          if ('updateTokenCache' in apiClientModule) {
-            (apiClientModule as any).updateTokenCache(token);
-          }
-        } catch (cacheError) {
-          console.log('⚠️ Não foi possível configurar API client:', cacheError);
+        } catch (error) {
+          console.log('⚠️ Não foi possível configurar API client:', error);
         }
         
         set({

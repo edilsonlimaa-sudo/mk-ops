@@ -1,16 +1,11 @@
-import { tokenCache } from '../../token/tokenCache';
 import { tokenRefreshManager } from '../../token/tokenRefreshManager';
 
 /**
  * Faz logout e redireciona para login quando refresh falha
- * - Limpa cache
- * - Faz logout no authService
+ * - Faz logout no authService (que limpa o store)
  * - Redireciona para /login
  */
 export const handleRefreshFailure = async (): Promise<void> => {
-  // Limpa cache de token
-  tokenCache.clear();
-
   // Importa authService dinamicamente
   const { authService } = await import('../../auth.service');
 
