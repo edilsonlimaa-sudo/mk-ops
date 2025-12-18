@@ -28,7 +28,7 @@ export interface Cliente {
   cli_ativado?: string;
 }
 
-export interface ListClientsResponse {
+interface ListClientsResponse {
   total_registros: number;
   consulta_atual: number;
   pagina_atual: number;
