@@ -28,16 +28,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       // Salva token e credenciais via authStorage
       await authStorage.saveCredentials({ ipMkAuth, clientId, clientSecret }, token);
       
-      // Configura baseURL após login bem-sucedido
-      try {
-        const apiClientModule = await import('@/services/api/apiClient');
-        if ('setBaseURL' in apiClientModule) {
-          (apiClientModule as any).setBaseURL(ipMkAuth);
-        }
-      } catch (error) {
-        console.log('⚠️ Não foi possível configurar API client:', error);
-      }
-      
+      // Atualiza estado (apiClient se auto-configura via subscription)
       set({
         token,
         ipMkAuth,
@@ -51,19 +42,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    // Limpa estado do API client
-    try {
-      const apiClientModule = await import('@/services/api/apiClient');
-      if ('clearApiState' in apiClientModule) {
-        (apiClientModule as any).clearApiState();
-      }
-    } catch (error) {
-      console.log('⚠️ Não foi possível limpar estado da API:', error);
-    }
-    
     // Limpa storage via authStorage
     await authStorage.clearAll();
     
+    // Limpa estado (apiClient se auto-limpa via subscription)
     set({
       token: null,
       ipMkAuth: null,
@@ -76,16 +58,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const session = await authStorage.getSession();
       
       if (session) {
-        // Configura baseURL ao restaurar sessão
-        try {
-          const apiClientModule = await import('@/services/api/apiClient');
-          if ('setBaseURL' in apiClientModule) {
-            (apiClientModule as any).setBaseURL(session.ipMkAuth);
-          }
-        } catch (error) {
-          console.log('⚠️ Não foi possível configurar API client:', error);
-        }
-        
+        // Atualiza estado (apiClient se auto-configura via subscription)
         set({
           token: session.token,
           ipMkAuth: session.ipMkAuth,

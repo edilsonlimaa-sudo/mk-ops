@@ -57,4 +57,26 @@ export const clearApiState = () => {
   clearBaseURL();
 };
 
+/**
+ * Auto-configura apiClient quando ipMkAuth muda no authStore
+ * Usa Zustand subscription para reagir a mudanças de estado (Observer Pattern)
+ */
+const initializeApiClientSync = async () => {
+  const { useAuthStore } = await import('@/stores/useAuthStore');
+  
+  useAuthStore.subscribe((state) => {
+    if (state.ipMkAuth) {
+      apiClient.defaults.baseURL = `https://${state.ipMkAuth}`;
+      console.log('🌐 BaseURL auto-configurado:', apiClient.defaults.baseURL);
+    } else {
+      apiClient.defaults.baseURL = undefined;
+      tokenRefreshManager.reset();
+      console.log('🌐 BaseURL limpo');
+    }
+  });
+};
+
+// Inicializa sincronização automática
+initializeApiClientSync();
+
 export default apiClient;
