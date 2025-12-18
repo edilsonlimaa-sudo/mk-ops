@@ -1,12 +1,6 @@
 import { authService } from '@/services/api/auth.service';
+import { authStorage, type LoginCredentials } from '@/services/storage/authStorage';
 import { create } from 'zustand';
-import { deleteItemAsync, getItemAsync, setItemAsync } from 'expo-secure-store';
-
-interface LoginCredentials {
-  ipMkAuth: string;
-  clientId: string;
-  clientSecret: string;
-}
 
 interface AuthState {
   token: string | null;
@@ -31,11 +25,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const token = await authService.login({ ipMkAuth, clientId, clientSecret });
       
-      // Salva token e credenciais no SecureStore
-      await setItemAsync('authToken', token);
-      await setItemAsync('ipMkAuth', ipMkAuth);
-      await setItemAsync('clientId', clientId);
-      await setItemAsync('clientSecret', clientSecret);
+      // Salva token e credenciais via authStorage
+      await authStorage.saveCredentials({ ipMkAuth, clientId, clientSecret }, token);
       
       // Configura baseURL após login bem-sucedido
       try {
@@ -70,11 +61,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       console.log('⚠️ Não foi possível limpar estado da API:', error);
     }
     
-    // Limpa SecureStore
-    await deleteItemAsync('authToken');
-    await deleteItemAsync('ipMkAuth');
-    await deleteItemAsync('clientId');
-    await deleteItemAsync('clientSecret');
+    // Limpa storage via authStorage
+    await authStorage.clearAll();
     
     set({
       token: null,
@@ -85,23 +73,22 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   checkAuth: async () => {
     try {
-      const token = await getItemAsync('authToken');
-      const ipMkAuth = await getItemAsync('ipMkAuth');
+      const session = await authStorage.getSession();
       
-      if (token && ipMkAuth) {
+      if (session) {
         // Configura baseURL ao restaurar sessão
         try {
           const apiClientModule = await import('@/services/api/apiClient');
           if ('setBaseURL' in apiClientModule) {
-            (apiClientModule as any).setBaseURL(ipMkAuth);
+            (apiClientModule as any).setBaseURL(session.ipMkAuth);
           }
         } catch (error) {
           console.log('⚠️ Não foi possível configurar API client:', error);
         }
         
         set({
-          token,
-          ipMkAuth,
+          token: session.token,
+          ipMkAuth: session.ipMkAuth,
           isAuthenticated: true,
         });
       } else {
@@ -122,14 +109,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   getSavedCredentials: async (): Promise<LoginCredentials | null> => {
-    const ipMkAuth = await getItemAsync('ipMkAuth');
-    const clientId = await getItemAsync('clientId');
-    const clientSecret = await getItemAsync('clientSecret');
-    
-    if (!ipMkAuth || !clientId || !clientSecret) {
-      return null;
-    }
-    
-    return { ipMkAuth, clientId, clientSecret };
+    return await authStorage.getCredentials();
   },
 }));
