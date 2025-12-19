@@ -1,6 +1,7 @@
-import { useAuthStore } from '@/stores/useAuthStore';
 import { useProactiveTokenRefresh } from '@/hooks/useProactiveTokenRefresh';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { asyncStoragePersister, queryClient } from '@/lib/queryClient';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -10,16 +11,6 @@ import '../global.css';
 
 // Mantém splash screen visível até verificar autenticação
 SplashScreen.preventAutoHideAsync();
-
-// Configuração do React Query
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 2,
-      staleTime: 1000 * 60 * 5, // 5 minutos
-    },
-  },
-});
 
 export default function RootLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -59,7 +50,10 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister: asyncStoragePersister }}
+    >
       <Stack screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
           <Stack.Screen name="(app)" />
@@ -68,6 +62,6 @@ export default function RootLayout() {
         )}
       </Stack>
       <StatusBar style="auto" />
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }
