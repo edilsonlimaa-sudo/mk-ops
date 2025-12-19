@@ -1,4 +1,5 @@
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useProactiveTokenRefresh } from '@/hooks/useProactiveTokenRefresh';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -24,6 +25,9 @@ export default function RootLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const [appIsReady, setAppIsReady] = useState(false);
+
+  // CAMADA 2: Refresh proativo ao voltar do background
+  useProactiveTokenRefresh();
 
   // Restaura sessão ao abrir o app (persistência)
   useEffect(() => {

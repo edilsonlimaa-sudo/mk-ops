@@ -1,10 +1,12 @@
 import { authService } from '@/services/api/auth.service';
 import { authStorage, type LoginCredentials } from '@/services/storage/authStorage';
+import { getTokenExpiration } from '@/services/api/token/jwtDecoder';
 import { router } from 'expo-router';
 import { create } from 'zustand';
 
 interface AuthState {
   token: string | null;
+  tokenExpiration: number | null; // Timestamp em milissegundos
   ipMkAuth: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -17,6 +19,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   token: null,
+  tokenExpiration: null,
   ipMkAuth: null,
   isAuthenticated: false,
   isLoading: false,
@@ -30,9 +33,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       // Salva token e credenciais via authStorage
       await authStorage.saveCredentials({ ipMkAuth, clientId, clientSecret }, token);
       
+      // Extrai data de expiração do token
+      const tokenExpiration = getTokenExpiration(token);
+      
       // Atualiza estado (apiClient se auto-configura via subscription)
       set({
         token,
+        tokenExpiration,
         ipMkAuth,
         isAuthenticated: true,
         isLoading: false,
@@ -50,6 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Limpa estado (apiClient se auto-limpa via subscription)
     set({
       token: null,
+      tokenExpiration: null,
       ipMkAuth: null,
       isAuthenticated: false,
     });
@@ -63,15 +71,40 @@ export const useAuthStore = create<AuthState>((set) => ({
       const session = await authStorage.getSession();
       
       if (session) {
-        // Atualiza estado (apiClient se auto-configura via subscription)
+        // Extrai data de expiração do token
+        const tokenExpiration = getTokenExpiration(session.token);
+        
+        // VALIDAÇÃO PROATIVA: Verifica se token expirado
+        if (Date.now() >= tokenExpiration) {
+          console.log('🔄 Token expirado detectado no checkAuth, renovando...');
+          try {
+            // Renova token ANTES de marcar como autenticado
+            await useAuthStore.getState().refreshToken();
+            return; // refreshToken() já atualiza o estado
+          } catch (refreshError) {
+            console.warn('⚠️ Falha ao renovar token proativamente:', refreshError);
+            // Mantém token expirado, interceptor vai tentar depois
+            set({
+              token: session.token,
+              tokenExpiration,
+              ipMkAuth: session.ipMkAuth,
+              isAuthenticated: true,
+            });
+            return;
+          }
+        }
+        
+        // Token válido, usa normalmente
         set({
           token: session.token,
+          tokenExpiration,
           ipMkAuth: session.ipMkAuth,
           isAuthenticated: true,
         });
       } else {
         set({
           token: null,
+          tokenExpiration: null,
           ipMkAuth: null,
           isAuthenticated: false,
         });
@@ -80,6 +113,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       // Limpa estado se falhar (storage corrompido, permissão negada, etc)
       set({
         token: null,
+        tokenExpiration: null,
         ipMkAuth: null,
         isAuthenticated: false,
       });
@@ -108,8 +142,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     // 3. Atualiza storage
     await authStorage.saveCredentials(credentials, token);
 
-    // 4. Atualiza estado silenciosamente (sem isLoading, sem navegação)
-    set({ token, isAuthenticated: true });
+    // 4. Extrai data de expiração do novo token
+    const tokenExpiration = getTokenExpiration(token);
+
+    // 5. Atualiza estado silenciosamente (sem isLoading, sem navegação)
+    set({ token, tokenExpiration, isAuthenticated: true });
 
     console.log('✅ Token renovado automaticamente!');
     return token;
