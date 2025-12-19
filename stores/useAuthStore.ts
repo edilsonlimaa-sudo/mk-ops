@@ -12,6 +12,7 @@ interface AuthState {
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   getSavedCredentials: () => Promise<LoginCredentials | null>;
+  refreshToken: () => Promise<string>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -92,5 +93,25 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   getSavedCredentials: async (): Promise<LoginCredentials | null> => {
     return await authStorage.getCredentials();
+  },
+
+  refreshToken: async (): Promise<string> => {
+    // 1. Busca credenciais salvas do storage
+    const credentials = await authStorage.getCredentials();
+    if (!credentials) {
+      throw new Error('Credenciais não salvas');
+    }
+
+    // 2. Faz login (HTTP call pura, sem side-effects)
+    const token = await authService.login(credentials);
+
+    // 3. Atualiza storage
+    await authStorage.saveCredentials(credentials, token);
+
+    // 4. Atualiza estado silenciosamente (sem isLoading, sem navegação)
+    set({ token, isAuthenticated: true });
+
+    console.log('✅ Token renovado automaticamente!');
+    return token;
   },
 }));

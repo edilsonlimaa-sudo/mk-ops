@@ -6,49 +6,6 @@ describe('TokenRefreshManager', () => {
     tokenRefreshManager.reset();
   });
 
-  describe('canRetry()', () => {
-    it('deve retornar true quando nenhuma tentativa foi feita', () => {
-      expect(tokenRefreshManager.canRetry()).toBe(true);
-    });
-
-    it('deve retornar true enquanto attempts < 3', () => {
-      tokenRefreshManager.incrementAttempts();
-      expect(tokenRefreshManager.canRetry()).toBe(true);
-      
-      tokenRefreshManager.incrementAttempts();
-      expect(tokenRefreshManager.canRetry()).toBe(true);
-    });
-
-    it('deve retornar false após 3 tentativas', () => {
-      tokenRefreshManager.incrementAttempts();
-      tokenRefreshManager.incrementAttempts();
-      tokenRefreshManager.incrementAttempts();
-      expect(tokenRefreshManager.canRetry()).toBe(false);
-    });
-  });
-
-  describe('incrementAttempts() / getAttempts()', () => {
-    it('deve incrementar contador de tentativas', () => {
-      expect(tokenRefreshManager.getAttempts()).toBe(0);
-      
-      tokenRefreshManager.incrementAttempts();
-      expect(tokenRefreshManager.getAttempts()).toBe(1);
-      
-      tokenRefreshManager.incrementAttempts();
-      expect(tokenRefreshManager.getAttempts()).toBe(2);
-    });
-  });
-
-  describe('resetAttempts()', () => {
-    it('deve resetar contador para 0', () => {
-      tokenRefreshManager.incrementAttempts();
-      tokenRefreshManager.incrementAttempts();
-      
-      tokenRefreshManager.resetAttempts();
-      expect(tokenRefreshManager.getAttempts()).toBe(0);
-    });
-  });
-
   describe('isRefreshing flag', () => {
     it('deve iniciar como false', () => {
       expect(tokenRefreshManager.getIsRefreshing()).toBe(false);
@@ -71,10 +28,10 @@ describe('TokenRefreshManager', () => {
       const callback = jest.fn();
       tokenRefreshManager.addPendingRequest(callback);
       
-      // Resolve fila com token
-      tokenRefreshManager.resolveAllPending('new-token');
+      // Resolve fila
+      tokenRefreshManager.resolveAllPending();
       
-      expect(callback).toHaveBeenCalledWith('new-token');
+      expect(callback).toHaveBeenCalledWith();
     });
 
     it('deve processar múltiplos callbacks na fila', () => {
@@ -86,27 +43,27 @@ describe('TokenRefreshManager', () => {
       tokenRefreshManager.addPendingRequest(callback2);
       tokenRefreshManager.addPendingRequest(callback3);
       
-      tokenRefreshManager.resolveAllPending('token-123');
+      tokenRefreshManager.resolveAllPending();
       
-      expect(callback1).toHaveBeenCalledWith('token-123');
-      expect(callback2).toHaveBeenCalledWith('token-123');
-      expect(callback3).toHaveBeenCalledWith('token-123');
+      expect(callback1).toHaveBeenCalledWith();
+      expect(callback2).toHaveBeenCalledWith();
+      expect(callback3).toHaveBeenCalledWith();
     });
 
     it('deve limpar fila após resolveAllPending', () => {
       const callback = jest.fn();
       tokenRefreshManager.addPendingRequest(callback);
       
-      tokenRefreshManager.resolveAllPending('token');
+      tokenRefreshManager.resolveAllPending();
       
       // Adiciona novo callback e resolve novamente
       const callback2 = jest.fn();
       tokenRefreshManager.addPendingRequest(callback2);
-      tokenRefreshManager.resolveAllPending('token2');
+      tokenRefreshManager.resolveAllPending();
       
       // Primeiro callback não deve ser chamado novamente
       expect(callback).toHaveBeenCalledTimes(1);
-      expect(callback2).toHaveBeenCalledWith('token2');
+      expect(callback2).toHaveBeenCalledWith();
     });
 
     it('deve rejeitar todos callbacks com erro', () => {
@@ -119,8 +76,8 @@ describe('TokenRefreshManager', () => {
       
       tokenRefreshManager.rejectAllPending(error);
       
-      expect(callback1).toHaveBeenCalledWith(undefined, error);
-      expect(callback2).toHaveBeenCalledWith(undefined, error);
+      expect(callback1).toHaveBeenCalledWith(error);
+      expect(callback2).toHaveBeenCalledWith(error);
     });
 
     it('deve limpar fila após rejectAllPending', () => {
@@ -132,18 +89,16 @@ describe('TokenRefreshManager', () => {
       // Tenta resolver - não deve chamar callback anterior
       const callback2 = jest.fn();
       tokenRefreshManager.addPendingRequest(callback2);
-      tokenRefreshManager.resolveAllPending('new-token');
+      tokenRefreshManager.resolveAllPending();
       
       expect(callback).toHaveBeenCalledTimes(1); // Apenas reject
-      expect(callback2).toHaveBeenCalledWith('new-token');
+      expect(callback2).toHaveBeenCalledWith();
     });
   });
 
   describe('reset()', () => {
     it('deve resetar completamente o estado', () => {
       // Configura estado
-      tokenRefreshManager.incrementAttempts();
-      tokenRefreshManager.incrementAttempts();
       tokenRefreshManager.setIsRefreshing(true);
       const callback = jest.fn();
       tokenRefreshManager.addPendingRequest(callback);
@@ -152,11 +107,10 @@ describe('TokenRefreshManager', () => {
       tokenRefreshManager.reset();
       
       // Verifica reset completo
-      expect(tokenRefreshManager.getAttempts()).toBe(0);
       expect(tokenRefreshManager.getIsRefreshing()).toBe(false);
       
       // Fila deve estar vazia (callback não será chamado)
-      tokenRefreshManager.resolveAllPending('token');
+      tokenRefreshManager.resolveAllPending();
       expect(callback).not.toHaveBeenCalled();
     });
   });
@@ -166,11 +120,11 @@ describe('TokenRefreshManager', () => {
       const { tokenRefreshManager: manager1 } = require('./tokenRefreshManager');
       const { tokenRefreshManager: manager2 } = require('./tokenRefreshManager');
       
-      manager1.incrementAttempts();
-      expect(manager2.getAttempts()).toBe(1);
+      manager1.setIsRefreshing(true);
+      expect(manager2.getIsRefreshing()).toBe(true);
       
-      manager2.setIsRefreshing(true);
-      expect(manager1.getIsRefreshing()).toBe(true);
+      manager2.setIsRefreshing(false);
+      expect(manager1.getIsRefreshing()).toBe(false);
     });
   });
 });

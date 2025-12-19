@@ -1,43 +1,13 @@
 /**
- * Gerencia tentativas de refresh e fila de requests pendentes
- * Previne loops infinitos e gerencia concorrência
+ * Gerencia fila de requests pendentes durante refresh de token
+ * Previne múltiplos refreshes simultâneos
  */
 
-type PendingRequestCallback = (token?: string, error?: any) => void;
+type PendingRequestCallback = (error?: any) => void;
 
 class TokenRefreshManager {
-  private refreshAttempts = 0;
-  private readonly MAX_REFRESH_ATTEMPTS = 3;
   private isRefreshing = false;
   private pendingRequests: PendingRequestCallback[] = [];
-
-  /**
-   * Verifica se pode tentar refresh novamente
-   */
-  canRetry(): boolean {
-    return this.refreshAttempts < this.MAX_REFRESH_ATTEMPTS;
-  }
-
-  /**
-   * Incrementa contador de tentativas
-   */
-  incrementAttempts(): void {
-    this.refreshAttempts++;
-  }
-
-  /**
-   * Retorna número atual de tentativas
-   */
-  getAttempts(): number {
-    return this.refreshAttempts;
-  }
-
-  /**
-   * Reseta contador de tentativas (após sucesso ou logout)
-   */
-  resetAttempts(): void {
-    this.refreshAttempts = 0;
-  }
 
   /**
    * Verifica se refresh está em andamento
@@ -61,10 +31,10 @@ class TokenRefreshManager {
   }
 
   /**
-   * Resolve todas as requests pendentes com novo token
+   * Resolve todas as requests pendentes
    */
-  resolveAllPending(token: string): void {
-    this.pendingRequests.forEach((callback) => callback(token));
+  resolveAllPending(): void {
+    this.pendingRequests.forEach((callback) => callback());
     this.pendingRequests = [];
   }
 
@@ -72,7 +42,7 @@ class TokenRefreshManager {
    * Rejeita todas as requests pendentes com erro
    */
   rejectAllPending(error: any): void {
-    this.pendingRequests.forEach((callback) => callback(undefined, error));
+    this.pendingRequests.forEach((callback) => callback(error));
     this.pendingRequests = [];
   }
 
@@ -80,7 +50,6 @@ class TokenRefreshManager {
    * Limpa tudo (usado no logout)
    */
   reset(): void {
-    this.resetAttempts();
     this.isRefreshing = false;
     this.pendingRequests = [];
   }

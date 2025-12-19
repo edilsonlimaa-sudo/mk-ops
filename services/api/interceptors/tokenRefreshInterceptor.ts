@@ -1,14 +1,15 @@
 import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { tokenRefreshManager } from '../token/tokenRefreshManager';
-import { handleRefreshFailure } from './helpers/errorRecoveryHandler';
-import { isNetworkError } from './helpers/networkErrorDetector';
-import { enqueueRequest } from './helpers/requestQueueManager';
-import { retryWithNewToken } from './helpers/requestRetrier';
-import { refreshToken } from './helpers/tokenRefresher';
+import apiClient from '../apiClient';
 
 /**
  * Response Interceptor: Detecta 401 e faz refresh automático do token
- * Orquestra helpers para gerenciar fila de requests e prevenir loops infinitos
+ * Responsabilidades:
+ * - Detectar erro 401 (token expirado)
+ * - Renovar token via useAuthStore.refreshToken()
+ * - Retentar request (tokenInjectorInterceptor injeta token atualizado)
+ * - Gerenciar fila de requests durante refresh
  */
 export const tokenRefreshSuccessHandler = (response: AxiosResponse) => {
   return response;
@@ -17,63 +18,47 @@ export const tokenRefreshSuccessHandler = (response: AxiosResponse) => {
 export const tokenRefreshErrorHandler = async (error: AxiosError) => {
   const originalRequest = error.config as InternalAxiosRequestConfig & {
     _retry?: boolean;
-    _refreshedToken?: boolean;
   };
 
-  // Se recebeu 401 (token expirado)
+  // Se recebeu 401 e ainda não tentou renovar
   if (error.response?.status === 401 && !originalRequest._retry) {
     originalRequest._retry = true;
 
-    // Se request tinha token recém-renovado e ainda deu 401,
-    // é erro de autorização (sem permissão), não token expirado
-    if (originalRequest._refreshedToken) {
-      console.log('⚠️ 401 após token refresh - possível erro de autorização');
-      return Promise.reject(error);
-    }
-
     // Se já está renovando, adiciona à fila de espera
     if (tokenRefreshManager.getIsRefreshing()) {
-      return enqueueRequest(originalRequest);
+      console.log('⏳ Request aguardando renovação de token...');
+      return new Promise((resolve, reject) => {
+        tokenRefreshManager.addPendingRequest((error) => {
+          if (error) {
+            reject(error);
+          } else {
+            // tokenInjectorInterceptor vai injetar token atualizado da store
+            resolve(apiClient(originalRequest));
+          }
+        });
+      });
     }
 
     tokenRefreshManager.setIsRefreshing(true);
 
     try {
-      // Previne loop infinito de refresh
-      if (!tokenRefreshManager.canRetry()) {
-        console.log('❌ Máximo de tentativas de refresh atingido');
-        tokenRefreshManager.resetAttempts();
-        throw new Error('Token refresh falhou após múltiplas tentativas');
-      }
+      console.log('🔄 Token expirado, renovando...');
 
-      tokenRefreshManager.incrementAttempts();
-      console.log(
-        `🔄 Token expirado, reautenticando automaticamente (tentativa ${tokenRefreshManager.getAttempts()})...`
-      );
-
-      // Faz refresh do token usando helper
-      const newToken = await refreshToken();
+      // Renova token via store (mantendo Single Source of Truth)
+      await useAuthStore.getState().refreshToken();
 
       // Processa todas as requests que estavam aguardando
-      tokenRefreshManager.resolveAllPending(newToken);
+      tokenRefreshManager.resolveAllPending();
 
-      // Retenta a request original com novo token
-      return retryWithNewToken(originalRequest, newToken);
+      // Retenta request - tokenInjectorInterceptor vai injetar token atualizado
+      return apiClient(originalRequest);
     } catch (refreshError) {
       console.log('❌ Erro ao renovar token:', refreshError);
 
       // Rejeita todas as requests que estavam aguardando
       tokenRefreshManager.rejectAllPending(refreshError);
 
-      // Detecta se é erro de rede (offline) - NÃO desloga nesse caso
-      if (isNetworkError(refreshError)) {
-        console.log('📡 Erro de rede detectado - preservando credenciais');
-        throw new Error('Sem conexão com a internet. Tente novamente.');
-      }
-
-      // Se não é erro de rede, faz logout e redireciona
-      await handleRefreshFailure();
-
+      // Falhou? Apenas propaga o erro
       throw refreshError;
     } finally {
       tokenRefreshManager.setIsRefreshing(false);

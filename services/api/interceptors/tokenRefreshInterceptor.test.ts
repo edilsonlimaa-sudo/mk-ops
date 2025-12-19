@@ -5,50 +5,38 @@ import {
     tokenRefreshSuccessHandler,
 } from './tokenRefreshInterceptor';
 
-// Mock dos helpers
-jest.mock('./helpers/errorRecoveryHandler', () => ({
-  handleRefreshFailure: jest.fn(),
+// Mock da useAuthStore
+jest.mock('@/stores/useAuthStore', () => ({
+  useAuthStore: {
+    getState: jest.fn(() => ({
+      refreshToken: jest.fn(),
+    })),
+  },
 }));
 
-jest.mock('./helpers/networkErrorDetector', () => ({
-  isNetworkError: jest.fn(),
-}));
-
-jest.mock('./helpers/requestQueueManager', () => ({
-  enqueueRequest: jest.fn(),
-}));
-
-jest.mock('./helpers/requestRetrier', () => ({
-  retryWithNewToken: jest.fn(),
-}));
-
-jest.mock('./helpers/tokenRefresher', () => ({
-  refreshToken: jest.fn(),
+// Mock do apiClient
+jest.mock('../apiClient', () => ({
+  __esModule: true,
+  default: jest.fn(),
 }));
 
 describe('tokenRefreshInterceptor', () => {
-  let mockHandleRefreshFailure: jest.Mock;
-  let mockIsNetworkError: jest.Mock;
-  let mockEnqueueRequest: jest.Mock;
-  let mockRetryWithNewToken: jest.Mock;
   let mockRefreshToken: jest.Mock;
+  let mockApiClient: jest.Mock;
+  let mockUseAuthStore: any;
 
   beforeEach(async () => {
     jest.clearAllMocks();
     tokenRefreshManager.reset();
 
     // Importa mocks
-    const errorRecoveryHandler = await import('./helpers/errorRecoveryHandler');
-    const networkErrorDetector = await import('./helpers/networkErrorDetector');
-    const requestQueueManager = await import('./helpers/requestQueueManager');
-    const requestRetrier = await import('./helpers/requestRetrier');
-    const tokenRefresher = await import('./helpers/tokenRefresher');
+    const { useAuthStore } = await import('@/stores/useAuthStore');
+    const apiClientModule = await import('../apiClient');
 
-    mockHandleRefreshFailure = errorRecoveryHandler.handleRefreshFailure as jest.Mock;
-    mockIsNetworkError = networkErrorDetector.isNetworkError as jest.Mock;
-    mockEnqueueRequest = requestQueueManager.enqueueRequest as jest.Mock;
-    mockRetryWithNewToken = requestRetrier.retryWithNewToken as jest.Mock;
-    mockRefreshToken = tokenRefresher.refreshToken as jest.Mock;
+    mockUseAuthStore = useAuthStore;
+    mockRefreshToken = jest.fn();
+    mockUseAuthStore.getState.mockReturnValue({ refreshToken: mockRefreshToken });
+    mockApiClient = apiClientModule.default as unknown as jest.Mock;
   });
 
   describe('tokenRefreshSuccessHandler', () => {
@@ -77,7 +65,6 @@ describe('tokenRefreshInterceptor', () => {
       await expect(tokenRefreshErrorHandler(error)).rejects.toBe(error);
 
       expect(mockRefreshToken).not.toHaveBeenCalled();
-      expect(mockEnqueueRequest).not.toHaveBeenCalled();
     });
 
     it('should reject 401 error if request already has _retry flag', async () => {
@@ -91,30 +78,9 @@ describe('tokenRefreshInterceptor', () => {
       expect(mockRefreshToken).not.toHaveBeenCalled();
     });
 
-    it('should reject 401 if token was just refreshed (authorization error)', async () => {
+    it('should add request to queue if refresh is already in progress', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-      const error = {
-        response: { status: 401 },
-        config: {
-          _retry: false,
-          _refreshedToken: true,
-        } as InternalAxiosRequestConfig & { _retry?: boolean; _refreshedToken?: boolean },
-      } as AxiosError;
-
-      await expect(tokenRefreshErrorHandler(error)).rejects.toBe(error);
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '⚠️ 401 após token refresh - possível erro de autorização'
-      );
-      expect(mockRefreshToken).not.toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
-    });
-
-    it('should enqueue request if refresh is already in progress', async () => {
-      const mockQueuedResponse = { data: {}, status: 200 } as AxiosResponse;
-      mockEnqueueRequest.mockResolvedValue(mockQueuedResponse);
+      const mockResponse = { data: {}, status: 200 } as AxiosResponse;
 
       tokenRefreshManager.setIsRefreshing(true);
 
@@ -123,45 +89,33 @@ describe('tokenRefreshInterceptor', () => {
         config: {} as InternalAxiosRequestConfig,
       } as AxiosError;
 
-      const result = await tokenRefreshErrorHandler(error);
+      // Simula que outro refresh vai completar e resolver a fila
+      const resultPromise = tokenRefreshErrorHandler(error);
+      
+      // Aguarda um pouco para garantir que foi enfileirado
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      // Resolve a fila (callbacks vão chamar apiClient)
+      mockApiClient.mockResolvedValue(mockResponse);
+      tokenRefreshManager.resolveAllPending();
 
-      expect(result).toBe(mockQueuedResponse);
-      expect(mockEnqueueRequest).toHaveBeenCalledWith(error.config);
+      const result = await resultPromise;
+      
+      expect(result).toBe(mockResponse);
       expect(mockRefreshToken).not.toHaveBeenCalled();
-    });
-
-    it('should throw error if max retry attempts reached', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-      // Simula 3 tentativas anteriores (máximo permitido)
-      tokenRefreshManager.incrementAttempts();
-      tokenRefreshManager.incrementAttempts();
-      tokenRefreshManager.incrementAttempts();
-
-      const error = {
-        response: { status: 401 },
-        config: {} as InternalAxiosRequestConfig,
-      } as AxiosError;
-
-      await expect(tokenRefreshErrorHandler(error)).rejects.toThrow(
-        'Token refresh falhou após múltiplas tentativas'
-      );
-
-      expect(consoleSpy).toHaveBeenCalledWith('❌ Máximo de tentativas de refresh atingido');
-      expect(mockRefreshToken).not.toHaveBeenCalled();
-      expect(tokenRefreshManager.getAttempts()).toBe(0); // Foi resetado
-
+      expect(mockApiClient).toHaveBeenCalledWith(error.config);
+      expect(consoleSpy).toHaveBeenCalledWith('⏳ Request aguardando renovação de token...');
+      
       consoleSpy.mockRestore();
     });
 
     it('should successfully refresh token and retry request', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
-      const newToken = 'new-token-123';
       const mockResponse = { data: { success: true }, status: 200 } as AxiosResponse;
 
-      mockRefreshToken.mockResolvedValue(newToken);
-      mockRetryWithNewToken.mockResolvedValue(mockResponse);
+      mockRefreshToken.mockResolvedValue('new-token-123');
+      mockApiClient.mockResolvedValue(mockResponse);
 
       const error = {
         response: { status: 401 },
@@ -172,10 +126,8 @@ describe('tokenRefreshInterceptor', () => {
 
       expect(result).toBe(mockResponse);
       expect(mockRefreshToken).toHaveBeenCalledTimes(1);
-      expect(mockRetryWithNewToken).toHaveBeenCalledWith(error.config, newToken);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('🔄 Token expirado, reautenticando automaticamente')
-      );
+      expect(mockApiClient).toHaveBeenCalledWith(error.config);
+      expect(consoleSpy).toHaveBeenCalledWith('🔄 Token expirado, renovando...');
 
       consoleSpy.mockRestore();
     });
@@ -183,11 +135,10 @@ describe('tokenRefreshInterceptor', () => {
     it('should resolve all pending requests after successful refresh', async () => {
       jest.spyOn(console, 'log').mockImplementation();
 
-      const newToken = 'new-token-456';
       const mockResponse = { data: {}, status: 200 } as AxiosResponse;
 
-      mockRefreshToken.mockResolvedValue(newToken);
-      mockRetryWithNewToken.mockResolvedValue(mockResponse);
+      mockRefreshToken.mockResolvedValue('new-token-456');
+      mockApiClient.mockResolvedValue(mockResponse);
 
       const error = {
         response: { status: 401 },
@@ -198,19 +149,18 @@ describe('tokenRefreshInterceptor', () => {
 
       await tokenRefreshErrorHandler(error);
 
-      expect(resolveSpy).toHaveBeenCalledWith(newToken);
+      expect(resolveSpy).toHaveBeenCalledWith();
     });
 
     it('should set isRefreshing flag during refresh process', async () => {
       jest.spyOn(console, 'log').mockImplementation();
 
-      const newToken = 'token-xyz';
       mockRefreshToken.mockImplementation(async () => {
         // Verifica que flag está setada durante o refresh
         expect(tokenRefreshManager.getIsRefreshing()).toBe(true);
-        return newToken;
+        return 'token-xyz';
       });
-      mockRetryWithNewToken.mockResolvedValue({ data: {}, status: 200 } as AxiosResponse);
+      mockApiClient.mockResolvedValue({ data: {}, status: 200 } as AxiosResponse);
 
       const error = {
         response: { status: 401 },
@@ -223,55 +173,11 @@ describe('tokenRefreshInterceptor', () => {
       expect(tokenRefreshManager.getIsRefreshing()).toBe(false);
     });
 
-    it('should handle network errors without logging out', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-      const networkError = new Error('Network Error');
-      mockRefreshToken.mockRejectedValue(networkError);
-      mockIsNetworkError.mockReturnValue(true);
-
-      const error = {
-        response: { status: 401 },
-        config: {} as InternalAxiosRequestConfig,
-      } as AxiosError;
-
-      await expect(tokenRefreshErrorHandler(error)).rejects.toThrow(
-        'Sem conexão com a internet. Tente novamente.'
-      );
-
-      expect(mockIsNetworkError).toHaveBeenCalledWith(networkError);
-      expect(mockHandleRefreshFailure).not.toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith('📡 Erro de rede detectado - preservando credenciais');
-
-      consoleSpy.mockRestore();
-    });
-
-    it('should logout and redirect on non-network refresh errors', async () => {
-      jest.spyOn(console, 'log').mockImplementation();
-
-      const authError = new Error('Invalid credentials');
-      mockRefreshToken.mockRejectedValue(authError);
-      mockIsNetworkError.mockReturnValue(false);
-      mockHandleRefreshFailure.mockResolvedValue(undefined);
-
-      const error = {
-        response: { status: 401 },
-        config: {} as InternalAxiosRequestConfig,
-      } as AxiosError;
-
-      await expect(tokenRefreshErrorHandler(error)).rejects.toThrow('Invalid credentials');
-
-      expect(mockIsNetworkError).toHaveBeenCalledWith(authError);
-      expect(mockHandleRefreshFailure).toHaveBeenCalledTimes(1);
-    });
-
     it('should reject all pending requests on refresh failure', async () => {
       jest.spyOn(console, 'log').mockImplementation();
 
       const refreshError = new Error('Refresh failed');
       mockRefreshToken.mockRejectedValue(refreshError);
-      mockIsNetworkError.mockReturnValue(false);
-      mockHandleRefreshFailure.mockResolvedValue(undefined);
 
       const error = {
         response: { status: 401 },
@@ -289,8 +195,6 @@ describe('tokenRefreshInterceptor', () => {
       jest.spyOn(console, 'log').mockImplementation();
 
       mockRefreshToken.mockRejectedValue(new Error('Fail'));
-      mockIsNetworkError.mockReturnValue(false);
-      mockHandleRefreshFailure.mockResolvedValue(undefined);
 
       const error = {
         response: { status: 401 },
@@ -305,30 +209,11 @@ describe('tokenRefreshInterceptor', () => {
       expect(tokenRefreshManager.getIsRefreshing()).toBe(false);
     });
 
-    it('should increment attempts counter before refresh', async () => {
-      jest.spyOn(console, 'log').mockImplementation();
-
-      mockRefreshToken.mockResolvedValue('token');
-      mockRetryWithNewToken.mockResolvedValue({ data: {}, status: 200 } as AxiosResponse);
-
-      const error = {
-        response: { status: 401 },
-        config: {} as InternalAxiosRequestConfig,
-      } as AxiosError;
-
-      const incrementSpy = jest.spyOn(tokenRefreshManager, 'incrementAttempts');
-
-      await tokenRefreshErrorHandler(error);
-
-      // Verifica que incrementAttempts foi chamado
-      expect(incrementSpy).toHaveBeenCalledTimes(1);
-    });
-
     it('should mark original request with _retry flag', async () => {
       jest.spyOn(console, 'log').mockImplementation();
 
       mockRefreshToken.mockResolvedValue('token');
-      mockRetryWithNewToken.mockResolvedValue({ data: {}, status: 200 } as AxiosResponse);
+      mockApiClient.mockResolvedValue({ data: {}, status: 200 } as AxiosResponse);
 
       const config = {} as InternalAxiosRequestConfig & { _retry?: boolean };
       const error = {
