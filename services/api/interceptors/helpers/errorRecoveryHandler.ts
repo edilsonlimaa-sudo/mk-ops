@@ -17,7 +17,7 @@ export const handleRefreshFailure = async (): Promise<void> => {
   // Redireciona para login (usuário deletado ou credenciais inválidas)
   try {
     const { router } = await import('expo-router');
-    router.replace('/login');
+    router.replace('/(auth)/login' as any);
   } catch (routerError) {
     console.log('⚠️ Não foi possível redirecionar:', routerError);
   }

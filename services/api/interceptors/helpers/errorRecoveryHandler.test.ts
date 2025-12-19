@@ -58,12 +58,12 @@ describe('errorRecoveryHandler', () => {
       expect(mockLogout).toHaveBeenCalledTimes(1);
     });
 
-    it('should redirect to /login after logout', async () => {
+    it('should redirect to /(auth)/login after logout', async () => {
       mockUseAuthStore.getState.mockReturnValue({ logout: jest.fn().mockResolvedValue(undefined) });
 
       await handleRefreshFailure();
 
-      expect(mockRouter.replace).toHaveBeenCalledWith('/login');
+      expect(mockRouter.replace).toHaveBeenCalledWith('/(auth)/login');
     });
 
     it('should handle router redirect errors gracefully', async () => {

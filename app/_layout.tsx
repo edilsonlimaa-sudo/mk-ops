@@ -21,6 +21,7 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const [appIsReady, setAppIsReady] = useState(false);
 
@@ -55,10 +56,12 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        {isAuthenticated ? (
+          <Stack.Screen name="(app)" />
+        ) : (
+          <Stack.Screen name="(auth)" />
+        )}
       </Stack>
       <StatusBar style="auto" />
     </QueryClientProvider>

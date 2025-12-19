@@ -34,7 +34,7 @@ export default function Login() {
   // Redireciona para home se já estiver autenticado
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/');
+      router.replace('/(app)');
     }
   }, [isAuthenticated]);
 
@@ -42,7 +42,7 @@ export default function Login() {
     try {
       await login(data.ipMkAuth, data.clientId, data.clientSecret);
       Alert.alert('Sucesso', 'Login realizado com sucesso!');
-      router.replace('/');
+      router.replace('/(app)');
     } catch (error) {
       Alert.alert('Erro', error instanceof Error ? error.message : 'Erro ao fazer login');
     }

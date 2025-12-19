@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
     
     // Redireciona para tela de login
-    router.replace('/login');
+    router.replace('/(auth)/login');
   },
 
   checkAuth: async () => {
