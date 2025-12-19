@@ -76,12 +76,17 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
       }
     } catch (error) {
-      console.log('Erro ao verificar autenticação:', error);
+      // Limpa estado se falhar (storage corrompido, permissão negada, etc)
       set({
         token: null,
         ipMkAuth: null,
         isAuthenticated: false,
       });
+      
+      // Tenta limpar storage corrompido em background (ignora se falhar)
+      authStorage.clearAll().catch(() => {});
+      
+      throw error;
     }
   },
 

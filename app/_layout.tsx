@@ -32,7 +32,7 @@ export default function RootLayout() {
         // Verifica se tem sessão salva
         await checkAuth();
       } catch (error) {
-        console.log('⚠️ Não foi possível restaurar sessão:', error);
+        // checkAuth já limpou estado e storage
       } finally {
         // App está pronto, esconde splash screen
         setAppIsReady(true);
