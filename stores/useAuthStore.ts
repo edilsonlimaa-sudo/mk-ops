@@ -1,5 +1,6 @@
 import { authService } from '@/services/api/auth.service';
 import { authStorage, type LoginCredentials } from '@/services/storage/authStorage';
+import { router } from 'expo-router';
 import { create } from 'zustand';
 
 interface AuthState {
@@ -51,6 +52,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       ipMkAuth: null,
       isAuthenticated: false,
     });
+    
+    // Redireciona para tela de login
+    router.replace('/login');
   },
 
   checkAuth: async () => {
