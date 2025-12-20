@@ -28,12 +28,17 @@ class TokenRefreshManager {
    */
   addPendingRequest(callback: PendingRequestCallback): void {
     this.pendingRequests.push(callback);
+    console.log(`📎 [TokenRefreshManager] Request adicionada à fila (total: ${this.pendingRequests.length})`);
   }
 
   /**
    * Resolve todas as requests pendentes
    */
   resolveAllPending(): void {
+    const count = this.pendingRequests.length;
+    if (count > 0) {
+      console.log(`✅ [TokenRefreshManager] Resolvendo ${count} request(s) pendente(s)...`);
+    }
     this.pendingRequests.forEach((callback) => callback());
     this.pendingRequests = [];
   }
@@ -42,6 +47,10 @@ class TokenRefreshManager {
    * Rejeita todas as requests pendentes com erro
    */
   rejectAllPending(error: any): void {
+    const count = this.pendingRequests.length;
+    if (count > 0) {
+      console.log(`❌ [TokenRefreshManager] Rejeitando ${count} request(s) pendente(s)...`);
+    }
     this.pendingRequests.forEach((callback) => callback(error));
     this.pendingRequests = [];
   }
