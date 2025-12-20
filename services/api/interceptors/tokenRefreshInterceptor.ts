@@ -1,7 +1,7 @@
-import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { tokenRefreshManager } from '../token/tokenRefreshManager';
-import apiClient from '../apiClient';
+// Import dinâmico para quebrar ciclo de dependência
 
 /**
  * Response Interceptor: Detecta 401 e faz refresh automático do token
@@ -24,15 +24,22 @@ export const tokenRefreshErrorHandler = async (error: AxiosError) => {
   if (error.response?.status === 401 && !originalRequest._retry) {
     originalRequest._retry = true;
 
+    // Import dinâmico para evitar ciclo de dependência
+    const getApiClient = async () => {
+      const { default: apiClient } = await import('../apiClient');
+      return apiClient;
+    };
+
     // Se já está renovando, adiciona à fila de espera
     if (tokenRefreshManager.getIsRefreshing()) {
-      console.log('⏳ Request aguardando renovação de token...');
-      return new Promise((resolve, reject) => {
-        tokenRefreshManager.addPendingRequest((error) => {
+      console.log('⏳ [TokenRefresh] Request aguardando renovação de token...');
+      return new Promise(async (resolve, reject) => {
+        tokenRefreshManager.addPendingRequest(async (error) => {
           if (error) {
             reject(error);
           } else {
             // tokenInjectorInterceptor vai injetar token atualizado da store
+            const apiClient = await getApiClient();
             resolve(apiClient(originalRequest));
           }
         });
@@ -42,18 +49,21 @@ export const tokenRefreshErrorHandler = async (error: AxiosError) => {
     tokenRefreshManager.setIsRefreshing(true);
 
     try {
-      console.log('🔄 Token expirado, renovando...');
+      console.log('🔄 [TokenRefresh] Token expirado (401 recebido), renovando...');
 
       // Renova token via store (mantendo Single Source of Truth)
       await useAuthStore.getState().refreshToken();
+
+      console.log('✅ [TokenRefresh] Token renovado, retentando request original...');
 
       // Processa todas as requests que estavam aguardando
       tokenRefreshManager.resolveAllPending();
 
       // Retenta request - tokenInjectorInterceptor vai injetar token atualizado
+      const apiClient = await getApiClient();
       return apiClient(originalRequest);
     } catch (refreshError) {
-      console.log('❌ Erro ao renovar token:', refreshError);
+      console.log('❌ [TokenRefresh] Erro ao renovar token:', refreshError);
 
       // Rejeita todas as requests que estavam aguardando
       tokenRefreshManager.rejectAllPending(refreshError);
