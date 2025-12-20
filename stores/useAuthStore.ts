@@ -83,7 +83,10 @@ export const useAuthStore = create<AuthState>((set) => ({
           try {
             // Renova token ANTES de marcar como autenticado
             await useAuthStore.getState().refreshToken();
-            return; // refreshToken() já atualiza o estado
+            // Marca como restaurado após refresh bem-sucedido
+            set({ isRestored: true });
+            console.log('✅ [AuthStore] Sessão restaurada com token renovado!');
+            return;
           } catch (refreshError) {
             console.warn('⚠️ Falha ao renovar token proativamente:', refreshError);
             // Mantém token expirado, interceptor vai tentar depois
