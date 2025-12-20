@@ -64,14 +64,22 @@ export const clearApiState = () => {
 const initializeApiClientSync = async () => {
   const { useAuthStore } = await import('@/stores/useAuthStore');
   
+  // Configura baseURL com estado inicial (subscription não dispara no estado inicial)
+  const initialState = useAuthStore.getState();
+  if (initialState.ipMkAuth) {
+    apiClient.defaults.baseURL = `https://${initialState.ipMkAuth}`;
+    console.log('🌐 [ApiClient] BaseURL inicial configurado:', apiClient.defaults.baseURL);
+  }
+  
+  // Subscreve para mudanças futuras
   useAuthStore.subscribe((state) => {
     if (state.ipMkAuth) {
       apiClient.defaults.baseURL = `https://${state.ipMkAuth}`;
-      console.log('🌐 BaseURL auto-configurado:', apiClient.defaults.baseURL);
+      console.log('🌐 [ApiClient] BaseURL auto-configurado:', apiClient.defaults.baseURL);
     } else {
       apiClient.defaults.baseURL = undefined;
       tokenRefreshManager.reset();
-      console.log('🌐 BaseURL limpo');
+      console.log('🌐 [ApiClient] BaseURL limpo');
     }
   });
 };

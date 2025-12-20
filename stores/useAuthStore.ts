@@ -1,6 +1,6 @@
 import { authService } from '@/services/api/auth.service';
-import { authStorage, type LoginCredentials } from '@/services/storage/authStorage';
 import { getTokenExpiration } from '@/services/api/token/jwtDecoder';
+import { authStorage, type LoginCredentials } from '@/services/storage/authStorage';
 import { router } from 'expo-router';
 import { create } from 'zustand';
 
@@ -9,6 +9,7 @@ interface AuthState {
   tokenExpiration: number | null; // Timestamp em milissegundos
   ipMkAuth: string | null;
   isAuthenticated: boolean;
+  isRestored: boolean; // Indica se a sessão foi restaurada do storage (bootstrap completo)
   isLoading: boolean;
   login: (ipMkAuth: string, clientId: string, clientSecret: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -22,6 +23,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   tokenExpiration: null,
   ipMkAuth: null,
   isAuthenticated: false,
+  isRestored: false,
   isLoading: false,
 
   login: async (ipMkAuth: string, clientId: string, clientSecret: string) => {
@@ -67,6 +69,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   checkAuth: async () => {
+    console.log('🔍 [AuthStore] checkAuth iniciado...');
     try {
       const session = await authStorage.getSession();
       
@@ -89,6 +92,7 @@ export const useAuthStore = create<AuthState>((set) => ({
               tokenExpiration,
               ipMkAuth: session.ipMkAuth,
               isAuthenticated: true,
+              isRestored: true, // Restauração completa (token expirado mas mantém sessão)
             });
             return;
           }
@@ -98,24 +102,30 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({
           token: session.token,
           tokenExpiration,
+          isRestored: true, // Restauração completa (com token válido)
           ipMkAuth: session.ipMkAuth,
           isAuthenticated: true,
         });
+        console.log('✅ [AuthStore] Sessão restaurada com sucesso! ipMkAuth:', session.ipMkAuth);
       } else {
         set({
           token: null,
           tokenExpiration: null,
           ipMkAuth: null,
           isAuthenticated: false,
+          isRestored: true, // Restauração completa (sem sessão)
         });
+        console.log('⚠️ [AuthStore] Nenhuma sessão encontrada');
       }
     } catch (error) {
+      console.log('❌ [AuthStore] Erro no checkAuth:', error);
       // Limpa estado se falhar (storage corrompido, permissão negada, etc)
       set({
         token: null,
         tokenExpiration: null,
         ipMkAuth: null,
         isAuthenticated: false,
+        isRestored: true, // Restauração completa (com erro)
       });
       
       // Tenta limpar storage corrompido em background (ignora se falhar)
