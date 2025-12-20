@@ -121,9 +121,10 @@ export default function ChamadosScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
-      {/* Header fixo */}
-      <View className="bg-white px-4 py-4 border-b border-gray-200">
+    <View className="flex-1 bg-white">
+      <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'left', 'right']}>
+        {/* Header fixo */}
+        <View className="bg-white px-4 py-4 border-b border-gray-200">
         <Text className="text-2xl font-bold text-gray-900 mb-1">Agenda de Atendimentos</Text>
         <Text className="text-gray-500 text-sm mb-3">
           {chamados?.length || 0} chamados em aberto
@@ -289,6 +290,7 @@ export default function ChamadosScreen() {
           );
         }}
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
