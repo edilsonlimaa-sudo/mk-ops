@@ -11,6 +11,7 @@ import '../global.css';
 
 // Mantém splash screen visível até verificar autenticação
 SplashScreen.preventAutoHideAsync();
+console.log('💦 [SplashScreen] Splash mantida visível (preventAutoHideAsync)');
 
 export default function RootLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -45,7 +46,11 @@ export default function RootLayout() {
   // Esconde splash screen quando app estiver pronto E sessão restaurada
   useEffect(() => {
     if (appIsReady && isRestored) {
+      console.log('👋 [SplashScreen] Escondendo splash (appIsReady && isRestored)');
       SplashScreen.hideAsync();
+      console.log('✨ [SplashScreen] Splash escondida com sucesso');
+    } else {
+      console.log(`⏳ [SplashScreen] Aguardando (appIsReady: ${appIsReady}, isRestored: ${isRestored})`);
     }
   }, [appIsReady, isRestored]);
 
@@ -63,7 +68,7 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" />
         )}
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
     </QueryClientProvider>
   );
 }
