@@ -30,22 +30,31 @@ const fetchClientPage = async (page: number): Promise<ClientListResponse> => {
  * @returns Array of all clients (empty array if no data)
  */
 export const fetchAllClients = async (): Promise<Client[]> => {
-  const firstPage = await fetchClientPage(1);
-  const { total_paginas, clientes } = firstPage;
+  console.log('🔍 [ClientService] Iniciando busca de clientes...');
+  console.log('🌐 [ClientService] BaseURL atual:', apiClient.defaults.baseURL);
   
-  // No data or only one page
-  if (total_paginas <= 1) {
-    return clientes;
-  }
-  
-  // Fetch remaining pages in parallel
-  const remainingPages = Array.from({ length: total_paginas - 1 }, (_, i) => i + 2);
-  const remainingResults = await Promise.all(remainingPages.map(fetchClientPage));
-  
-  return [...clientes, ...remainingResults.flatMap((r) => r.clientes)];
-};
+  try {
+    const firstPage = await fetchClientPage(1);
+    const { total_paginas, clientes } = firstPage;
 
-export const clientService = {
-  fetchAllClients,
-  fetchClientPage,
+    console.log(`📊 [ClientService] Total de páginas: ${total_paginas}, Clientes na página 1: ${clientes.length}`);
+
+    // No data or only one page
+    if (total_paginas <= 1) {
+      console.log(`✅ [ClientService] Retornando ${clientes.length} clientes`);
+      return clientes;
+    }
+
+    // Fetch remaining pages in parallel
+    const remainingPages = Array.from({ length: total_paginas - 1 }, (_, i) => i + 2);
+    console.log(`🚀 [ClientService] Buscando ${remainingPages.length} páginas restantes em paralelo...`);
+    const remainingResults = await Promise.all(remainingPages.map(fetchClientPage));
+
+    const allClients = [...clientes, ...remainingResults.flatMap((r) => r.clientes)];
+    console.log(`✅ [ClientService] Total de clientes carregados: ${allClients.length}`);
+    return allClients;
+  } catch (error) {
+    console.error('❌ [ClientService] Erro ao buscar clientes:', error);
+    throw error;
+  }
 };
