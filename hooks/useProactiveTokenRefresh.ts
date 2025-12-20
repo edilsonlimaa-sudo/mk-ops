@@ -17,8 +17,13 @@ export const useProactiveTokenRefresh = () => {
 
   // AppState Listener: Detecta volta do background
   useEffect(() => {
+    console.log('🎯 [ProactiveTokenRefresh] Hook inicializado');
+    
     const subscription = AppState.addEventListener('change', async (nextAppState) => {
+      console.log(`📱 [ProactiveTokenRefresh] AppState mudou para: ${nextAppState}`);
+      
       if (nextAppState === 'active') {
+        console.log('✨ [ProactiveTokenRefresh] App voltou para foreground, verificando token...');
         // App voltou para foreground
         const { token, tokenExpiration } = useAuthStore.getState();
         
@@ -26,18 +31,27 @@ export const useProactiveTokenRefresh = () => {
           const isExpired = Date.now() >= tokenExpiration;
           
           if (isExpired) {
-            console.log('🔄 Token expirado detectado ao voltar do background, renovando...');
+            console.log('🔄 [ProactiveTokenRefresh] Token expirado detectado, renovando...');
             try {
               await refreshToken();
+              console.log('✅ [ProactiveTokenRefresh] Token renovado com sucesso!');
             } catch (error) {
-              console.warn('⚠️ Falha ao renovar token ao voltar do background:', error);
+              console.warn('⚠️ [ProactiveTokenRefresh] Falha ao renovar token:', error);
               // Não faz nada, interceptor vai tentar depois
             }
+          } else {
+            const timeLeft = Math.round((tokenExpiration - Date.now()) / 1000 / 60);
+            console.log(`✅ [ProactiveTokenRefresh] Token ainda válido (${timeLeft} minutos restantes)`);
           }
+        } else {
+          console.log('⚠️ [ProactiveTokenRefresh] Nenhum token encontrado');
         }
       }
     });
 
-    return () => subscription.remove();
+    return () => {
+      console.log('🔌 [ProactiveTokenRefresh] Hook desmontado');
+      subscription.remove();
+    };
   }, [refreshToken]);
 };
