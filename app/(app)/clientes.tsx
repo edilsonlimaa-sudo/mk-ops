@@ -1,6 +1,6 @@
 import { useClients, useInvalidateClients } from '@/hooks/useClients';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type FiltroCliente = 'todos' | 'ativos' | 'bloqueados';
@@ -9,6 +9,7 @@ export default function ClientesScreen() {
   const { data: clients, isLoading, isFetching, error } = useClients();
   const { invalidate } = useInvalidateClients();
   const [filtroAtivo, setFiltroAtivo] = useState<FiltroCliente>('todos');
+  const [buscaTexto, setBuscaTexto] = useState('');
 
   // Debug: log do erro
   if (error) {
@@ -22,13 +23,25 @@ export default function ClientesScreen() {
     console.log('✅ [ClientesScreen] Dados atualizados com sucesso!');
   };
 
-  // Filtra clientes com base no filtro ativo
-  const clientesFiltrados = clients?.filter(c => {
+  // Filtra clientes por pill primeiro
+  const clientesPorPill = clients?.filter(c => {
     if (filtroAtivo === 'todos') return true;
     if (filtroAtivo === 'ativos') return c.bloqueado !== 'sim';
     if (filtroAtivo === 'bloqueados') return c.bloqueado === 'sim';
     return true;
   }) || [];
+
+  // Depois aplica busca textual (nome, celular, cpf_cnpj)
+  const clientesFiltrados = clientesPorPill.filter(c => {
+    if (!buscaTexto.trim()) return true;
+    
+    const busca = buscaTexto.toLowerCase().trim();
+    const nome = (c.nome || '').toLowerCase();
+    const celular = (c.celular || '').toLowerCase();
+    const cpf = (c.cpf_cnpj || '').toLowerCase();
+    
+    return nome.includes(busca) || celular.includes(busca) || cpf.includes(busca);
+  });
 
   // Define filtros disponíveis
   const filtros = [
@@ -75,7 +88,10 @@ export default function ClientesScreen() {
       <View className="bg-white px-4 py-4 border-b border-gray-200">
         <Text className="text-2xl font-bold text-gray-900 mb-1">Clientes</Text>
         <Text className="text-gray-500 text-sm mb-3">
-          {clientesFiltrados.length} de {clients?.length || 0} clientes
+          {buscaTexto.trim() 
+            ? `${clientesFiltrados.length} encontrados de ${clientesPorPill.length} ${filtroAtivo === 'todos' ? 'clientes' : filtroAtivo}`
+            : `${clientesFiltrados.length} ${filtroAtivo === 'todos' ? 'clientes' : filtroAtivo}`
+          }
         </Text>
 
         {/* Filter Pills */}
@@ -83,6 +99,7 @@ export default function ClientesScreen() {
           horizontal 
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 8 }}
+          className="mb-3"
         >
           {filtros.map((filtro) => (
             <TouchableOpacity
@@ -124,6 +141,25 @@ export default function ClientesScreen() {
             </TouchableOpacity>
           ))}
         </ScrollView>
+
+        {/* Campo de Busca */}
+        <View className="flex-row items-center bg-gray-100 rounded-lg px-3 py-2 mt-3">
+          <Text className="text-gray-400 text-lg mr-2">🔍</Text>
+          <TextInput
+            className="flex-1 text-gray-900"
+            placeholder="Buscar por nome, celular, CPF..."
+            placeholderTextColor="#9ca3af"
+            value={buscaTexto}
+            onChangeText={setBuscaTexto}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {buscaTexto.length > 0 && (
+            <TouchableOpacity onPress={() => setBuscaTexto('')} className="ml-2">
+              <Text className="text-gray-400 text-lg">⊗</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Lista de Clientes */}
