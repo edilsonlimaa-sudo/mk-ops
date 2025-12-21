@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type FiltroCliente = 'todos' | 'ativos' | 'bloqueados' | 'com_comodato' | 'turbo';
+type FiltroCliente = 'todos' | 'ativos' | 'bloqueados';
 
 export default function ClientesScreen() {
   const { data: clients, isLoading, isFetching, error } = useClients();
@@ -27,8 +27,6 @@ export default function ClientesScreen() {
     if (filtroAtivo === 'todos') return true;
     if (filtroAtivo === 'ativos') return c.bloqueado !== 'sim';
     if (filtroAtivo === 'bloqueados') return c.bloqueado === 'sim';
-    if (filtroAtivo === 'com_comodato') return c.comodato === 'sim';
-    if (filtroAtivo === 'turbo') return c.turbo === 'sim';
     return true;
   }) || [];
 
@@ -46,18 +44,6 @@ export default function ClientesScreen() {
       label: 'Bloqueados', 
       emoji: '🚫', 
       count: clients?.filter(c => c.bloqueado === 'sim').length || 0 
-    },
-    { 
-      key: 'com_comodato' as const, 
-      label: 'Comodato', 
-      emoji: '📦', 
-      count: clients?.filter(c => c.comodato === 'sim').length || 0 
-    },
-    { 
-      key: 'turbo' as const, 
-      label: 'Turbo', 
-      emoji: '⚡', 
-      count: clients?.filter(c => c.turbo === 'sim').length || 0 
     },
   ];
 
@@ -108,8 +94,6 @@ export default function ClientesScreen() {
                     ? 'bg-red-600'
                     : filtro.key === 'ativos'
                     ? 'bg-green-600'
-                    : filtro.key === 'turbo'
-                    ? 'bg-purple-600'
                     : 'bg-blue-600'
                   : 'bg-gray-100'
               }`}
@@ -159,23 +143,11 @@ export default function ClientesScreen() {
         }
         renderItem={({ item }) => (
           <View className="bg-white rounded-lg p-4 mb-3 shadow-sm border-l-4 border-blue-500">
-            {/* Header com badges de status */}
-            <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-lg font-semibold text-gray-900 flex-1">
+            {/* Header */}
+            <View className="mb-2">
+              <Text className="text-lg font-semibold text-gray-900">
                 {item.nome}
               </Text>
-              <View className="flex-row gap-1">
-                {item.turbo === 'sim' && (
-                  <View className="bg-purple-100 px-2 py-0.5 rounded">
-                    <Text className="text-xs font-bold text-purple-700">⚡</Text>
-                  </View>
-                )}
-                {item.comodato === 'sim' && (
-                  <View className="bg-blue-100 px-2 py-0.5 rounded">
-                    <Text className="text-xs font-bold text-blue-700">📦</Text>
-                  </View>
-                )}
-              </View>
             </View>
             
             {item.cpf_cnpj && (
