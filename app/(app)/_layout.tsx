@@ -31,6 +31,9 @@ export default function TabLayout() {
         name="clientes"
         options={{
           title: 'Clientes',
+          headerShown: true,
+          headerTitle: 'Clientes',
+          headerShadowVisible: false,
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol size={28} name="person.2.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),
@@ -39,10 +42,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="chamados"
         options={{
-          title: 'Chamados',
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={28} name="list.bullet.rectangle" color={color || (focused ? '#3b82f6' : '#6b7280')} />
-          ),
+          href: null, // Esconde da tab bar
         }}
       />
       <Tabs.Screen

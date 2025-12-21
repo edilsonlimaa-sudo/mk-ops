@@ -83,10 +83,9 @@ export default function ClientesScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
-      {/* Header e Filter Pills */}
-      <View className="bg-white px-4 py-4 border-b border-gray-200">
-        <Text className="text-2xl font-bold text-gray-900 mb-1">Clientes</Text>
+    <View className="flex-1 bg-gray-50">
+      {/* Filter Pills e Busca - fixas abaixo do header */}
+      <View className="bg-white px-4 py-3 border-b border-gray-200">
         <Text className="text-gray-500 text-sm mb-3">
           {buscaTexto.trim() 
             ? `${clientesFiltrados.length} encontrados de ${clientesPorPill.length} ${filtroAtivo === 'todos' ? 'clientes' : filtroAtivo}`
@@ -231,6 +230,6 @@ export default function ClientesScreen() {
           </View>
         )}
       />
-    </SafeAreaView>
+    </View>
   );
 }
