@@ -1,56 +1,57 @@
-import { Chamado } from '@/types/chamado';
+import { useChamadosFechados, useInvalidateChamadosFechados } from '@/hooks/useChamadosFechados';
 import { useState } from 'react';
-import { FlatList, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type FiltroFechado = 'hoje' | 'ontem' | 'ultimos_7_dias';
 
 export default function HistoricoScreen() {
+  const { data: chamados, isLoading, isFetching, error } = useChamadosFechados();
+  const { invalidate } = useInvalidateChamadosFechados();
   const [filtroFechado, setFiltroFechado] = useState<FiltroFechado>('hoje');
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Mock data para chamados fechados (temporário - depois integramos com o service)
-  const chamadosFechados: Chamado[] = [
-    { 
-      id: '1', uuid_suporte: 'mock-1', uuid: 'mock-1',
-      chamado: '12345', nome: 'João Silva', ramal: null, 
-      assunto: 'Instalação concluída', fechamento: '2025-12-20 14:30:00', 
-      motivo_fechar: 'Serviço executado', prioridade: 'alta', 
-      atendente: 'Carlos Tech', abertura: '2025-12-20 08:00:00', 
-      visita: null, email: 'joao@email.com', status: 'fechado',
-      login: '12345678900', reply: '', tecnico: null, login_atend: null
-    },
-    { 
-      id: '2', uuid_suporte: 'mock-2', uuid: 'mock-2',
-      chamado: '12346', nome: 'Maria Santos', ramal: 'Ramal 101', 
-      assunto: 'Manutenção preventiva', fechamento: '2025-12-20 11:15:00', 
-      motivo_fechar: 'Concluído', prioridade: 'media', 
-      atendente: 'Ana Silva', abertura: '2025-12-20 07:00:00', 
-      visita: null, email: 'maria@email.com', status: 'fechado',
-      login: '98765432100', reply: '', tecnico: null, login_atend: null
-    },
-    { 
-      id: '3', uuid_suporte: 'mock-3', uuid: 'mock-3',
-      chamado: '12347', nome: 'Pedro Costa', ramal: null, 
-      assunto: 'Troca de equipamento', fechamento: '2025-12-19 16:45:00', 
-      motivo_fechar: 'Equipamento substituído', prioridade: 'alta', 
-      atendente: 'Carlos Tech', abertura: '2025-12-19 09:00:00', 
-      visita: null, email: 'pedro@email.com', status: 'fechado',
-      login: '11122233344', reply: '', tecnico: null, login_atend: null
-    },
-  ];
-
-  const filtros = [
-    { key: 'hoje' as const, label: 'Hoje', emoji: '📅', count: chamadosFechados.length },
-    { key: 'ontem' as const, label: 'Ontem', emoji: '🕐', count: 0 },
-    { key: 'ultimos_7_dias' as const, label: 'Últimos 7 dias', emoji: '📆', count: 0 },
-  ];
 
   const handleRefresh = async () => {
-    setIsRefreshing(true);
-    // Aqui virá a lógica de refresh quando integrar com o service
-    setTimeout(() => setIsRefreshing(false), 1000);
+    await invalidate();
   };
+
+  // Função para categorizar chamado fechado por data
+  const categorizarFechamento = (dataStr: string | null) => {
+    if (!dataStr) return null;
+    
+    try {
+      const dataFechamento = new Date(dataStr.replace(' ', 'T'));
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      
+      const ontem = new Date(hoje);
+      ontem.setDate(ontem.getDate() - 1);
+      
+      const seteDiasAtras = new Date(hoje);
+      seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+      
+      const fechamentoData = new Date(dataFechamento);
+      fechamentoData.setHours(0, 0, 0, 0);
+      
+      if (fechamentoData.getTime() === hoje.getTime()) return 'hoje';
+      if (fechamentoData.getTime() === ontem.getTime()) return 'ontem';
+      if (fechamentoData >= seteDiasAtras) return 'ultimos_7_dias';
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Filtra chamados com base no filtro ativo
+  const chamadosFiltrados = chamados?.filter(c => {
+    const categoria = categorizarFechamento(c.fechamento);
+    return categoria === filtroFechado;
+  }) || [];
+
+  const filtros = [
+    { key: 'hoje' as const, label: 'Hoje', emoji: '📅', count: chamados?.filter(c => categorizarFechamento(c.fechamento) === 'hoje').length || 0 },
+    { key: 'ontem' as const, label: 'Ontem', emoji: '🕐', count: chamados?.filter(c => categorizarFechamento(c.fechamento) === 'ontem').length || 0 },
+    { key: 'ultimos_7_dias' as const, label: 'Últimos 7 dias', emoji: '📆', count: chamados?.filter(c => categorizarFechamento(c.fechamento) === 'ultimos_7_dias').length || 0 },
+  ];
 
   const formatarDataHora = (dataStr: string | null) => {
     if (!dataStr) return null;
@@ -74,6 +75,28 @@ export default function HistoricoScreen() {
     }
   };
 
+  if (isLoading && !chamados) {
+    return (
+      <SafeAreaView className="flex-1 bg-white justify-center items-center">
+        <ActivityIndicator size="large" color="#16a34a" />
+        <Text className="text-gray-600 mt-4">Carregando histórico...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView className="flex-1 bg-white justify-center items-center p-6">
+        <Text className="text-red-500 text-lg font-semibold mb-2">
+          Erro ao carregar histórico
+        </Text>
+        <Text className="text-gray-600 text-center mb-4">
+          {error.message}
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <View className="flex-1 bg-white">
       <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'left', 'right']}>
@@ -81,7 +104,7 @@ export default function HistoricoScreen() {
         <View className="bg-white px-4 py-4 border-b border-gray-200">
           <Text className="text-2xl font-bold text-gray-900 mb-1">Histórico</Text>
           <Text className="text-gray-500 text-sm mb-3">
-            {chamadosFechados.length} chamados concluídos
+            {chamadosFiltrados.length} de {chamados?.length || 0} chamados
           </Text>
 
           {/* Filtros */}
@@ -128,11 +151,11 @@ export default function HistoricoScreen() {
 
         {/* Lista */}
         <FlatList
-          data={chamadosFechados}
+          data={chamadosFiltrados}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16 }}
           refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+            <RefreshControl refreshing={isFetching} onRefresh={handleRefresh} />
           }
           ListEmptyComponent={
             <View className="justify-center items-center py-12">
