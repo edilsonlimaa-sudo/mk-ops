@@ -159,7 +159,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     const tokenExpiration = getTokenExpiration(token);
 
     // 5. Atualiza estado silenciosamente (sem isLoading, sem navegação)
-    set({ token, tokenExpiration, isAuthenticated: true });
+    set({ 
+      token, 
+      tokenExpiration, 
+      ipMkAuth: credentials.ipMkAuth, // ← CRÍTICO: mantém ipMkAuth atualizado
+      isAuthenticated: true 
+    });
 
     console.log('✅ Token renovado automaticamente!');
     return token;
