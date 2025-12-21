@@ -50,7 +50,7 @@ export default function TabLayout() {
         options={{
           title: 'Agenda',
           headerShown: true,
-          headerTitle: 'Agenda Unificada',
+          headerTitle: 'Agenda de Atendimentos',
           headerShadowVisible: false,
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol size={28} name="calendar" color={color || (focused ? '#3b82f6' : '#6b7280')} />
