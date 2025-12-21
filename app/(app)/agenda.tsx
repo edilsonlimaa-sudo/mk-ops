@@ -139,83 +139,79 @@ export default function AgendaScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'left', 'right']}>
-        {/* Header */}
-        <View className="bg-white px-4 py-4 border-b border-gray-200">
-          <Text className="text-2xl font-bold text-gray-900 mb-1">Agenda Unificada</Text>
-          <Text className="text-gray-500 text-sm mb-3">
-            {servicos?.length || 0} serviços em aberto
-          </Text>
-
-          {/* Filtros em Pills */}
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 8 }}
-          >
-            {filtros.map((filtro) => (
-              <TouchableOpacity
-                key={filtro.key}
-                onPress={() => setFiltroAtivo(filtro.key)}
-                className={`flex-row items-center px-3 py-2 rounded-full ${
-                  filtroAtivo === filtro.key
-                    ? filtro.key === 'atrasado'
-                      ? 'bg-red-500'
-                      : filtro.key === 'hoje'
-                      ? 'bg-orange-500'
-                      : filtro.key === 'amanha'
-                      ? 'bg-yellow-500'
-                      : filtro.key === 'proximo'
-                      ? 'bg-blue-500'
-                      : 'bg-gray-700'
-                    : 'bg-gray-100'
+    <View className="flex-1 bg-gray-50">
+      {/* Filter Pills - fixas abaixo do header */}
+      <View className="bg-white px-4 py-3 border-b border-gray-200">
+        <Text className="text-gray-500 text-sm mb-3">
+          {servicos?.length || 0} serviços em aberto
+        </Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8 }}
+        >
+          {filtros.map((filtro) => (
+            <TouchableOpacity
+              key={filtro.key}
+              onPress={() => setFiltroAtivo(filtro.key)}
+              className={`flex-row items-center px-3 py-2 rounded-full ${
+                filtroAtivo === filtro.key
+                  ? filtro.key === 'atrasado'
+                    ? 'bg-red-500'
+                    : filtro.key === 'hoje'
+                    ? 'bg-orange-500'
+                    : filtro.key === 'amanha'
+                    ? 'bg-yellow-500'
+                    : filtro.key === 'proximo'
+                    ? 'bg-blue-500'
+                    : 'bg-gray-700'
+                  : 'bg-gray-100'
+              }`}
+            >
+              <Text className="text-sm mr-1">{filtro.emoji}</Text>
+              <Text
+                className={`text-sm font-semibold ${
+                  filtroAtivo === filtro.key ? 'text-white' : 'text-gray-700'
                 }`}
               >
-                <Text className="text-sm mr-1">{filtro.emoji}</Text>
-                <Text
-                  className={`text-sm font-semibold ${
-                    filtroAtivo === filtro.key ? 'text-white' : 'text-gray-700'
+                {filtro.label}
+              </Text>
+              {filtro.count > 0 && (
+                <View
+                  className={`ml-1.5 px-1.5 py-0.5 rounded-full ${
+                    filtroAtivo === filtro.key ? 'bg-white/30' : 'bg-gray-200'
                   }`}
                 >
-                  {filtro.label}
-                </Text>
-                {filtro.count > 0 && (
-                  <View
-                    className={`ml-1.5 px-1.5 py-0.5 rounded-full ${
-                      filtroAtivo === filtro.key ? 'bg-white/30' : 'bg-gray-200'
+                  <Text
+                    className={`text-xs font-bold ${
+                      filtroAtivo === filtro.key ? 'text-white' : 'text-gray-700'
                     }`}
                   >
-                    <Text
-                      className={`text-xs font-bold ${
-                        filtroAtivo === filtro.key ? 'text-white' : 'text-gray-700'
-                      }`}
-                    >
-                      {filtro.count}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+                    {filtro.count}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
-        {/* Lista de serviços */}
-        <FlatList
-          data={servicosFiltrados}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 16 }}
-          refreshControl={
-            <RefreshControl refreshing={isFetching} onRefresh={handleRefresh} />
-          }
-          ListEmptyComponent={
-            <View className="justify-center items-center py-12">
-              <Text className="text-gray-500 text-center">
-                Nenhum serviço encontrado
-              </Text>
-            </View>
-          }
-          renderItem={({ item }) => {
+      {/* Lista de serviços */}
+      <FlatList
+        data={servicosFiltrados}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ padding: 16 }}
+        refreshControl={
+          <RefreshControl refreshing={isFetching} onRefresh={handleRefresh} />
+        }
+        ListEmptyComponent={
+          <View className="justify-center items-center py-12">
+            <Text className="text-gray-500 text-center">
+              Nenhum serviço encontrado
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => {
             const categoria = categorizarVisita(item.visita);
             const borderColor = getBorderColor(categoria);
 
@@ -360,8 +356,7 @@ export default function AgendaScreen() {
 
             return null;
           }}
-        />
-      </SafeAreaView>
+      />
     </View>
   );
 }
