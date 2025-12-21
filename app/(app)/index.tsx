@@ -7,11 +7,6 @@ export default function HomeScreen() {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-6">
-        {/* Header */}
-        <View className="mb-8 mt-12">
-          <Text className="text-4xl font-bold text-gray-900 mb-2">MK-Auth Mobile</Text>
-          <Text className="text-lg text-gray-600">Com NativeWind/Tailwind ✅</Text>
-        </View>
 
         {/* Auth Status Card */}
         <View className="rounded-2xl p-6 mb-4 shadow-lg bg-green-500">
