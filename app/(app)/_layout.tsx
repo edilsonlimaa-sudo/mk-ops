@@ -37,9 +37,18 @@ export default function TabLayout() {
       <Tabs.Screen
         name="chamados"
         options={{
-          title: 'Chamados',
+          title: 'Agenda',
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol size={28} name="list.bullet.rectangle" color={color || (focused ? '#3b82f6' : '#6b7280')} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="historico"
+        options={{
+          title: 'Histórico',
+          tabBarIcon: ({ color, focused }) => (
+            <IconSymbol size={28} name="checkmark.circle.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),
         }}
       />
