@@ -163,7 +163,7 @@ export default function HistoricoScreen() {
 
           return (
             <TouchableOpacity
-              onPress={() => router.push(`/detalhes/chamado/${item.id}` as any)}
+              onPress={() => router.push(`/detalhes/chamado/${item.id}`)}
               activeOpacity={0.7}
             >
               <View className="bg-white rounded-lg p-3 mb-2 shadow-sm border-l-4 border-green-500">
