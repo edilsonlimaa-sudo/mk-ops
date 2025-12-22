@@ -2,7 +2,7 @@ import { useProactiveTokenRefresh } from '@/hooks/useProactiveTokenRefresh';
 import { queryClient } from '@/lib/queryClient';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { router, Stack, useRootNavigationState, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -18,6 +18,9 @@ export default function RootLayout() {
   const isRestored = useAuthStore((state) => state.isRestored);
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const [appIsReady, setAppIsReady] = useState(false);
+  
+  const segments = useSegments();
+  const navigationState = useRootNavigationState();
 
   // CAMADA 2: Refresh proativo ao voltar do background
   useProactiveTokenRefresh();
@@ -54,6 +57,23 @@ export default function RootLayout() {
     }
   }, [appIsReady, isRestored]);
 
+  // Navegação imperativa baseada em autenticação (funciona melhor em production)
+  useEffect(() => {
+    if (!navigationState?.key || !isRestored) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!isAuthenticated && !inAuthGroup) {
+      // Usuário não autenticado mas não está em (auth) → redireciona
+      console.log('🔓 [Navigation] Redirecionando para login');
+      router.replace('/(auth)/login');
+    } else if (isAuthenticated && inAuthGroup) {
+      // Usuário autenticado mas está em (auth) → redireciona  
+      console.log('🔐 [Navigation] Redirecionando para app');
+      router.replace('/(app)');
+    }
+  }, [isAuthenticated, segments, navigationState, isRestored]);
+
   // Não renderiza nada até verificar autenticação E restaurar sessão
   if (!appIsReady || !isRestored) {
     return null;
@@ -62,11 +82,8 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <Stack screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <Stack.Screen name="(app)" />
-        ) : (
-          <Stack.Screen name="(auth)" />
-        )}
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(app)" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="dark" />
     </QueryClientProvider>
