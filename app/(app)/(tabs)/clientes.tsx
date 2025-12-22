@@ -180,7 +180,7 @@ export default function ClientesScreen() {
         }
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() => router.push(`/detalhes/cliente/${item.id}`)}
+            onPress={() => router.push(`/detalhes/cliente/${item.uuid_cliente}`)}
             activeOpacity={0.7}
           >
             <View className="bg-white rounded-lg p-4 mb-3 shadow-sm border-l-4 border-blue-500">
