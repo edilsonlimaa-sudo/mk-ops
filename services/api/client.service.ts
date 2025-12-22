@@ -31,7 +31,6 @@ const fetchClientPage = async (page: number): Promise<ClientListResponse> => {
  */
 export const fetchAllClients = async (): Promise<Client[]> => {
   console.log('🔍 [ClientService] Iniciando busca de clientes...');
-  console.log('🌐 [ClientService] BaseURL atual:', apiClient.defaults.baseURL);
   
   try {
     const firstPage = await fetchClientPage(1);
