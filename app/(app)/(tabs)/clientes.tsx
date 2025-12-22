@@ -1,4 +1,5 @@
 import { useClients, useInvalidateClients } from '@/hooks/useClients';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +11,7 @@ export default function ClientesScreen() {
   const { invalidate } = useInvalidateClients();
   const [filtroAtivo, setFiltroAtivo] = useState<FiltroCliente>('todos');
   const [buscaTexto, setBuscaTexto] = useState('');
+  const router = useRouter();
 
   // Debug: log do erro
   if (error) {
@@ -177,9 +179,13 @@ export default function ClientesScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <View className="bg-white rounded-lg p-4 mb-3 shadow-sm border-l-4 border-blue-500">
-            {/* Header */}
-            <View className="mb-2">
+          <TouchableOpacity
+            onPress={() => router.push(`/detalhes/cliente/${item.id}`)}
+            activeOpacity={0.7}
+          >
+            <View className="bg-white rounded-lg p-4 mb-3 shadow-sm border-l-4 border-blue-500">
+              {/* Header */}
+              <View className="mb-2">
               <Text className="text-lg font-semibold text-gray-900">
                 {item.nome}
               </Text>
@@ -227,7 +233,8 @@ export default function ClientesScreen() {
                 </View>
               )}
             </View>
-          </View>
+            </View>
+          </TouchableOpacity>
         )}
       />
     </View>

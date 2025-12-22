@@ -1,74 +1,37 @@
-import { Tabs } from 'expo-router';
+import { Stack } from 'expo-router';
 import React from 'react';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function AppLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: '#3b82f6', // Azul visível
-        tabBarInactiveTintColor: '#6b7280', // Cinza visível
-        headerShown: false, // Default false, cada tela decide
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen 
+        name="detalhes/cliente/[id]" 
+        options={{ 
           headerShown: true,
-          headerTitle: 'MK-Auth Mobile',
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={28} name="house.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
-          ),
-        }}
+          headerBackTitle: 'Voltar',
+          headerTitle: 'Detalhes do Cliente',
+          presentation: 'card',
+        }} 
       />
-      <Tabs.Screen
-        name="clientes"
-        options={{
-          title: 'Clientes',
+      <Stack.Screen 
+        name="detalhes/chamado/[id]" 
+        options={{ 
           headerShown: true,
-          headerTitle: 'Clientes',
-          headerShadowVisible: false,
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={28} name="person.2.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
-          ),
-        }}
+          headerBackTitle: 'Voltar',
+          headerTitle: 'Detalhes do Chamado',
+          presentation: 'card',
+        }} 
       />
-      <Tabs.Screen
-        name="chamados"
-        options={{
-          href: null, // Esconde da tab bar
-        }}
-      />
-      <Tabs.Screen
-        name="agenda"
-        options={{
-          title: 'Agenda',
+      <Stack.Screen 
+        name="detalhes/instalacao/[id]" 
+        options={{ 
           headerShown: true,
-          headerTitle: 'Agenda de Atendimentos',
-          headerShadowVisible: false,
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={28} name="calendar" color={color || (focused ? '#3b82f6' : '#6b7280')} />
-          ),
-        }}
+          headerBackTitle: 'Voltar',
+          headerTitle: 'Detalhes da Instalação',
+          presentation: 'card',
+        }} 
       />
-      <Tabs.Screen
-        name="historico"
-        options={{
-          title: 'Histórico',
-          headerShown: true,
-          headerTitle: 'Histórico',
-          headerShadowVisible: false,
-          tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={28} name="checkmark.circle.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
-          ),
-        }}
-      />
-    </Tabs>
+    </Stack>
   );
 }

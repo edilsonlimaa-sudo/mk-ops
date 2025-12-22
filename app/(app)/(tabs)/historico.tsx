@@ -1,4 +1,5 @@
 import { useChamadosFechados, useInvalidateChamadosFechados } from '@/hooks/useChamadosFechados';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +10,7 @@ export default function HistoricoScreen() {
   const { data: chamados, isLoading, isFetching, error } = useChamadosFechados();
   const { invalidate } = useInvalidateChamadosFechados();
   const [filtroFechado, setFiltroFechado] = useState<FiltroFechado>('hoje');
+  const router = useRouter();
 
   const handleRefresh = async () => {
     await invalidate();
@@ -160,7 +162,11 @@ export default function HistoricoScreen() {
           const dataFechamento = item.fechamento ? formatarDataHora(item.fechamento) : null;
 
           return (
-            <View className="bg-white rounded-lg p-3 mb-2 shadow-sm border-l-4 border-green-500">
+            <TouchableOpacity
+              onPress={() => router.push(`/detalhes/chamado/${item.id}` as any)}
+              activeOpacity={0.7}
+            >
+              <View className="bg-white rounded-lg p-3 mb-2 shadow-sm border-l-4 border-green-500">
               {/* Header */}
               <View className="flex-row justify-between items-center mb-2">
                 <View
@@ -215,7 +221,8 @@ export default function HistoricoScreen() {
                   {item.atendente || 'Não atribuído'}
                 </Text>
               </View>
-            </View>
+              </View>
+            </TouchableOpacity>
           );
         }}
       />

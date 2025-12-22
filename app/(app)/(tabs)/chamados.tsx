@@ -1,4 +1,5 @@
 import { useChamados, useInvalidateChamados } from '@/hooks/useChamados';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +10,7 @@ export default function ChamadosScreen() {
   const { data: chamados, isLoading, isFetching, error } = useChamados('aberto');
   const { invalidate } = useInvalidateChamados();
   const [filtroAtivo, setFiltroAtivo] = useState<FiltroCategoria>('todos');
+  const router = useRouter();
 
   const handleRefresh = async () => {
     await invalidate('aberto');
@@ -227,7 +229,11 @@ export default function ChamadosScreen() {
           const categoria = categorizarVisita(item.visita);
 
           return (
-            <View className={`bg-white rounded-lg p-3 mb-2 shadow-sm border-l-4 ${getBorderColor(categoria)}`}>
+            <TouchableOpacity
+              onPress={() => router.push(`/detalhes/chamado/${item.id}` as any)}
+              activeOpacity={0.7}
+            >
+              <View className={`bg-white rounded-lg p-3 mb-2 shadow-sm border-l-4 ${getBorderColor(categoria)}`}>
               {/* Header: Prioridade e Número */}
               <View className="flex-row justify-between items-center mb-2">
                 <View className="flex-row items-center gap-2">
@@ -286,7 +292,8 @@ export default function ChamadosScreen() {
                   {item.atendente || '🔴 Livre'}
                 </Text>
               </View>
-            </View>
+              </View>
+            </TouchableOpacity>
           );
         }}
       />
