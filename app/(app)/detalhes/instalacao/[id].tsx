@@ -1,6 +1,7 @@
 import { useInstalacaoDetail } from '@/hooks/useInstalacaoDetail';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function InstalacaoDetalhesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -85,8 +86,9 @@ export default function InstalacaoDetalhesScreen() {
           headerBackTitle: 'Voltar',
         }}
       />
-      <ScrollView className="flex-1 bg-gray-50">
-        <View className="p-4 gap-4">
+      <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+        <ScrollView className="flex-1">
+          <View className="p-4 gap-4">
           {/* Status */}
           <View className="bg-white rounded-lg p-4 shadow-sm">
             <View className="flex-row justify-between items-center">
@@ -320,6 +322,7 @@ export default function InstalacaoDetalhesScreen() {
           )}
         </View>
       </ScrollView>
+      </SafeAreaView>
     </>
   );
 }
