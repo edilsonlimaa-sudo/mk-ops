@@ -1,4 +1,7 @@
-import { useChamadosFechados, useInvalidateChamadosFechados } from '@/hooks/useChamadosFechados';
+import { useHistorico, useInvalidateHistorico } from '@/hooks/useHistorico';
+import { isChamado, isInstalacao } from '@/services/api/agenda.service';
+import { Chamado } from '@/types/chamado';
+import { Instalacao } from '@/types/instalacao';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -7,8 +10,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 type FiltroFechado = 'hoje' | 'ontem' | 'ultimos_7_dias';
 
 export default function HistoricoScreen() {
-  const { data: chamados, isLoading, isFetching, error } = useChamadosFechados();
-  const { invalidate } = useInvalidateChamadosFechados();
+  const { data: historico, isLoading, isFetching, error } = useHistorico();
+  const { invalidate } = useInvalidateHistorico();
   const [filtroFechado, setFiltroFechado] = useState<FiltroFechado>('hoje');
   const router = useRouter();
 
@@ -16,8 +19,9 @@ export default function HistoricoScreen() {
     await invalidate();
   };
 
-  // Função para categorizar chamado fechado por data
-  const categorizarFechamento = (dataStr: string | null) => {
+  // Função para categorizar item fechado/concluído por data
+  const categorizarFechamento = (item: Chamado | Instalacao) => {
+    const dataStr = isChamado(item) ? item.fechamento : item.datainst;
     if (!dataStr) return null;
 
     try {
@@ -43,16 +47,16 @@ export default function HistoricoScreen() {
     }
   };
 
-  // Filtra chamados com base no filtro ativo
-  const chamadosFiltrados = chamados?.filter(c => {
-    const categoria = categorizarFechamento(c.fechamento);
+  // Filtra itens com base no filtro ativo
+  const historicoFiltrado = historico?.filter(item => {
+    const categoria = categorizarFechamento(item);
     return categoria === filtroFechado;
   }) || [];
 
   const filtros = [
-    { key: 'hoje' as const, label: 'Hoje', emoji: '📅', count: chamados?.filter(c => categorizarFechamento(c.fechamento) === 'hoje').length || 0 },
-    { key: 'ontem' as const, label: 'Ontem', emoji: '🕐', count: chamados?.filter(c => categorizarFechamento(c.fechamento) === 'ontem').length || 0 },
-    { key: 'ultimos_7_dias' as const, label: 'Últimos 7 dias', emoji: '📆', count: chamados?.filter(c => categorizarFechamento(c.fechamento) === 'ultimos_7_dias').length || 0 },
+    { key: 'hoje' as const, label: 'Hoje', emoji: '📅', count: historico?.filter(item => categorizarFechamento(item) === 'hoje').length || 0 },
+    { key: 'ontem' as const, label: 'Ontem', emoji: '🕐', count: historico?.filter(item => categorizarFechamento(item) === 'ontem').length || 0 },
+    { key: 'ultimos_7_dias' as const, label: 'Últimos 7 dias', emoji: '📆', count: historico?.filter(item => categorizarFechamento(item) === 'ultimos_7_dias').length || 0 },
   ];
 
   const formatarDataHora = (dataStr: string | null) => {
@@ -77,7 +81,7 @@ export default function HistoricoScreen() {
     }
   };
 
-  if (isLoading && !chamados) {
+  if (isLoading && !historico) {
     return (
       <SafeAreaView className="flex-1 bg-white justify-center items-center">
         <ActivityIndicator size="large" color="#16a34a" />
@@ -104,7 +108,7 @@ export default function HistoricoScreen() {
       {/* Filter Pills - fixas abaixo do header */}
       <View className="bg-white px-4 py-3 border-b border-gray-200">
         <Text className="text-gray-500 text-sm mb-3">
-          {chamadosFiltrados.length} de {chamados?.length || 0} chamados
+          {historicoFiltrado.length} de {historico?.length || 0} itens concluídos
         </Text>
         <ScrollView
           horizontal
@@ -145,7 +149,7 @@ export default function HistoricoScreen() {
 
       {/* Lista */}
       <FlatList
-        data={chamadosFiltrados}
+        data={historicoFiltrado}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: 16 }}
         refreshControl={
@@ -154,73 +158,107 @@ export default function HistoricoScreen() {
         ListEmptyComponent={
           <View className="justify-center items-center py-12">
             <Text className="text-gray-500 text-center">
-              Nenhum chamado concluído encontrado
+              Nenhum item concluído encontrado
             </Text>
           </View>
         }
         renderItem={({ item }) => {
-          const dataFechamento = item.fechamento ? formatarDataHora(item.fechamento) : null;
+          const ehChamado = isChamado(item);
+          const ehInstalacao = isInstalacao(item);
+          const dataFechamento = ehChamado 
+            ? (item.fechamento ? formatarDataHora(item.fechamento) : null)
+            : (item.datainst ? formatarDataHora(item.datainst) : null);
+
+          // Navegação condicional
+          const handlePress = () => {
+            if (ehChamado) {
+              router.push(`/detalhes/chamado/${item.uuid_suporte}`);
+            } else if (ehInstalacao) {
+              router.push(`/detalhes/instalacao/${item.uuid_solic}`);
+            }
+          };
 
           return (
             <TouchableOpacity
-              onPress={() => router.push(`/detalhes/chamado/${item.uuid_suporte}`)}
+              onPress={handlePress}
               activeOpacity={0.7}
             >
-              <View className="bg-white rounded-lg p-3 mb-2 shadow-sm border-l-4 border-green-500">
-              {/* Header */}
-              <View className="flex-row justify-between items-center mb-2">
-                <View
-                  className={`px-2 py-0.5 rounded ${item.prioridade === 'alta'
-                      ? 'bg-red-500'
-                      : item.prioridade === 'media'
-                        ? 'bg-orange-500'
-                        : 'bg-green-500'
-                    }`}
-                >
-                  <Text className="text-xs font-bold text-white">
-                    {item.prioridade?.toUpperCase() || 'NORMAL'}
+              <View className={`bg-white rounded-lg p-3 mb-2 shadow-sm border-l-4 ${ehChamado ? 'border-green-500' : 'border-blue-500'}`}>
+                {/* Header */}
+                <View className="flex-row justify-between items-center mb-2">
+                  <View className="flex-row items-center gap-2">
+                    <View
+                      className={`px-2 py-0.5 rounded ${
+                        ehChamado
+                          ? (item.prioridade === 'alta' || item.prioridade === 'Alta')
+                            ? 'bg-red-500'
+                            : (item.prioridade === 'media' || item.prioridade === 'Média')
+                              ? 'bg-orange-500'
+                              : 'bg-green-500'
+                          : 'bg-blue-500'
+                      }`}
+                    >
+                      <Text className="text-xs font-bold text-white">
+                        {ehChamado ? (item.prioridade?.toUpperCase() || 'NORMAL') : 'INSTALAÇÃO'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text className="text-xs font-mono text-gray-500">
+                    {ehChamado ? `#${item.chamado}` : `#${item.id}`}
                   </Text>
                 </View>
-                <Text className="text-xs font-mono text-gray-500">
-                  #{item.chamado}
-                </Text>
-              </View>
 
-              {/* Cliente */}
-              <View className="mb-2">
-                <Text className="text-sm font-bold text-gray-900" numberOfLines={1}>
-                  {item.nome || 'Cliente não identificado'}
-                </Text>
-                {item.ramal && (
-                  <Text className="text-xs text-gray-500" numberOfLines={1}>
-                    {item.ramal}
+                {/* Cliente/Nome */}
+                <View className="mb-2">
+                  <Text className="text-sm font-bold text-gray-900" numberOfLines={1}>
+                    {item.nome || 'Cliente não identificado'}
                   </Text>
+                  {ehChamado && item.ramal && (
+                    <Text className="text-xs text-gray-500" numberOfLines={1}>
+                      {item.ramal}
+                    </Text>
+                  )}
+                  {ehInstalacao && (
+                    <Text className="text-xs text-gray-500" numberOfLines={1}>
+                      {item.plano}
+                    </Text>
+                  )}
+                </View>
+
+                {/* Assunto/Descrição */}
+                <Text className="text-sm text-gray-700 mb-2" numberOfLines={2}>
+                  {ehChamado 
+                    ? (item.assunto || 'Sem assunto')
+                    : `${item.endereco}, ${item.numero} - ${item.bairro}`
+                  }
+                </Text>
+
+                {/* Motivo fechamento / Status instalação */}
+                {ehChamado && item.motivo_fechar && (
+                  <View className="bg-green-50 px-2 py-1 rounded mb-2">
+                    <Text className="text-xs text-green-700">
+                      ✓ {item.motivo_fechar}
+                    </Text>
+                  </View>
                 )}
-              </View>
+                {ehInstalacao && item.instalado === 'sim' && (
+                  <View className="bg-blue-50 px-2 py-1 rounded mb-2">
+                    <Text className="text-xs text-blue-700">
+                      ✓ Instalação concluída
+                    </Text>
+                  </View>
+                )}
 
-              {/* Assunto */}
-              <Text className="text-sm text-gray-700 mb-2" numberOfLines={2}>
-                {item.assunto || 'Sem assunto'}
-              </Text>
-
-              {/* Motivo fechamento */}
-              {item.motivo_fechar && (
-                <View className="bg-green-50 px-2 py-1 rounded mb-2">
-                  <Text className="text-xs text-green-700">
-                    ✓ {item.motivo_fechar}
+                {/* Footer */}
+                <View className="flex-row justify-between items-center pt-2 border-t border-gray-100">
+                  <Text className="text-xs text-gray-500">
+                    {ehChamado ? 'Fechado: ' : 'Instalado: '}
+                    {dataFechamento?.completo || 'Data não disponível'}
+                  </Text>
+                  <Text className="text-xs text-gray-600" numberOfLines={1}>
+                    {ehChamado ? (item.atendente || 'Não atribuído') : (item.tecnico || 'Não atribuído')}
                   </Text>
                 </View>
-              )}
-
-              {/* Footer */}
-              <View className="flex-row justify-between items-center pt-2 border-t border-gray-100">
-                <Text className="text-xs text-gray-500">
-                  Fechado: {dataFechamento?.completo || 'Data não disponível'}
-                </Text>
-                <Text className="text-xs text-gray-600" numberOfLines={1}>
-                  {item.atendente || 'Não atribuído'}
-                </Text>
-              </View>
               </View>
             </TouchableOpacity>
           );

@@ -5,11 +5,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 /**
  * Hook to fetch a single chamado by UUID
- * Uses initialData from active caches for instant navigation
+ * Uses initialData from historico cache for instant navigation
  * Searches in:
- * - ['chamados', 'fechados'] - Aba Histórico  
- * - ['agenda'] - Aba Agenda (chamados + instalações)
+ * - ['historico'] - Histórico unificado (only closed chamados)
  * Falls back to API call if not found in cache (deep links, refreshes)
+ * Note: Does not search agenda cache since agenda only contains open chamados
  */
 export const useChamadoDetail = (uuid: string) => {
   const queryClient = useQueryClient();
@@ -20,24 +20,16 @@ export const useChamadoDetail = (uuid: string) => {
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     initialData: () => {
-      // 1. Check chamados fechados cache (aba Histórico)
-      const chamadosFechados = queryClient.getQueryData<Chamado[]>(['chamados', 'fechados']);
-      const chamadoFechado = chamadosFechados?.find((c) => c.uuid_suporte === uuid);
-      if (chamadoFechado) {
-        console.log(`⚡ [useChamadoDetail] Cache hit! Found chamado #${chamadoFechado.chamado} in histórico cache`);
-        return chamadoFechado;
-      }
-      
-      // 2. Check agenda cache (aba Agenda - contains both chamados and instalacoes)
-      const agendaItems = queryClient.getQueryData<ServicoAgenda[]>(['agenda']);
-      if (agendaItems) {
-        const chamadoAgenda = agendaItems.find((item): item is Chamado => 
+      // Check historico cache (aba Histórico - closed chamados only)
+      const historicoItems = queryClient.getQueryData<ServicoAgenda[]>(['historico']);
+      if (historicoItems) {
+        const chamadoHistorico = historicoItems.find((item): item is Chamado => 
           isChamado(item) && item.uuid_suporte === uuid
         );
         
-        if (chamadoAgenda) {
-          console.log(`⚡ [useChamadoDetail] Cache hit! Found chamado #${chamadoAgenda.chamado} in agenda cache`);
-          return chamadoAgenda;
+        if (chamadoHistorico) {
+          console.log(`⚡ [useChamadoDetail] Cache hit! Found chamado #${chamadoHistorico.chamado} in historico cache`);
+          return chamadoHistorico;
         }
       }
       

@@ -5,11 +5,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 /**
  * Hook to fetch a single instalacao by UUID
- * Uses initialData from active caches for instant navigation
+ * Uses initialData from historico cache for instant navigation
  * Searches in:
- * - ['historico'] - Histórico unificado (chamados + instalações concluídas)
- * - ['agenda'] - Aba Agenda (chamados + instalações)
+ * - ['historico'] - Histórico unificado (only completed instalações)
  * Falls back to API call if not found in cache (deep links, refreshes)
+ * Note: Does not search agenda cache since agenda only contains open instalações
  */
 export const useInstalacaoDetail = (uuid: string) => {
   const queryClient = useQueryClient();
@@ -20,7 +20,7 @@ export const useInstalacaoDetail = (uuid: string) => {
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     initialData: () => {
-      // 1. Check historico cache (if it exists - chamados fechados + instalações concluídas)
+      // Check historico cache (aba Histórico - completed instalações only)
       const historicoItems = queryClient.getQueryData<ServicoAgenda[]>(['historico']);
       if (historicoItems) {
         const instalacaoHistorico = historicoItems.find((item): item is Instalacao => 
@@ -30,19 +30,6 @@ export const useInstalacaoDetail = (uuid: string) => {
         if (instalacaoHistorico) {
           console.log(`⚡ [useInstalacaoDetail] Cache hit! Found instalacao #${instalacaoHistorico.id} in historico cache`);
           return instalacaoHistorico;
-        }
-      }
-      
-      // 2. Check agenda cache (aba Agenda - contains both chamados and instalacoes)
-      const agendaItems = queryClient.getQueryData<ServicoAgenda[]>(['agenda']);
-      if (agendaItems) {
-        const instalacaoAgenda = agendaItems.find((item): item is Instalacao => 
-          isInstalacao(item) && item.uuid_solic === uuid
-        );
-        
-        if (instalacaoAgenda) {
-          console.log(`⚡ [useInstalacaoDetail] Cache hit! Found instalacao #${instalacaoAgenda.id} in agenda cache`);
-          return instalacaoAgenda;
         }
       }
       
