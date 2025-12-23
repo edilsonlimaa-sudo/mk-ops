@@ -65,3 +65,37 @@ export const fetchAllInstalacoes = async (status: InstalacaoStatus = 'aberto'): 
     throw error;
   }
 };
+
+/**
+ * Fetches a single instalacao by UUID
+ * @param uuid - The uuid_solic of the instalacao
+ * @returns Instalacao object with complete details
+ * @throws Error if instalacao is not found or API returns invalid data
+ */
+export const fetchInstalacaoById = async (uuid: string): Promise<Instalacao> => {
+  console.log(`🔍 [InstalacaoService] Fetching instalacao by uuid_solic: ${uuid}`);
+  
+  try {
+    const response = await apiClient.get(`/api/instalacao/show/${uuid}`);
+    
+    // Handle API inconsistency: 200 status with empty array means "not found"
+    if (Array.isArray(response.data) && response.data.length === 0) {
+      console.error(`❌ [InstalacaoService] Instalação não encontrada (API retornou array vazio)`);
+      throw new Error('Instalação não encontrada');
+    }
+    
+    const instalacao = response.data;
+    
+    // Validate that we got a valid instalacao object
+    if (!instalacao || typeof instalacao !== 'object' || !instalacao.uuid_solic) {
+      console.error(`❌ [InstalacaoService] Resposta inválida da API:`, instalacao);
+      throw new Error('Dados da instalação inválidos');
+    }
+    
+    console.log(`✅ [InstalacaoService] Instalação #${instalacao.id} carregada com sucesso`);
+    return instalacao;
+  } catch (error) {
+    console.error(`❌ [InstalacaoService] Erro ao buscar instalação ${uuid}:`, error);
+    throw error;
+  }
+};
