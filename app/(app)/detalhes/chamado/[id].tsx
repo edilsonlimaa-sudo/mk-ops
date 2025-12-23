@@ -49,6 +49,22 @@ export default function ChamadoDetalhesScreen() {
     chamado.prioridade === 'Média' ? 'bg-yellow-100 text-yellow-800' :
     'bg-blue-100 text-blue-800';
 
+  // Formatar data para dd/MM/yyyy HH:mm
+  const formatarDataCompleta = (dataStr: string) => {
+    try {
+      const data = new Date(dataStr.replace(' ', 'T'));
+      return data.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dataStr;
+    }
+  };
+
   return (
     <>
       <Stack.Screen
@@ -160,7 +176,7 @@ export default function ChamadoDetalhesScreen() {
               {chamado.visita && (
                 <View className="border-t border-gray-100 pt-3">
                   <Text className="text-gray-500 text-xs mb-1">Visita Agendada</Text>
-                  <Text className="text-gray-900 font-medium">{chamado.visita}</Text>
+                  <Text className="text-gray-900 font-medium">{formatarDataCompleta(chamado.visita)}</Text>
                 </View>
               )}
             </View>
@@ -173,13 +189,13 @@ export default function ChamadoDetalhesScreen() {
             <View className="gap-3">
               <View>
                 <Text className="text-gray-500 text-xs mb-1">Data de Abertura</Text>
-                <Text className="text-gray-900">{chamado.abertura}</Text>
+                <Text className="text-gray-900">{formatarDataCompleta(chamado.abertura)}</Text>
               </View>
 
-              {chamado.fechamento && (
+              {chamado.fechamento && chamado.fechamento !== '0000-00-00' && chamado.fechamento !== '0000-00-00 00:00:00' && (
                 <View className="border-t border-gray-100 pt-3">
                   <Text className="text-gray-500 text-xs mb-1">Data de Fechamento</Text>
-                  <Text className="text-gray-900">{chamado.fechamento}</Text>
+                  <Text className="text-gray-900">{formatarDataCompleta(chamado.fechamento)}</Text>
                 </View>
               )}
 
