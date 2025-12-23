@@ -1,6 +1,20 @@
 /**
+ * Relato (comment/update) in a chamado
+ */
+export interface Relato {
+  id: string;
+  chamado: string;
+  msg: string;
+  tipo: string;
+  login: string;
+  atendente: string;
+  msg_data: string;
+}
+
+/**
  * Chamado entity from MK-Auth API
  * Contains all fields returned by /api/chamado/listar endpoint
+ * Note: 'relatos' field is only present in /api/chamado/show/{uuid} endpoint
  */
 export interface Chamado {
   id: string;
@@ -22,6 +36,7 @@ export interface Chamado {
   tecnico: string | null; // ID do técnico
   login_atend: string | null; // Login do atendente
   motivo_fechar: string | null;
+  relatos?: Relato[]; // Only present in detail endpoint (show)
 }
 
 /**

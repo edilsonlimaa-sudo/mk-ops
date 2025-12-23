@@ -13,7 +13,7 @@ export default function ChamadoDetalhesScreen() {
     );
   }
 
-  const { data: chamado, isLoading, error } = useChamadoDetail(id);
+  const { data: chamado, isLoading, isFetching, error } = useChamadoDetail(id);
 
   if (isLoading) {
     return (
@@ -190,6 +190,100 @@ export default function ChamadoDetalhesScreen() {
                 </View>
               )}
             </View>
+          </View>
+
+          {/* Histórico de Relatos */}
+          <View className="bg-white rounded-lg p-4 shadow-sm">
+            <View className="flex-row items-center mb-4">
+              <View className="bg-blue-100 p-2 rounded-full mr-2">
+                <Text className="text-blue-600 text-base">📝</Text>
+              </View>
+              <Text className="text-lg font-bold text-gray-900">Histórico de Atualizações</Text>
+            </View>
+            
+            {!chamado.relatos && isFetching ? (
+              // Loading skeleton enquanto relatos carregam
+              <View className="py-8 items-center">
+                <ActivityIndicator size="small" color="#0284c7" />
+                <Text className="text-gray-500 text-sm text-center mt-2">Carregando histórico...</Text>
+              </View>
+            ) : !chamado.relatos || chamado.relatos.length === 0 ? (
+              // Nenhum relato
+              <View className="py-8 items-center">
+                <Text className="text-4xl mb-2">📭</Text>
+                <Text className="text-gray-500 text-center">Nenhuma atualização registrada</Text>
+              </View>
+            ) : (
+              // Lista de relatos com timeline
+              <View className="relative">
+                {/* Linha vertical da timeline */}
+                <View className="absolute left-4 top-6 bottom-6 w-0.5 bg-gray-200" />
+                
+                {chamado.relatos.map((relato, index) => {
+                  // Formatar data/hora
+                  const formatarData = (dataStr: string) => {
+                    try {
+                      const data = new Date(dataStr.replace(' ', 'T'));
+                      const hoje = new Date();
+                      const ontem = new Date(hoje);
+                      ontem.setDate(ontem.getDate() - 1);
+                      
+                      const dataFormatada = data.toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                      });
+                      const horaFormatada = data.toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
+                      
+                      const dataData = new Date(data);
+                      dataData.setHours(0, 0, 0, 0);
+                      const hojeData = new Date(hoje);
+                      hojeData.setHours(0, 0, 0, 0);
+                      const ontemData = new Date(ontem);
+                      ontemData.setHours(0, 0, 0, 0);
+                      
+                      if (dataData.getTime() === hojeData.getTime()) {
+                        return `Hoje às ${horaFormatada}`;
+                      } else if (dataData.getTime() === ontemData.getTime()) {
+                        return `Ontem às ${horaFormatada}`;
+                      }
+                      return `${dataFormatada} às ${horaFormatada}`;
+                    } catch {
+                      return dataStr;
+                    }
+                  };
+
+                  const isUltimo = index === chamado.relatos!.length - 1;
+                  
+                  return (
+                    <View 
+                      key={relato.id}
+                      className={`relative ${!isUltimo ? 'mb-4' : ''}`}
+                    >
+                      {/* Círculo da timeline */}
+                      <View className="absolute left-0 w-8 h-8 rounded-full bg-blue-100 items-center justify-center border-2 border-white z-10">
+                        <Text className="text-sm">💬</Text>
+                      </View>
+                      
+                      {/* Conteúdo do relato */}
+                      <View className="ml-12 bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <View className="flex-row justify-between items-start mb-2">
+                          <View className="flex-1">
+                            <Text className="text-gray-900 font-bold text-sm">{relato.atendente}</Text>
+                            <Text className="text-gray-500 text-xs mt-0.5">
+                              {formatarData(relato.msg_data)}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text className="text-gray-800 text-sm leading-5">{relato.msg}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>

@@ -44,6 +44,8 @@ export const useChamadoDetail = (uuid: string) => {
       console.log(`⚠️ [useChamadoDetail] Cache miss for uuid ${uuid}, will fetch from API`);
       return undefined;
     },
+    // Force revalidation even with initialData (to fetch relatos from API)
+    initialDataUpdatedAt: 0,
     retry: 1,
   });
 };
