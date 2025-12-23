@@ -65,3 +65,35 @@ export const fetchAllChamados = async (status: ChamadoStatus = 'aberto'): Promis
     throw error;
   }
 };
+
+/**
+ * Fetches a single chamado by UUID
+ * @param uuid - Chamado UUID (uuid_suporte field)
+ * @returns Single chamado object
+ * @throws Error if chamado not found or invalid UUID
+ */
+export const fetchChamadoById = async (uuid: string): Promise<Chamado> => {
+  console.log(`🔍 [ChamadoService] Buscando chamado por UUID: ${uuid}`);
+  
+  try {
+    const response = await apiClient.get(`/api/chamado/show/${uuid}`);
+    
+    // API inconsistency: returns 200 with empty array when chamado not found
+    if (Array.isArray(response.data) && response.data.length === 0) {
+      console.warn(`⚠️ [ChamadoService] Chamado não encontrado: ${uuid}`);
+      throw new Error('Chamado não encontrado');
+    }
+    
+    // Validate that we got a chamado object
+    if (!response.data || typeof response.data !== 'object' || !response.data.uuid_suporte) {
+      console.warn(`⚠️ [ChamadoService] Resposta inválida para UUID: ${uuid}`, response.data);
+      throw new Error('Resposta inválida da API');
+    }
+    
+    console.log(`✅ [ChamadoService] Chamado encontrado: #${response.data.chamado}`);
+    return response.data;
+  } catch (error) {
+    console.error(`❌ [ChamadoService] Erro ao buscar chamado ${uuid}:`, error);
+    throw error;
+  }
+};

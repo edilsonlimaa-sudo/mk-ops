@@ -26,11 +26,11 @@ export type AppStackParamList = {
  * Helper types for useLocalSearchParams in detail screens
  * Note: 'id' param represents the actual identifier used by the API:
  * - Cliente: uuid_cliente
- * - Chamado: id (numeric string)
+ * - Chamado: uuid_suporte
  * - Instalacao: id (numeric string)
  */
 export type ClienteDetalhesParams = { id: string }; // id = uuid_cliente
-export type ChamadoDetalhesParams = { id: string }; // id = chamado.id
+export type ChamadoDetalhesParams = { id: string }; // id = uuid_suporte
 export type InstalacaoDetalhesParams = { id: string }; // id = instalacao.id
 
 /**
