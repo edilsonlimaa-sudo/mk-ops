@@ -57,3 +57,35 @@ export const fetchAllClients = async (): Promise<Client[]> => {
     throw error;
   }
 };
+
+/**
+ * Fetches a single client by UUID
+ * @param uuid - Client UUID (uuid_cliente field)
+ * @returns Single client object
+ * @throws Error if client not found or invalid UUID
+ */
+export const fetchClientById = async (uuid: string): Promise<Client> => {
+  console.log(`🔍 [ClientService] Buscando cliente por UUID: ${uuid}`);
+  
+  try {
+    const response = await apiClient.get(`/api/cliente/show/${uuid}`);
+    
+    // API inconsistency: returns 200 with empty array when client not found
+    if (Array.isArray(response.data) && response.data.length === 0) {
+      console.warn(`⚠️ [ClientService] Cliente não encontrado: ${uuid}`);
+      throw new Error('Cliente não encontrado');
+    }
+    
+    // Validate that we got a client object
+    if (!response.data || typeof response.data !== 'object' || !response.data.uuid_cliente) {
+      console.warn(`⚠️ [ClientService] Resposta inválida para UUID: ${uuid}`, response.data);
+      throw new Error('Resposta inválida da API');
+    }
+    
+    console.log(`✅ [ClientService] Cliente encontrado: ${response.data.nome}`);
+    return response.data;
+  } catch (error) {
+    console.error(`❌ [ClientService] Erro ao buscar cliente ${uuid}:`, error);
+    throw error;
+  }
+};

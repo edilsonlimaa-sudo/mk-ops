@@ -10,7 +10,6 @@ export default function AppLayout() {
         options={{ 
           headerShown: true,
           headerBackTitle: 'Voltar',
-          headerTitle: 'Detalhes do Cliente',
           presentation: 'card',
         }} 
       />
