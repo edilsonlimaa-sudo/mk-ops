@@ -1,10 +1,14 @@
+import { ClientSearchModal } from '@/components/ClientSearchModal';
 import { useChamadoDetail } from '@/hooks/useChamadoDetail';
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ChamadoDetalhesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [searchModalVisible, setSearchModalVisible] = useState(false);
   
   if (!id) {
     return (
@@ -128,10 +132,18 @@ export default function ChamadoDetalhesScreen() {
             <Text className="text-lg font-bold text-gray-900 mb-3">Cliente</Text>
             
             <View className="gap-3">
-              <View>
-                <Text className="text-gray-500 text-xs mb-1">Nome</Text>
-                <Text className="text-gray-900 font-semibold">{chamado.nome || 'Não informado'}</Text>
-              </View>
+              <TouchableOpacity 
+                onPress={() => setSearchModalVisible(true)}
+                className="active:opacity-70"
+              >
+                <View className="flex-row items-center justify-between border border-blue-200 bg-blue-50 rounded-lg p-3">
+                  <View className="flex-1">
+                    <Text className="text-blue-600 text-xs mb-1 font-medium">Nome (toque para buscar)</Text>
+                    <Text className="text-gray-900 font-semibold">{chamado.nome || 'Não informado'}</Text>
+                  </View>
+                  <Ionicons name="search" size={20} color="#2563eb" />
+                </View>
+              </TouchableOpacity>
 
               {chamado.login && (
                 <View className="border-t border-gray-100 pt-3">
@@ -305,6 +317,13 @@ export default function ChamadoDetalhesScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Client Search Modal */}
+      <ClientSearchModal
+        visible={searchModalVisible}
+        onClose={() => setSearchModalVisible(false)}
+        initialSearchQuery={chamado?.nome || ''}
+      />
       </SafeAreaView>
     </>
   );
