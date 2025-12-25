@@ -1,5 +1,5 @@
 import { Instalacao, InstalacaoListResponse, InstalacaoStatus } from '@/types/instalacao';
-import apiClient from './apiClient';
+import apiClient from '../core/apiClient';
 
 /**
  * Fetches a single page of instalacoes

@@ -1,5 +1,5 @@
 import { Chamado, ChamadoListResponse, ChamadoStatus } from '@/types/chamado';
-import apiClient from './apiClient';
+import apiClient from '../core/apiClient';
 
 /**
  * Fetches a single page of chamados

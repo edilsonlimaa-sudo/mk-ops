@@ -107,7 +107,7 @@ Exemplo:
 ```typescript
 // hooks/cliente/useUpdateClient.ts
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateClient } from '@/services/api/client.service';
+import { updateClient } from '@/services/api/cliente';
 import { clienteKeys } from './keys';
 
 export const useUpdateClient = () => {

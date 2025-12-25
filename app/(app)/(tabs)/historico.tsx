@@ -1,5 +1,5 @@
 import { useHistorico, useInvalidateHistorico } from '@/hooks/historico';
-import { isChamado, isInstalacao } from '@/services/api/agenda.service';
+import { isChamado, isInstalacao } from '@/services/api/agenda';
 import { Chamado } from '@/types/chamado';
 import { Instalacao } from '@/types/instalacao';
 import { useRouter } from 'expo-router';

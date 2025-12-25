@@ -1,5 +1,5 @@
-import { isInstalacao, ServicoAgenda } from '@/services/api/agenda.service';
-import { fetchInstalacaoById } from '@/services/api/instalacao.service';
+import { isInstalacao, ServicoAgenda } from '@/services/api/agenda';
+import { fetchInstalacaoById } from '@/services/api/instalacao';
 import { Instalacao } from '@/types/instalacao';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { agendaKeys } from '../agenda/keys';

@@ -1,5 +1,5 @@
 import { useAgenda, useInvalidateAgenda } from '@/hooks/agenda';
-import { isChamado, isInstalacao } from '@/services/api/agenda.service';
+import { isChamado, isInstalacao } from '@/services/api/agenda';
 import { Chamado } from '@/types/chamado';
 import { Instalacao } from '@/types/instalacao';
 import { useRouter } from 'expo-router';

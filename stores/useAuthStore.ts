@@ -1,5 +1,5 @@
-import { authService } from '@/services/api/auth.service';
-import { getTokenExpiration } from '@/services/api/token/jwtDecoder';
+import { authService } from '@/services/api/auth';
+import { getTokenExpiration } from '@/services/api/core/token/jwtDecoder';
 import { authStorage, type LoginCredentials } from '@/services/storage/authStorage';
 import { router } from 'expo-router';
 import { create } from 'zustand';

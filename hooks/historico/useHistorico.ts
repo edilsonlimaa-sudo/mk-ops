@@ -1,4 +1,4 @@
-import { fetchRecentHistorico, ServicoAgenda } from '@/services/api/agenda.service';
+import { fetchRecentHistorico, ServicoAgenda } from '@/services/api/agenda';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { historicoKeys } from './keys';
 

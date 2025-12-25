@@ -1,5 +1,5 @@
 import { Client, ClientListResponse } from '@/types/client';
-import apiClient from './apiClient';
+import apiClient from '../core/apiClient';
 
 /**
  * Fetches a single page of clients

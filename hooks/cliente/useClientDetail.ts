@@ -1,4 +1,4 @@
-import { fetchClientById } from '@/services/api/client.service';
+import { fetchClientById } from '@/services/api/cliente';
 import { Client } from '@/types/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { clienteKeys } from './keys';

@@ -1,8 +1,8 @@
 import { ServicoAgenda } from '@/types/agenda';
 import { Instalacao } from '@/types/instalacao';
 import { compareVisita, isChamado } from '@/utils/agenda';
-import { fetchAllChamados, fetchRecentChamadosFechados } from './chamado.service';
-import { fetchAllInstalacoes, fetchRecentInstalacoesConcluidadas } from './instalacao.service';
+import { fetchAllChamados, fetchRecentChamadosFechados } from '../chamado/chamado.service';
+import { fetchAllInstalacoes, fetchRecentInstalacoesConcluidadas } from '../instalacao/instalacao.service';
 
 // Re-export utilities for backward compatibility
 export type { ServicoAgenda } from '@/types/agenda';

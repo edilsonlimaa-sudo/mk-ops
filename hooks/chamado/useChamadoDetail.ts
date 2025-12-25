@@ -1,5 +1,5 @@
-import { isChamado, ServicoAgenda } from '@/services/api/agenda.service';
-import { fetchChamadoById } from '@/services/api/chamado.service';
+import { isChamado, ServicoAgenda } from '@/services/api/agenda';
+import { fetchChamadoById } from '@/services/api/chamado';
 import { Chamado } from '@/types/chamado';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { agendaKeys } from '../agenda/keys';
