@@ -163,3 +163,19 @@ export const fecharChamado = async (numeroChamado: string, motivo: string): Prom
     throw error;
   }
 };
+
+/**
+ * Reabre um chamado fechado
+ * @param numeroChamado - Número do chamado (campo 'chamado')
+ */
+export const reabrirChamado = async (numeroChamado: string): Promise<void> => {
+  console.log(`🔓 [ChamadoService] Reabrindo chamado ${numeroChamado}...`);
+  
+  try {
+    const response = await apiClient.get(`/api/chamado/reabrir/${numeroChamado}`);
+    console.log(`✅ [ChamadoService] Chamado ${numeroChamado} reaberto com sucesso`, response.data);
+  } catch (error) {
+    console.error(`❌ [ChamadoService] Erro ao reabrir chamado ${numeroChamado}:`, error);
+    throw error;
+  }
+};

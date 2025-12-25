@@ -1,5 +1,5 @@
 import { ClientSearchModal } from '@/components/ClientSearchModal';
-import { useChamadoDetail, useFechaChamado } from '@/hooks/chamado';
+import { useChamadoDetail, useFechaChamado, useReabrirChamado } from '@/hooks/chamado';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -23,6 +23,7 @@ export default function ChamadoDetalhesScreen() {
   const [fecharModalVisible, setFecharModalVisible] = useState(false);
   const [motivo, setMotivo] = useState('');
   const fechaChamadoMutation = useFechaChamado();
+  const reabrirChamadoMutation = useReabrirChamado();
   const motivoInputRef = useRef<TextInput>(null);
 
   // Foca no input quando o modal abre
@@ -365,6 +366,66 @@ export default function ChamadoDetalhesScreen() {
               {fechaChamadoMutation.isSuccess && (
                 <Text className="text-green-600 text-sm mt-2 text-center">
                   Chamado fechado com sucesso!
+                </Text>
+              )}
+            </View>
+          )}
+
+          {/* Botão Reabrir Chamado */}
+          {chamado.status === 'fechado' && (
+            <View className="bg-white rounded-lg p-4 shadow-sm">
+              <TouchableOpacity
+                onPress={() => {
+                  Alert.alert(
+                    'Reabrir Chamado',
+                    'Tem certeza que deseja reabrir este chamado?',
+                    [
+                      {
+                        text: 'Cancelar',
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'Reabrir',
+                        style: 'default',
+                        onPress: () => {
+                          reabrirChamadoMutation.mutate(chamado.chamado, {
+                            onSuccess: () => {
+                              router.back();
+                              setTimeout(() => {
+                                Toast.show({
+                                  type: 'success',
+                                  text1: 'Chamado reaberto com sucesso! 🔓',
+                                  text2: 'Você pode vê-lo na aba Agenda',
+                                  position: 'top',
+                                  visibilityTime: 4000,
+                                  topOffset: 60,
+                                });
+                              }, 300);
+                            },
+                          });
+                        },
+                      },
+                    ]
+                  );
+                }}
+                disabled={reabrirChamadoMutation.isPending}
+                className={`${
+                  reabrirChamadoMutation.isPending ? 'bg-gray-400' : 'bg-blue-600'
+                } py-4 px-6 rounded-lg items-center flex-row justify-center gap-2`}
+              >
+                {reabrirChamadoMutation.isPending ? (
+                  <>
+                    <ActivityIndicator size="small" color="white" />
+                    <Text className="text-white font-bold text-base">Reabrindo...</Text>
+                  </>
+                ) : (
+                  <Text className="text-white font-bold text-base">Reabrir Chamado</Text>
+                )}
+              </TouchableOpacity>
+
+              {reabrirChamadoMutation.isError && (
+                <Text className="text-red-600 text-sm mt-2 text-center">
+                  Erro ao reabrir chamado. Tente novamente.
                 </Text>
               )}
             </View>
