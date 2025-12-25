@@ -2,14 +2,16 @@ import { isInstalacao, ServicoAgenda } from '@/services/api/agenda.service';
 import { fetchInstalacaoById } from '@/services/api/instalacao.service';
 import { Instalacao } from '@/types/instalacao';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { agendaQueryKeys } from './useAgenda';
+import { historicoQueryKeys } from './useHistorico';
 
 /**
  * Hook to fetch a single instalacao by UUID
- * Uses initialData from historico cache for instant navigation
+ * Uses initialData from cache for instant navigation
  * Searches in:
- * - ['historico'] - Histórico unificado (only completed instalações)
+ * 1. ['agenda'] - Agenda unificada (open instalações)
+ * 2. ['historico'] - Histórico unificado (completed instalações)
  * Falls back to API call if not found in cache (deep links, refreshes)
- * Note: Does not search agenda cache since agenda only contains open instalações
  */
 export const useInstalacaoDetail = (uuid: string) => {
   const queryClient = useQueryClient();
@@ -20,8 +22,20 @@ export const useInstalacaoDetail = (uuid: string) => {
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     initialData: () => {
-      // Check historico cache (aba Histórico - completed instalações only)
-      const historicoItems = queryClient.getQueryData<ServicoAgenda[]>(['historico']);
+      // 1. Check agenda cache (open instalações)
+      const agendaItems = queryClient.getQueryData<ServicoAgenda[]>(agendaQueryKeys.all);
+      if (agendaItems) {
+        const instalacaoAgenda = agendaItems.find((item): item is Instalacao => 
+          isInstalacao(item) && item.uuid_solic === uuid
+        );
+        if (instalacaoAgenda) {
+          console.log(`⚡ [useInstalacaoDetail] Cache hit! Found instalacao #${instalacaoAgenda.id} in agenda cache`);
+          return instalacaoAgenda;
+        }
+      }
+
+      // 2. Check historico cache (completed instalações)
+      const historicoItems = queryClient.getQueryData<ServicoAgenda[]>(historicoQueryKeys.all);
       if (historicoItems) {
         const instalacaoHistorico = historicoItems.find((item): item is Instalacao => 
           isInstalacao(item) && item.uuid_solic === uuid

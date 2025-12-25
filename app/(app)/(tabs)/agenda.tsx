@@ -303,7 +303,7 @@ export default function AgendaScreen() {
 
               return (
                 <TouchableOpacity
-                  onPress={() => router.push(`/detalhes/instalacao/${item.id}`)}
+                  onPress={() => router.push(`/detalhes/instalacao/${item.uuid_solic}`)}
                   activeOpacity={0.7}
                 >
                   <View className={`bg-white rounded-lg p-3 mb-2 shadow-sm border-l-4 ${borderColor}`}>
