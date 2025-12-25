@@ -5,15 +5,19 @@ import apiClient from './apiClient';
  * Fetches a single page of instalacoes
  * @param page - Page number (1-indexed)
  * @param status - Filter by status: 'aberto', 'concluido', or 'todos'
+ * @param limit - Optional limit per page
  * @returns Paginated response with instalacoes (empty array if no records found)
  */
 const fetchInstalacaoPage = async (
   page: number,
-  status: InstalacaoStatus = 'aberto'
+  status: InstalacaoStatus = 'aberto',
+  limit?: number
 ): Promise<InstalacaoListResponse> => {
-  const response = await apiClient.get(
-    `/api/instalacao/listar/status=${status}&pagina=${page}`
-  );
+  const url = limit 
+    ? `/api/instalacao/listar/status=${status}&pagina=${page}&limite=${limit}`
+    : `/api/instalacao/listar/status=${status}&pagina=${page}`;
+  
+  const response = await apiClient.get(url);
   
   // Handle "Registros nao encontrados" response (200 status, no data)
   if (response.data?.mensagem?.includes('Registros nao encontrados')) {
@@ -62,6 +66,47 @@ export const fetchAllInstalacoes = async (status: InstalacaoStatus = 'aberto'): 
     return allInstalacoes;
   } catch (error) {
     console.error('❌ [InstalacaoService] Erro ao buscar instalações:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches the most recent completed instalacoes using reverse pagination
+ * 
+ * Strategy:
+ * 1. Fetch page 1 to discover total_paginas
+ * 2. If only 1 page: return page 1 data
+ * 3. If multiple pages: fetch and return LAST page (most recent records)
+ * 
+ * @param limit - Number of records per page (default: 50)
+ * @returns Array of recent completed instalacoes (max 50, empty if no data)
+ */
+export const fetchRecentInstalacoesConcluidadas = async (limit: number = 50): Promise<Instalacao[]> => {
+  console.log(`🔍 [InstalacaoService] Iniciando busca de instalações concluídas recentes...`);
+  console.log(`⚙️ [InstalacaoService] Limite por página: ${limit}`);
+  
+  try {
+    // Step 1: Fetch first page to get metadata
+    console.log('📄 [InstalacaoService] Buscando página 1 para obter metadados...');
+    const firstPage = await fetchInstalacaoPage(1, 'concluido', limit);
+    const { total_paginas, instalacoes } = firstPage;
+
+    console.log(`📊 [InstalacaoService] Total de páginas: ${total_paginas}`);
+
+    // No data or only one page
+    if (total_paginas <= 1) {
+      console.log(`✅ [InstalacaoService] Retornando ${instalacoes.length} instalações (página única)`);
+      return instalacoes;
+    }
+
+    // Step 2: Fetch LAST page (most recent records)
+    console.log(`🚀 [InstalacaoService] Buscando última página (${total_paginas})...`);
+    const lastPage = await fetchInstalacaoPage(total_paginas, 'concluido', limit);
+    console.log(`✅ [InstalacaoService] Retornando ${lastPage.instalacoes.length} instalações da última página`);
+    
+    return lastPage.instalacoes;
+  } catch (error) {
+    console.error('❌ [InstalacaoService] Erro ao buscar instalações concluídas:', error);
     throw error;
   }
 };

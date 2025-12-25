@@ -5,15 +5,19 @@ import apiClient from './apiClient';
  * Fetches a single page of chamados
  * @param page - Page number (1-indexed)
  * @param status - Filter by status: 'aberto', 'fechado', or 'todos'
+ * @param limit - Optional limit per page
  * @returns Paginated response with chamados (empty array if no records found)
  */
 const fetchChamadoPage = async (
   page: number,
-  status: ChamadoStatus = 'aberto'
+  status: ChamadoStatus = 'aberto',
+  limit?: number
 ): Promise<ChamadoListResponse> => {
-  const response = await apiClient.get(
-    `/api/chamado/listar/status=${status}&pagina=${page}`
-  );
+  const url = limit 
+    ? `/api/chamado/listar/status=${status}&pagina=${page}&limite=${limit}`
+    : `/api/chamado/listar/status=${status}&pagina=${page}`;
+  
+  const response = await apiClient.get(url);
   
   // Handle "Registros nao encontrados" response (200 status, no data)
   if (response.data?.mensagem?.includes('Registros nao encontrados')) {
@@ -62,6 +66,47 @@ export const fetchAllChamados = async (status: ChamadoStatus = 'aberto'): Promis
     return allChamados;
   } catch (error) {
     console.error('❌ [ChamadoService] Erro ao buscar chamados:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches the most recent closed chamados using reverse pagination
+ * 
+ * Strategy:
+ * 1. Fetch page 1 to discover total_paginas
+ * 2. If only 1 page: return page 1 data
+ * 3. If multiple pages: fetch and return LAST page (most recent records)
+ * 
+ * @param limit - Number of records per page (default: 50)
+ * @returns Array of recent closed chamados (max 50, empty if no data)
+ */
+export const fetchRecentChamadosFechados = async (limit: number = 50): Promise<Chamado[]> => {
+  console.log(`🔍 [ChamadoService] Iniciando busca de chamados fechados recentes...`);
+  console.log(`⚙️ [ChamadoService] Limite por página: ${limit}`);
+  
+  try {
+    // Step 1: Fetch first page to get metadata
+    console.log('📄 [ChamadoService] Buscando página 1 para obter metadados...');
+    const firstPage = await fetchChamadoPage(1, 'fechado', limit);
+    const { total_paginas, chamados } = firstPage;
+
+    console.log(`📊 [ChamadoService] Total de páginas: ${total_paginas}`);
+
+    // No data or only one page
+    if (total_paginas <= 1) {
+      console.log(`✅ [ChamadoService] Retornando ${chamados.length} chamados (página única)`);
+      return chamados;
+    }
+
+    // Step 2: Fetch LAST page (most recent records)
+    console.log(`🚀 [ChamadoService] Buscando última página (${total_paginas})...`);
+    const lastPage = await fetchChamadoPage(total_paginas, 'fechado', limit);
+    console.log(`✅ [ChamadoService] Retornando ${lastPage.chamados.length} chamados da última página`);
+    
+    return lastPage.chamados;
+  } catch (error) {
+    console.error('❌ [ChamadoService] Erro ao buscar chamados fechados:', error);
     throw error;
   }
 };
