@@ -3,15 +3,14 @@ import { fetchChamadoById } from '@/services/api/chamado.service';
 import { Chamado } from '@/types/chamado';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { agendaQueryKeys } from './useAgenda';
-import { chamadosQueryKeys } from './useChamados';
+import { historicoQueryKeys } from './useHistorico';
 
 /**
  * Hook to fetch a single chamado by UUID
  * Uses initialData from cache for instant navigation
  * Searches in:
  * 1. ['agenda'] - Agenda unificada (chamados + instalações)
- * 2. ['chamados', 'list', 'aberto'] - Lista de chamados abertos
- * 3. ['historico'] - Histórico unificado (closed chamados)
+ * 2. ['historico'] - Histórico unificado (closed chamados)
  * Falls back to API call if not found in cache (deep links, refreshes)
  */
 export const useChamadoDetail = (uuid: string) => {
@@ -35,18 +34,8 @@ export const useChamadoDetail = (uuid: string) => {
         }
       }
 
-      // 2. Check chamados list cache (open chamados from Chamados tab)
-      const agendaChamados = queryClient.getQueryData<Chamado[]>(chamadosQueryKeys.list('aberto'));
-      if (agendaChamados) {
-        const chamadoLista = agendaChamados.find((ch) => ch.uuid_suporte === uuid);
-        if (chamadoLista) {
-          console.log(`⚡ [useChamadoDetail] Cache hit! Found chamado #${chamadoLista.chamado} in chamados list cache`);
-          return chamadoLista;
-        }
-      }
-
-      // 3. Check historico cache (closed chamados)
-      const historicoItems = queryClient.getQueryData<ServicoAgenda[]>(['historico']);
+      // 2. Check historico cache (closed chamados)
+      const historicoItems = queryClient.getQueryData<ServicoAgenda[]>(historicoQueryKeys.all);
       if (historicoItems) {
         const chamadoHistorico = historicoItems.find((item): item is Chamado => 
           isChamado(item) && item.uuid_suporte === uuid

@@ -40,12 +40,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="chamados"
-        options={{
-          href: null, // Esconde da tab bar
-        }}
-      />
-      <Tabs.Screen
         name="agenda"
         options={{
           title: 'Agenda',
