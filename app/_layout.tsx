@@ -71,7 +71,7 @@ export default function RootLayout() {
     } else if (isAuthenticated && inAuthGroup) {
       // Usuário autenticado mas está em (auth) → redireciona  
       console.log('🔐 [Navigation] Redirecionando para app');
-      router.replace('/(app)');
+      router.replace('/(app)/(tabs)');
     }
   }, [isAuthenticated, segments, navigationState, isRestored]);
 

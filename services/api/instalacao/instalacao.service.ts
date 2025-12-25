@@ -144,3 +144,19 @@ export const fetchInstalacaoById = async (uuid: string): Promise<Instalacao> => 
     throw error;
   }
 };
+
+/**
+ * Fecha uma instalação aberta
+ * @param uuid - UUID da instalação (campo 'uuid_solic')
+ */
+export const fecharInstalacao = async (uuid: string): Promise<void> => {
+  console.log(`🔒 [InstalacaoService] Fechando instalação ${uuid}...`);
+  
+  try {
+    const response = await apiClient.get(`/api/instalacao/fechar/${uuid}`);
+    console.log(`✅ [InstalacaoService] Instalação ${uuid} fechada com sucesso`, response.data);
+  } catch (error) {
+    console.error(`❌ [InstalacaoService] Erro ao fechar instalação ${uuid}:`, error);
+    throw error;
+  }
+};
