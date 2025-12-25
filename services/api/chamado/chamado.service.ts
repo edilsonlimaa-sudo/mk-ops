@@ -142,3 +142,24 @@ export const fetchChamadoById = async (uuid: string): Promise<Chamado> => {
     throw error;
   }
 };
+
+/**
+ * Fecha um chamado aberto
+ * @param numeroChamado - Número do chamado (campo 'chamado')
+ * @param motivo - Motivo do fechamento
+ */
+export const fecharChamado = async (numeroChamado: string, motivo: string): Promise<void> => {
+  console.log(`🔒 [ChamadoService] Fechando chamado ${numeroChamado}...`);
+  
+  try {
+    const response = await apiClient.put('/api/chamado/fechar', {
+      chamado: numeroChamado,
+      motivo,
+    });
+    
+    console.log(`✅ [ChamadoService] Chamado ${numeroChamado} fechado com sucesso`, response.data);
+  } catch (error) {
+    console.error(`❌ [ChamadoService] Erro ao fechar chamado ${numeroChamado}:`, error);
+    throw error;
+  }
+};

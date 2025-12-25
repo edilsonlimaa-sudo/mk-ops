@@ -1,14 +1,39 @@
 import { ClientSearchModal } from '@/components/ClientSearchModal';
-import { useChamadoDetail } from '@/hooks/chamado';
+import { useChamadoDetail, useFechaChamado } from '@/hooks/chamado';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 
 export default function ChamadoDetalhesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const [searchModalVisible, setSearchModalVisible] = useState(false);
+  const [fecharModalVisible, setFecharModalVisible] = useState(false);
+  const [motivo, setMotivo] = useState('');
+  const fechaChamadoMutation = useFechaChamado();
+  const motivoInputRef = useRef<TextInput>(null);
+
+  // Foca no input quando o modal abre
+  useEffect(() => {
+    if (fecharModalVisible) {
+      // Timeout para garantir que o modal terminou a animação
+      setTimeout(() => {
+        motivoInputRef.current?.focus();
+      }, 100);
+    }
+  }, [fecharModalVisible]);
   
   if (!id) {
     return (
@@ -48,7 +73,7 @@ export default function ChamadoDetalhesScreen() {
     );
   }
 
-  const statusColor = chamado.status === 'Aberto' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+  const statusColor = chamado.status === 'aberto' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
   const prioridadeColor = 
     chamado.prioridade === 'Alta' ? 'bg-red-100 text-red-800' :
     chamado.prioridade === 'Média' ? 'bg-yellow-100 text-yellow-800' :
@@ -315,6 +340,35 @@ export default function ChamadoDetalhesScreen() {
               </View>
             )}
           </View>
+
+          {/* Botão Fechar Chamado */}
+          {chamado.status === 'aberto' && (
+            <View className="bg-white rounded-lg p-4 shadow-sm">
+              <TouchableOpacity
+                onPress={() => setFecharModalVisible(true)}
+                disabled={fechaChamadoMutation.isPending}
+                className={`${
+                  fechaChamadoMutation.isPending ? 'bg-gray-400' : 'bg-green-600'
+                } py-4 px-6 rounded-lg items-center`}
+              >
+                <Text className="text-white font-bold text-base">
+                  {fechaChamadoMutation.isPending ? 'Fechando...' : 'Fechar Chamado'}
+                </Text>
+              </TouchableOpacity>
+
+              {fechaChamadoMutation.isError && (
+                <Text className="text-red-600 text-sm mt-2 text-center">
+                  Erro ao fechar chamado. Tente novamente.
+                </Text>
+              )}
+
+              {fechaChamadoMutation.isSuccess && (
+                <Text className="text-green-600 text-sm mt-2 text-center">
+                  Chamado fechado com sucesso!
+                </Text>
+              )}
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -324,6 +378,96 @@ export default function ChamadoDetalhesScreen() {
         onClose={() => setSearchModalVisible(false)}
         initialSearchQuery={chamado?.nome || ''}
       />
+
+      {/* Modal Fechar Chamado */}
+      <Modal
+        visible={fecharModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFecharModalVisible(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-center items-center p-4">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <Text className="text-xl font-bold text-gray-900 mb-4">Fechar Chamado</Text>
+            
+            <TextInput
+              ref={motivoInputRef}
+              className="bg-gray-50 border border-gray-300 rounded-lg p-3 mb-4 text-gray-900"
+              placeholder="Digite o motivo..."
+              placeholderTextColor="#9ca3af"
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              value={motivo}
+              onChangeText={setMotivo}
+            />
+
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => {
+                  setFecharModalVisible(false);
+                  setMotivo('');
+                }}
+                disabled={fechaChamadoMutation.isPending}
+                className={`flex-1 py-3 rounded-lg ${
+                  fechaChamadoMutation.isPending ? 'bg-gray-300' : 'bg-gray-200'
+                }`}
+              >
+                <Text className="text-gray-700 font-semibold text-center">Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  if (motivo.trim()) {
+                    fechaChamadoMutation.mutate(
+                      {
+                        numeroChamado: chamado!.chamado,
+                        motivo: motivo.trim(),
+                      },
+                      {
+                        onSuccess: () => {
+                          setFecharModalVisible(false);
+                          setMotivo('');
+
+                          // Volta imediatamente para a agenda
+                          router.back();
+
+                          // Toast aparece na agenda (não-bloqueante)
+                          setTimeout(() => {
+                            Toast.show({
+                              type: 'success',
+                              text1: 'Chamado fechado com sucesso! ✅',
+                              text2: 'Você pode vê-lo na aba Histórico',
+                              position: 'top',
+                              visibilityTime: 4000,
+                              topOffset: 60,
+                            });
+                          }, 300);
+                        },
+                      }
+                    );
+                  } else {
+                    Alert.alert('Atenção', 'Por favor, informe um motivo para o fechamento.');
+                  }
+                }}
+                disabled={fechaChamadoMutation.isPending}
+                className={`flex-1 py-3 rounded-lg ${
+                  fechaChamadoMutation.isPending ? 'bg-green-400' : 'bg-green-600'
+                }`}
+              >
+                {fechaChamadoMutation.isPending ? (
+                  <View className="flex-row items-center justify-center gap-2">
+                    <ActivityIndicator size="small" color="white" />
+                    <Text className="text-white font-bold text-center">Fechando...</Text>
+                  </View>
+                ) : (
+                  <Text className="text-white font-bold text-center">Fechar Chamado</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       </SafeAreaView>
     </>
   );
