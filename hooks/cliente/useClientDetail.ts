@@ -1,7 +1,7 @@
 import { fetchClientById } from '@/services/api/client.service';
 import { Client } from '@/types/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CLIENTS_QUERY_KEY } from './useClients';
+import { clienteKeys } from './keys';
 
 /**
  * Hook to fetch a single client by UUID
@@ -15,12 +15,12 @@ export function useClientDetail(uuid: string) {
   const queryClient = useQueryClient();
 
   return useQuery({
-    queryKey: ['client', uuid],
+    queryKey: clienteKeys.detail(uuid),
     queryFn: () => fetchClientById(uuid),
     
     // Try to get data from the clients list cache first (instant rendering)
     initialData: () => {
-      const clients = queryClient.getQueryData<Client[]>(CLIENTS_QUERY_KEY);
+      const clients = queryClient.getQueryData<Client[]>(clienteKeys.list());
       return clients?.find(c => c.uuid_cliente === uuid);
     },
     
@@ -39,7 +39,7 @@ export function useInvalidateClientDetail() {
   return {
     invalidate: (uuid: string) => {
       console.log(`🔄 [useClientDetail] Invalidando cache do cliente: ${uuid}`);
-      return queryClient.invalidateQueries({ queryKey: ['client', uuid] });
+      return queryClient.invalidateQueries({ queryKey: clienteKeys.detail(uuid) });
     },
   };
 }

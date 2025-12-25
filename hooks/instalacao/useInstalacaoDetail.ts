@@ -2,8 +2,9 @@ import { isInstalacao, ServicoAgenda } from '@/services/api/agenda.service';
 import { fetchInstalacaoById } from '@/services/api/instalacao.service';
 import { Instalacao } from '@/types/instalacao';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { agendaQueryKeys } from './useAgenda';
-import { historicoQueryKeys } from './useHistorico';
+import { agendaKeys } from '../agenda/keys';
+import { historicoKeys } from '../historico/keys';
+import { instalacaoKeys } from './keys';
 
 /**
  * Hook to fetch a single instalacao by UUID
@@ -17,13 +18,13 @@ export const useInstalacaoDetail = (uuid: string) => {
   const queryClient = useQueryClient();
 
   return useQuery({
-    queryKey: ['instalacao', uuid],
+    queryKey: instalacaoKeys.detail(uuid),
     queryFn: () => fetchInstalacaoById(uuid),
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     initialData: () => {
       // 1. Check agenda cache (open instalações)
-      const agendaItems = queryClient.getQueryData<ServicoAgenda[]>(agendaQueryKeys.all);
+      const agendaItems = queryClient.getQueryData<ServicoAgenda[]>(agendaKeys.all);
       if (agendaItems) {
         const instalacaoAgenda = agendaItems.find((item): item is Instalacao => 
           isInstalacao(item) && item.uuid_solic === uuid
@@ -35,7 +36,7 @@ export const useInstalacaoDetail = (uuid: string) => {
       }
 
       // 2. Check historico cache (completed instalações)
-      const historicoItems = queryClient.getQueryData<ServicoAgenda[]>(historicoQueryKeys.all);
+      const historicoItems = queryClient.getQueryData<ServicoAgenda[]>(historicoKeys.all);
       if (historicoItems) {
         const instalacaoHistorico = historicoItems.find((item): item is Instalacao => 
           isInstalacao(item) && item.uuid_solic === uuid

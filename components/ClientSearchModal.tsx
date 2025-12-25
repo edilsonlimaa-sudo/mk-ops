@@ -1,4 +1,4 @@
-import { useClients } from '@/hooks/useClients';
+import { useClients } from '@/hooks/cliente';
 import { Client } from '@/types/client';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';

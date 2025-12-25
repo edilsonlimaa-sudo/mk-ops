@@ -1,4 +1,4 @@
-import { useAgenda, useInvalidateAgenda } from '@/hooks/useAgenda';
+import { useAgenda, useInvalidateAgenda } from '@/hooks/agenda';
 import { isChamado, isInstalacao } from '@/services/api/agenda.service';
 import { Chamado } from '@/types/chamado';
 import { Instalacao } from '@/types/instalacao';

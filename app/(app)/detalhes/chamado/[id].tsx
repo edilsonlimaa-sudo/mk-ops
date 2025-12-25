@@ -1,5 +1,5 @@
 import { ClientSearchModal } from '@/components/ClientSearchModal';
-import { useChamadoDetail } from '@/hooks/useChamadoDetail';
+import { useChamadoDetail } from '@/hooks/chamado';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';

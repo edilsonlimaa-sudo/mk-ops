@@ -1,12 +1,6 @@
 import { fetchRecentHistorico, ServicoAgenda } from '@/services/api/agenda.service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-
-/**
- * Query key factory for historico
- */
-export const historicoQueryKeys = {
-  all: ['historico'] as const,
-};
+import { historicoKeys } from './keys';
 
 /**
  * Hook to fetch and cache recent historical records with reverse pagination optimization
@@ -29,9 +23,9 @@ export const historicoQueryKeys = {
  */
 export const useHistorico = () => {
   return useQuery<ServicoAgenda[], Error>({
-    queryKey: historicoQueryKeys.all,
+    queryKey: historicoKeys.all,
     queryFn: () => fetchRecentHistorico(),
-    staleTime: 1000 * 60 * 10, // 10 minutes (same as useChamadosFechados)
+    staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes (memory only)
     persister: undefined, // Disable persistence
   });
@@ -46,10 +40,10 @@ export const useInvalidateHistorico = () => {
 
   return {
     invalidate: () =>
-      queryClient.invalidateQueries({ queryKey: historicoQueryKeys.all }),
+      queryClient.invalidateQueries({ queryKey: historicoKeys.all }),
     refetch: () =>
-      queryClient.refetchQueries({ queryKey: historicoQueryKeys.all }),
+      queryClient.refetchQueries({ queryKey: historicoKeys.all }),
     clear: () =>
-      queryClient.removeQueries({ queryKey: historicoQueryKeys.all }),
+      queryClient.removeQueries({ queryKey: historicoKeys.all }),
   };
 };

@@ -1,12 +1,6 @@
 import { fetchAgenda, ServicoAgenda } from '@/services/api/agenda.service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-
-/**
- * Query key factory for agenda
- */
-export const agendaQueryKeys = {
-  all: ['agenda'] as const,
-};
+import { agendaKeys } from './keys';
 
 /**
  * Hook to fetch and cache unified agenda (chamados + instalacoes)
@@ -22,7 +16,7 @@ export const agendaQueryKeys = {
  */
 export const useAgenda = () => {
   return useQuery<ServicoAgenda[], Error>({
-    queryKey: agendaQueryKeys.all,
+    queryKey: agendaKeys.all,
     queryFn: () => fetchAgenda(),
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes (memory only)
@@ -39,10 +33,10 @@ export const useInvalidateAgenda = () => {
 
   return {
     invalidate: () =>
-      queryClient.invalidateQueries({ queryKey: agendaQueryKeys.all }),
+      queryClient.invalidateQueries({ queryKey: agendaKeys.all }),
     refetch: () =>
-      queryClient.refetchQueries({ queryKey: agendaQueryKeys.all }),
+      queryClient.refetchQueries({ queryKey: agendaKeys.all }),
     clear: () =>
-      queryClient.removeQueries({ queryKey: agendaQueryKeys.all }),
+      queryClient.removeQueries({ queryKey: agendaKeys.all }),
   };
 };

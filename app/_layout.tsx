@@ -1,4 +1,4 @@
-import { useProactiveTokenRefresh } from '@/hooks/useProactiveTokenRefresh';
+import { useProactiveTokenRefresh } from '@/hooks/auth';
 import { queryClient } from '@/lib/queryClient';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { QueryClientProvider } from '@tanstack/react-query';

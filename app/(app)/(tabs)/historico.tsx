@@ -1,4 +1,4 @@
-import { useHistorico, useInvalidateHistorico } from '@/hooks/useHistorico';
+import { useHistorico, useInvalidateHistorico } from '@/hooks/historico';
 import { isChamado, isInstalacao } from '@/services/api/agenda.service';
 import { Chamado } from '@/types/chamado';
 import { Instalacao } from '@/types/instalacao';

@@ -1,5 +1,5 @@
 import { ClientSearchModal } from '@/components/ClientSearchModal';
-import { useInstalacaoDetail } from '@/hooks/useInstalacaoDetail';
+import { useInstalacaoDetail } from '@/hooks/instalacao';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';

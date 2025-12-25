@@ -1,4 +1,4 @@
-import { useClients, useInvalidateClients } from '@/hooks/useClients';
+import { useClients, useInvalidateClients } from '@/hooks/cliente';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';

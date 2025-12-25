@@ -1,4 +1,4 @@
-import { useClientDetail } from '@/hooks/useClientDetail';
+import { useClientDetail } from '@/hooks/cliente';
 import type { ClienteDetalhesParams } from '@/types/navigation';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';

@@ -1,11 +1,7 @@
 import { fetchAllClients } from '@/services/api/client.service';
 import { Client } from '@/types/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-
-/**
- * Query key for clients list
- */
-export const CLIENTS_QUERY_KEY = ['clients', 'list'] as const;
+import { clienteKeys } from './keys';
 
 /**
  * Hook to fetch and cache all clients (memory only - too large for persistence)
@@ -22,7 +18,7 @@ export const CLIENTS_QUERY_KEY = ['clients', 'list'] as const;
  */
 export const useClients = () => {
   return useQuery<Client[], Error>({
-    queryKey: CLIENTS_QUERY_KEY,
+    queryKey: clienteKeys.list(),
     queryFn: fetchAllClients,
     staleTime: 1000 * 60 * 30, // 30 minutes
     gcTime: 1000 * 60 * 60 * 24, // 24 hours (memory only)
@@ -38,8 +34,8 @@ export const useInvalidateClients = () => {
   const queryClient = useQueryClient();
 
   return {
-    invalidate: () => queryClient.invalidateQueries({ queryKey: CLIENTS_QUERY_KEY }),
-    refetch: () => queryClient.refetchQueries({ queryKey: CLIENTS_QUERY_KEY }),
-    clear: () => queryClient.removeQueries({ queryKey: CLIENTS_QUERY_KEY }),
+    invalidate: () => queryClient.invalidateQueries({ queryKey: clienteKeys.list() }),
+    refetch: () => queryClient.refetchQueries({ queryKey: clienteKeys.list() }),
+    clear: () => queryClient.removeQueries({ queryKey: clienteKeys.list() }),
   };
 };
