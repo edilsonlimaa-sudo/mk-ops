@@ -21,7 +21,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           headerShown: true,
-          headerTitle: 'MK-Auth Mobile',
+          headerTitle: 'MK-Edge',
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol size={28} name="house.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),
