@@ -190,10 +190,21 @@ export default function ClienteDetalhesScreen() {
                 <Text className="text-gray-600 text-sm mb-2">Localização GPS</Text>
                 <TouchableOpacity
                   onPress={async () => {
-                    const [lng, lat] = cliente.coordenadas.split(',');
-                    const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-                    
                     try {
+                      // As coordenadas vêm no formato: lng,lat,altitude
+                      const parts = cliente.coordenadas.split(',');
+                      const lng = parseFloat(parts[0]);
+                      const lat = parseFloat(parts[1]);
+                      
+                      // Validar se as coordenadas são números válidos
+                      if (isNaN(lat) || isNaN(lng)) {
+                        Alert.alert('Erro', 'Coordenadas inválidas');
+                        return;
+                      }
+                      
+                      // Google Maps espera: lat,lng
+                      const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+                      
                       const canOpen = await Linking.canOpenURL(url);
                       if (canOpen) {
                         await Linking.openURL(url);
