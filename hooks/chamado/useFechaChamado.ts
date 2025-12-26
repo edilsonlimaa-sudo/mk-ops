@@ -4,7 +4,7 @@ import { agendaKeys } from '../agenda/keys';
 import { historicoKeys } from '../historico/keys';
 
 // 🎭 MOCK MODE - Ative para testar sem chamar API
-const MOCK_MODE = true;
+const MOCK_MODE = false;
 
 /**
  * Hook para fechar um chamado aberto

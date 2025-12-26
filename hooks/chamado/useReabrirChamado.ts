@@ -11,7 +11,7 @@ export const useReabrirChamado = () => {
   const queryClient = useQueryClient();
   
   // 🎭 Mock mode - desabilite para usar a API real
-  const MOCK_MODE = true;
+  const MOCK_MODE = false;
 
   return useMutation({
     mutationFn: async (numeroChamado: string) => {
