@@ -6,6 +6,15 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen 
+        name="user-identification" 
+        options={{ 
+          headerShown: true,
+          headerTitle: 'Quem é você?',
+          headerBackVisible: false,
+          presentation: 'card',
+        }} 
+      />
+      <Stack.Screen 
         name="detalhes/cliente/[id]" 
         options={{ 
           headerShown: true,

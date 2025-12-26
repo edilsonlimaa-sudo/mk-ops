@@ -1,6 +1,7 @@
 import { useProactiveTokenRefresh } from '@/hooks/auth';
 import { queryClient } from '@/lib/queryClient';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useUserStore } from '@/stores/useUserStore';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -17,6 +18,7 @@ console.log('💦 [SplashScreen] Splash mantida visível (preventAutoHideAsync)'
 export default function RootLayout() {
   const isRestored = useAuthStore((state) => state.isRestored);
   const checkAuth = useAuthStore((state) => state.checkAuth);
+  const restoreUser = useUserStore((state) => state.restoreUser);
   const [appIsReady, setAppIsReady] = useState(false);
 
   // CAMADA 2: Refresh proativo ao voltar do background
@@ -29,6 +31,8 @@ export default function RootLayout() {
         console.log('🚀 [RootLayout] Iniciando bootstrap da aplicação...');
         // Verifica se tem sessão salva
         await checkAuth();
+        // Restaura identificação do usuário (se tiver)
+        await restoreUser();
         console.log('✅ [RootLayout] Bootstrap concluído');
       } catch (error) {
         console.log('❌ [RootLayout] Erro no bootstrap:', error);
