@@ -99,6 +99,13 @@ export default function HistoricoScreen() {
         <Text className="text-gray-600 text-center mb-4">
           {error.message}
         </Text>
+        <TouchableOpacity
+          onPress={invalidate}
+          className="bg-green-600 px-6 py-3 rounded-lg mt-2"
+          activeOpacity={0.7}
+        >
+          <Text className="text-white font-semibold">Tentar novamente</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }
