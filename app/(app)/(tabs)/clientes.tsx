@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-type FiltroCliente = 'todos' | 'ativos' | 'bloqueados';
+type FiltroCliente = 'todos' | 'ativos' | 'inativos' | 'bloqueados';
 
 export default function ClientesScreen() {
   const { data: clients, isLoading, isFetching, error } = useClients();
@@ -28,8 +28,9 @@ export default function ClientesScreen() {
   // Filtra clientes por pill primeiro
   const clientesPorPill = clients?.filter(c => {
     if (filtroAtivo === 'todos') return true;
-    if (filtroAtivo === 'ativos') return c.bloqueado !== 'sim';
-    if (filtroAtivo === 'bloqueados') return c.bloqueado === 'sim';
+    if (filtroAtivo === 'ativos') return c.cli_ativado === 's';
+    if (filtroAtivo === 'inativos') return c.cli_ativado === 'n';
+    if (filtroAtivo === 'bloqueados') return c.cli_ativado === 's' && c.bloqueado === 'sim';
     return true;
   }) || [];
 
@@ -52,13 +53,19 @@ export default function ClientesScreen() {
       key: 'ativos' as const, 
       label: 'Ativos', 
       emoji: '✅', 
-      count: clients?.filter(c => c.bloqueado !== 'sim').length || 0 
+      count: clients?.filter(c => c.cli_ativado === 's').length || 0 
     },
     { 
       key: 'bloqueados' as const, 
       label: 'Bloqueados', 
       emoji: '🚫', 
-      count: clients?.filter(c => c.bloqueado === 'sim').length || 0 
+      count: clients?.filter(c => c.cli_ativado === 's' && c.bloqueado === 'sim').length || 0 
+    },
+    { 
+      key: 'inativos' as const, 
+      label: 'Inativos', 
+      emoji: '😴', 
+      count: clients?.filter(c => c.cli_ativado === 'n').length || 0 
     },
   ];
 
@@ -205,23 +212,42 @@ export default function ClientesScreen() {
                 </Text>
               </View>
               
-              <View>
-                <Text className="text-xs text-gray-500">Status</Text>
+              <View className="flex-row gap-2">
+                {/* Badge Ativação */}
+                <View
+                  className={`px-2 py-1 rounded ${
+                    item.cli_ativado === 's'
+                      ? 'bg-green-100'
+                      : 'bg-gray-100'
+                  }`}
+                >
+                  <Text
+                    className={`text-xs font-medium ${
+                      item.cli_ativado === 's'
+                        ? 'text-green-700'
+                        : 'text-gray-600'
+                    }`}
+                  >
+                    {item.cli_ativado === 's' ? 'Ativo' : 'Inativo'}
+                  </Text>
+                </View>
+                
+                {/* Badge Bloqueio */}
                 <View
                   className={`px-2 py-1 rounded ${
                     item.bloqueado === 'sim'
                       ? 'bg-red-100'
-                      : 'bg-green-100'
+                      : 'bg-blue-100'
                   }`}
                 >
                   <Text
                     className={`text-xs font-medium ${
                       item.bloqueado === 'sim'
                         ? 'text-red-700'
-                        : 'text-green-700'
+                        : 'text-blue-700'
                     }`}
                   >
-                    {item.bloqueado === 'sim' ? 'Bloqueado' : 'Ativo'}
+                    {item.bloqueado === 'sim' ? 'Bloqueado' : 'Desbloqueado'}
                   </Text>
                 </View>
               </View>
