@@ -25,9 +25,10 @@ export default function HomeScreen() {
     router.replace('/(app)/user-identification');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setShowProfileMenu(false);
-    logout();
+    await clearIdentification(); // Limpa identificação do usuário
+    logout(); // Desconecta da API
   };
 
   return (
