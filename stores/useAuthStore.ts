@@ -27,18 +27,24 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: false,
 
   login: async (ipMkAuth: string, clientId: string, clientSecret: string) => {
+    console.log('🔑 [AuthStore.login] Iniciando login...');
     set({ isLoading: true });
     
     try {
+      console.log('🌐 [AuthStore.login] Chamando authService.login...');
       const token = await authService.login({ ipMkAuth, clientId, clientSecret });
+      console.log('✅ [AuthStore.login] Token recebido');
       
       // Salva token e credenciais via authStorage
+      console.log('💾 [AuthStore.login] Salvando credenciais no storage...');
       await authStorage.saveCredentials({ ipMkAuth, clientId, clientSecret }, token);
       
       // Extrai data de expiração do token
       const tokenExpiration = getTokenExpiration(token);
+      console.log('⏰ [AuthStore.login] Token expira em:', new Date(tokenExpiration).toLocaleString());
       
       // Atualiza estado (apiClient se auto-configura via subscription)
+      console.log('📝 [AuthStore.login] Atualizando estado: isAuthenticated = true');
       set({
         token,
         tokenExpiration,
@@ -46,15 +52,19 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
         isLoading: false,
       });
+      console.log('✨ [AuthStore.login] Login completo!');
     } catch (error) {
+      console.error('❌ [AuthStore.login] Erro:', error);
       set({ isLoading: false });
       throw error;
     }
   },
 
   logout: async () => {
+    console.log('🚪 [AuthStore.logout] Iniciando logout...');
     // Limpa storage via authStorage
     await authStorage.clearAll();
+    console.log('🗑️ [AuthStore.logout] Storage limpo');
     
     // Limpa estado (apiClient se auto-limpa via subscription)
     set({
@@ -63,8 +73,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       ipMkAuth: null,
       isAuthenticated: false,
     });
+    console.log('📝 [AuthStore.logout] Estado limpo: isAuthenticated = false');
     
-    // Redireciona para tela de login
+    // Redireciona para login (AppLayout guard vai confirmar)
+    console.log('➡️ [AuthStore.logout] Redirecionando para /(auth)/login');
     router.replace('/(auth)/login');
   },
 

@@ -20,15 +20,25 @@ export default function HomeScreen() {
   }, []);
 
   const handleSwitchUser = async () => {
+    console.log('🔄 [Home] Trocando de usuário...');
     setShowProfileMenu(false);
+    
+    // Limpa identificação
     await clearIdentification();
-    router.replace('/(app)/user-identification');
+    console.log('✅ [Home] Identificação limpa');
+    
+    // Vai para /(auth)/user-identification (AppLayout guard vai redirecionar)
+    console.log('➡️ [Home] Redirecionando para /(auth)/user-identification');
+    router.replace('/(auth)/user-identification');
   };
 
   const handleLogout = async () => {
+    console.log('👋 [Home] Fazendo logout completo...');
     setShowProfileMenu(false);
-    await clearIdentification(); // Limpa identificação do usuário
-    logout(); // Desconecta da API
+    
+    // Limpa identificação e auth
+    await clearIdentification();
+    await logout(); // Limpa auth e redireciona automaticamente
   };
 
   return (

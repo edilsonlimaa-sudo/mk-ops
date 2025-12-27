@@ -1,27 +1,26 @@
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useUserStore } from '@/stores/useUserStore';
 import { Redirect } from 'expo-router';
 
 /**
- * Rota raiz - redireciona baseado em 3 estados:
- * 1. Não autenticado na API → Login
- * 2. Autenticado na API mas funcionário não identificado → Identificação
- * 3. Autenticado e identificado → App completo
+ * Rota raiz - Bootstrap inicial da aplicação
+ * Os route guards nos layouts cuidam da proteção de cada seção
  */
 export default function Index() {
+  const isRestored = useAuthStore((state) => state.isRestored);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const isIdentified = useUserStore((state) => state.isIdentified);
 
-  // Estado 1: Não autenticado na API
-  if (!isAuthenticated) {
-    return <Redirect href="/(auth)/login" />;
+  // Aguarda restauração antes de redirecionar
+  if (!isRestored) {
+    console.log('⏳ [Index] Aguardando restauração da sessão...');
+    return null;
   }
 
-  // Estado 2: Autenticado mas funcionário não identificado
-  if (!isIdentified) {
-    return <Redirect href="/(app)/user-identification" />;
-  }
+  console.log('🔄 [Index] Sessão restaurada, isAuthenticated:', isAuthenticated);
 
-  // Estado 3: Totalmente autenticado e identificado
+  // Redireciona para tabs (guards vão interceptar se necessário)
+  // Se não autenticado → AppLayout redireciona para login
+  // Se autenticado mas não identificado → AppLayout redireciona para identificação
+  // Se tudo ok → vai para tabs
+  console.log('➡️ [Index] Redirecionando para /(app)/(tabs) (guards decidem o resto)');
   return <Redirect href="/(app)/(tabs)" />;
 }

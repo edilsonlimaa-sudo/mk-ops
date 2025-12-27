@@ -12,16 +12,19 @@ import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, Vi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function UserIdentification() {
+  console.log('👤 [UserIdentification] Componente renderizado');
   const router = useRouter();
   const { identifyUser } = useUserStore();
   const { ipMkAuth } = useAuthStore();
   const insets = useSafeAreaInsets();
   
   const { data: usuarios = [], isLoading, isError, refetch } = useUsuarios();
+  console.log('📋 [UserIdentification] Usuários carregados:', usuarios?.length || 0);
   const [selectedUsuario, setSelectedUsuario] = useState<Usuario | null>(null);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
 
   const handleSelectUser = (usuario: Usuario) => {
+    console.log('👆 [UserIdentification] Usuário selecionado:', usuario.login);
     setSelectedUsuario(usuario);
     setPasswordModalVisible(true);
   };
@@ -30,10 +33,13 @@ export default function UserIdentification() {
     if (!selectedUsuario) return;
 
     try {
+      console.log('🔐 [UserIdentification] Iniciando validação de senha para:', selectedUsuario.login);
       // Busca dados completos do usuário incluindo hash
       const usuarioDetalhado = await fetchUsuarioDetail(selectedUsuario.uuid);
+      console.log('✅ [UserIdentification] Dados completos do usuário obtidos');
       
       // Valida senha com SHA-256 + bcrypt
+      console.log('🔒 [UserIdentification] Gerando hash SHA-256 da senha...');
       const sha256Hash = await Crypto.digestStringAsync(
         Crypto.CryptoDigestAlgorithm.SHA256,
         password
@@ -43,22 +49,27 @@ export default function UserIdentification() {
       const bcryptHash = usuarioDetalhado.sha.replace('$2y$', '$2a$');
       
       // Compara hash SHA-256 da senha com bcrypt armazenado
+      console.log('🔍 [UserIdentification] Comparando hashes...');
       const isValid = await bcrypt.compare(sha256Hash, bcryptHash);
       
       if (!isValid) {
+        console.log('❌ [UserIdentification] Senha incorreta');
         throw new Error('Senha incorreta');
       }
       
       console.log('✅ [UserIdentification] Senha validada com sucesso');
       
       // Identifica o usuário com dados completos (hash será removido automaticamente)
+      console.log('💾 [UserIdentification] Chamando identifyUser...');
       await identifyUser(usuarioDetalhado);
+      console.log('✨ [UserIdentification] Usuário identificado com sucesso!');
       
-      // Fecha modal e navega
+      // Fecha modal - AuthLayout guard vai redirecionar automaticamente
       setPasswordModalVisible(false);
       setSelectedUsuario(null);
-      router.replace('/(app)/(tabs)');
+      console.log('✅ [UserIdentification] Modal fechado. AuthLayout guard vai redirecionar...');
     } catch (error) {
+      console.error('❌ [UserIdentification] Erro:', error);
       throw error; // Modal vai pegar e mostrar o erro
     }
   };

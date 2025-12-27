@@ -18,6 +18,8 @@ export default function Login() {
   const router = useRouter();
   const { login, isLoading, isAuthenticated } = useAuthStore();
 
+  console.log('🔐 [Login] Componente renderizado. isAuthenticated:', isAuthenticated);
+
   const {
     control,
     handleSubmit,
@@ -31,19 +33,23 @@ export default function Login() {
     },
   });
 
-  // Redireciona para home se já estiver autenticado
+  // Redireciona para tabs se já estiver autenticado (guards decidem o resto)
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/(app)');
+      console.log('🚀 [Login] isAuthenticated mudou para true, redirecionando para /(app)/(tabs)');
+      router.replace('/(app)/(tabs)');
     }
   }, [isAuthenticated]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      console.log('📝 [Login] Iniciando processo de login...');
       await login(data.ipMkAuth, data.clientId, data.clientSecret);
+      console.log('✅ [Login] Login concluído! useEffect vai redirecionar automaticamente...');
       Alert.alert('Sucesso', 'Login realizado com sucesso!');
-      router.replace('/(app)');
+      // ⚠️ Não redireciona aqui - deixa o useEffect fazer isso ao detectar isAuthenticated
     } catch (error) {
+      console.error('❌ [Login] Erro no login:', error);
       Alert.alert('Erro', error instanceof Error ? error.message : 'Erro ao fazer login');
     }
   };
