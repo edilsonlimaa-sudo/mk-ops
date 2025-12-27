@@ -26,7 +26,7 @@ export default function AppLayout() {
   // Guard: Precisa estar identificado como funcionário
   if (!isIdentified) {
     console.log('🚫 [AppLayout] Não identificado, redirecionando para /(auth)/user-identification');
-    return <Redirect href="/(auth)/user-identification" />;
+    return <Redirect href="/(auth)/user-identification?flow=login" />;
   }
 
   console.log('✅ [AppLayout] Totalmente autenticado, permitindo acesso');

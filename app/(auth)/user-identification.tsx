@@ -6,16 +6,17 @@ import { useUserStore } from '@/stores/useUserStore';
 import { Usuario } from '@/types/usuario';
 import bcrypt from 'bcryptjs';
 import * as Crypto from 'expo-crypto';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Animated, FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ValidationState = 'idle' | 'validating' | 'success' | 'error';
+type InitialLoadState = 'loading' | 'success' | 'done';
 
 export default function UserIdentification() {
   console.log('👤 [UserIdentification] Componente renderizado');
-  const router = useRouter();
+  const { flow = 'login' } = useLocalSearchParams<{ flow?: 'login' | 'switchUser' }>();
   const { identifyUser } = useUserStore();
   const { ipMkAuth, logout } = useAuthStore();
   const insets = useSafeAreaInsets();
@@ -25,10 +26,57 @@ export default function UserIdentification() {
   const [selectedUsuario, setSelectedUsuario] = useState<Usuario | null>(null);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [validationState, setValidationState] = useState<ValidationState>('idle');
+  
+  // Se flow=switchUser (troca de usuário), pula o intro imersivo
+  const [initialLoadState, setInitialLoadState] = useState<InitialLoadState>(
+    flow === 'switchUser' ? 'done' : 'loading'
+  );
+  
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0));
 
-  // Animação de entrada do loading screen
+  // Controla o loading inicial (quando vem da tela de login)
+  useEffect(() => {
+    if (initialLoadState === 'loading') {
+      // Mostra loading imediatamente
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+
+      // Quando carregar os usuários, mostra o green check
+      if (!isLoading && !isError && usuarios.length > 0) {
+        setInitialLoadState('success');
+      }
+    }
+  }, [isLoading, isError, usuarios, initialLoadState]);
+
+  // Animação do green check inicial
+  useEffect(() => {
+    if (initialLoadState === 'success') {
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.2,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 3,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      // Após 1.8s, fecha o loading e mostra a lista
+      setTimeout(() => {
+        setInitialLoadState('done');
+      }, 1800);
+    }
+  }, [initialLoadState]);
+
+  // Animação de entrada do loading de validação
   useEffect(() => {
     if (validationState === 'validating') {
       Animated.timing(fadeAnim, {
@@ -39,7 +87,7 @@ export default function UserIdentification() {
     }
   }, [validationState]);
 
-  // Animação de sucesso (check verde)
+  // Animação de sucesso (check verde) - validação de senha
   useEffect(() => {
     if (validationState === 'success') {
       Animated.sequence([
@@ -152,6 +200,50 @@ export default function UserIdentification() {
       // Mantém selectedUsuario para poder tentar novamente
     }
   };
+
+  // Se ainda está no loading inicial, não renderiza nada (tela de loading vai cobrir)
+  if (initialLoadState !== 'done') {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        {/* Loading Screen Fullscreen - Carregamento Inicial */}
+        <Animated.View 
+          style={{ opacity: fadeAnim }}
+          className="absolute inset-0 bg-white justify-center items-center z-50"
+        >
+            {initialLoadState === 'loading' && (
+              <View className="items-center">
+                <ActivityIndicator size="large" color="#3B82F6" />
+                <Text className="text-xl font-semibold text-gray-900 mt-6">
+                  Buscando funcionários
+                </Text>
+                <Text className="text-sm text-gray-500 mt-2">
+                  Aguarde um momento...
+                </Text>
+              </View>
+            )}
+
+            {initialLoadState === 'success' && (
+              <Animated.View 
+                style={{ transform: [{ scale: scaleAnim }] }}
+                className="items-center"
+              >
+                {/* Check Icon Verde */}
+                <View className="w-20 h-20 bg-green-500 rounded-full items-center justify-center mb-6">
+                  <Text className="text-white text-4xl font-bold">✓</Text>
+                </View>
+                <Text className="text-xl font-semibold text-gray-900">
+                  Conectado com sucesso!
+                </Text>
+                <Text className="text-sm text-gray-500 mt-2">
+                  Funcionários carregados...
+                </Text>
+              </Animated.View>
+            )}
+        </Animated.View>
+      </>
+    );
+  }
 
   if (isLoading) {
     return (

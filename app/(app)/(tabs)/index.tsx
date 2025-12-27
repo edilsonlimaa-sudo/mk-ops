@@ -27,9 +27,9 @@ export default function HomeScreen() {
     await clearIdentification();
     console.log('✅ [Home] Identificação limpa');
     
-    // Vai para /(auth)/user-identification (AppLayout guard vai redirecionar)
+    // Vai para /(auth)/user-identification (trocar usuário)
     console.log('➡️ [Home] Redirecionando para /(auth)/user-identification');
-    router.replace('/(auth)/user-identification');
+    router.replace('/(auth)/user-identification?flow=switchUser');
   };
 
   const handleLogout = async () => {
