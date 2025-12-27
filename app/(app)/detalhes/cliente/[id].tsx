@@ -191,18 +191,50 @@ export default function ClienteDetalhesScreen() {
                 <TouchableOpacity
                   onPress={async () => {
                     try {
-                      // As coordenadas vêm no formato: lng,lat,altitude
+                      // Validar se coordenadas existem
+                      if (!cliente.coordenadas || typeof cliente.coordenadas !== 'string') {
+                        Alert.alert('Erro', 'Coordenadas não disponíveis');
+                        return;
+                      }
+
+                      // Parse coordinates
                       const parts = cliente.coordenadas.split(',');
-                      const lng = parseFloat(parts[0]);
-                      const lat = parseFloat(parts[1]);
                       
-                      // Validar se as coordenadas são números válidos
-                      if (isNaN(lat) || isNaN(lng)) {
+                      // Validar se temos pelo menos 2 partes
+                      if (parts.length < 2) {
+                        Alert.alert('Erro', 'Formato de coordenadas inválido');
+                        return;
+                      }
+
+                      const firstValue = parseFloat(parts[0]?.trim() || '');
+                      const secondValue = parseFloat(parts[1]?.trim() || '');
+                      
+                      // Validar se as coordenadas são números válidos e finitos
+                      if (
+                        isNaN(firstValue) || 
+                        isNaN(secondValue) || 
+                        !isFinite(firstValue) || 
+                        !isFinite(secondValue)
+                      ) {
                         Alert.alert('Erro', 'Coordenadas inválidas');
                         return;
                       }
+
+                      // Validar se estão dentro de ranges geográficos válidos
+                      if (
+                        Math.abs(firstValue) > 180 || 
+                        Math.abs(secondValue) > 180
+                      ) {
+                        Alert.alert('Erro', 'Coordenadas fora do intervalo válido');
+                        return;
+                      }
                       
-                      // Google Maps espera: lat,lng
+                      // Google Maps espera: lat,lng (latitude, longitude)
+                      // No Brasil: latitude é menor (entre -5 e -33), longitude é maior (entre -35 e -73)
+                      // Detectar automaticamente: o valor com menor valor absoluto é a latitude
+                      const lat = Math.abs(firstValue) < Math.abs(secondValue) ? firstValue : secondValue;
+                      const lng = Math.abs(firstValue) < Math.abs(secondValue) ? secondValue : firstValue;
+                      
                       const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
                       
                       const canOpen = await Linking.canOpenURL(url);
