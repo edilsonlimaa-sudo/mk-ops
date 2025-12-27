@@ -1,3 +1,4 @@
+import { ImmersiveLoadingScreen } from '@/components/ImmersiveLoadingScreen';
 import { PasswordModal } from '@/components/PasswordModal';
 import { useUsuarios } from '@/hooks/usuario';
 import { fetchUsuarioDetail } from '@/services/api/usuario';
@@ -8,7 +9,7 @@ import bcrypt from 'bcryptjs';
 import * as Crypto from 'expo-crypto';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Animated, FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ValidationState = 'idle' | 'validating' | 'success' | 'error';
@@ -31,103 +32,16 @@ export default function UserIdentification() {
   const [initialLoadState, setInitialLoadState] = useState<InitialLoadState>(
     flow === 'switchUser' ? 'done' : 'loading'
   );
-  
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [scaleAnim] = useState(new Animated.Value(0));
 
   // Controla o loading inicial (quando vem da tela de login)
   useEffect(() => {
     if (initialLoadState === 'loading') {
-      // Mostra loading imediatamente
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-
       // Quando carregar os usuários, mostra o green check
       if (!isLoading && !isError && usuarios.length > 0) {
         setInitialLoadState('success');
       }
     }
   }, [isLoading, isError, usuarios, initialLoadState]);
-
-  // Animação do green check inicial
-  useEffect(() => {
-    if (initialLoadState === 'success') {
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 3,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      // Após 1.8s, fecha o loading e mostra a lista
-      setTimeout(() => {
-        setInitialLoadState('done');
-      }, 1800);
-    }
-  }, [initialLoadState]);
-
-  // Animação de entrada do loading de validação
-  useEffect(() => {
-    if (validationState === 'validating') {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [validationState]);
-
-  // Animação de sucesso (check verde) - validação de senha
-  useEffect(() => {
-    if (validationState === 'success') {
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 3,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-    
-    // Animação de erro (X vermelho)
-    if (validationState === 'error') {
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 3,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-      ]).start();
-      
-      // Após mostrar erro, reabre o modal
-      setTimeout(() => {
-        setValidationState('idle');
-        setPasswordModalVisible(true); // Reabre modal (mantém selectedUsuario!)
-      }, 1800);
-    }
-  }, [validationState]);
 
   const handleDisconnect = () => {
     console.log('🚪 [UserIdentification] Desconectando...');
@@ -207,40 +121,16 @@ export default function UserIdentification() {
       <>
         <Stack.Screen options={{ headerShown: false }} />
         {/* Loading Screen Fullscreen - Carregamento Inicial */}
-        <Animated.View 
-          style={{ opacity: fadeAnim }}
-          className="absolute inset-0 bg-white justify-center items-center z-50"
-        >
-            {initialLoadState === 'loading' && (
-              <View className="items-center">
-                <ActivityIndicator size="large" color="#3B82F6" />
-                <Text className="text-xl font-semibold text-gray-900 mt-6">
-                  Buscando funcionários
-                </Text>
-                <Text className="text-sm text-gray-500 mt-2">
-                  Aguarde um momento...
-                </Text>
-              </View>
-            )}
-
-            {initialLoadState === 'success' && (
-              <Animated.View 
-                style={{ transform: [{ scale: scaleAnim }] }}
-                className="items-center"
-              >
-                {/* Check Icon Verde */}
-                <View className="w-20 h-20 bg-green-500 rounded-full items-center justify-center mb-6">
-                  <Text className="text-white text-4xl font-bold">✓</Text>
-                </View>
-                <Text className="text-xl font-semibold text-gray-900">
-                  Conectado com sucesso!
-                </Text>
-                <Text className="text-sm text-gray-500 mt-2">
-                  Funcionários carregados...
-                </Text>
-              </Animated.View>
-            )}
-        </Animated.View>
+        <ImmersiveLoadingScreen
+          visible={true}
+          state={initialLoadState}
+          loadingTitle="Buscando funcionários"
+          loadingSubtitle="Aguarde um momento..."
+          successTitle="Conectado com sucesso!"
+          successSubtitle="Funcionários carregados..."
+          errorTitle="" // Not used in initial load
+          onAnimationComplete={() => setInitialLoadState('done')}
+        />
       </>
     );
   }
@@ -388,60 +278,22 @@ export default function UserIdentification() {
       />
 
       {/* Loading Screen Fullscreen - Validação */}
-      {validationState !== 'idle' && (
-        <Animated.View 
-          style={{ opacity: fadeAnim }}
-          className="absolute inset-0 bg-white justify-center items-center z-50"
-        >
-          {validationState === 'validating' && (
-            <View className="items-center">
-              <ActivityIndicator size="large" color="#3B82F6" />
-              <Text className="text-xl font-semibold text-gray-900 mt-6">
-                Validando senha
-              </Text>
-              <Text className="text-sm text-gray-500 mt-2">
-                Aguarde um momento...
-              </Text>
-            </View>
-          )}
-
-          {validationState === 'success' && (
-            <Animated.View 
-              style={{ transform: [{ scale: scaleAnim }] }}
-              className="items-center"
-            >
-              {/* Check Icon Verde */}
-              <View className="w-20 h-20 bg-green-500 rounded-full items-center justify-center mb-6">
-                <Text className="text-white text-4xl font-bold">✓</Text>
-              </View>
-              <Text className="text-xl font-semibold text-gray-900">
-                Bem-vindo, @{selectedUsuario?.login}!
-              </Text>
-              <Text className="text-sm text-gray-500 mt-2">
-                Entrando no sistema...
-              </Text>
-            </Animated.View>
-          )}
-
-          {validationState === 'error' && (
-            <Animated.View 
-              style={{ transform: [{ scale: scaleAnim }] }}
-              className="items-center"
-            >
-              {/* X Icon Vermelho */}
-              <View className="w-20 h-20 bg-red-500 rounded-full items-center justify-center mb-6">
-                <Text className="text-white text-4xl font-bold">✕</Text>
-              </View>
-              <Text className="text-xl font-semibold text-gray-900">
-                Senha incorreta!
-              </Text>
-              <Text className="text-sm text-gray-500 mt-2">
-                Tente novamente...
-              </Text>
-            </Animated.View>
-          )}
-        </Animated.View>
-      )}
+      <ImmersiveLoadingScreen
+        visible={validationState !== 'idle'}
+        state={validationState === 'validating' ? 'loading' : (validationState as 'success' | 'error')}
+        loadingTitle="Validando senha"
+        loadingSubtitle="Aguarde um momento..."
+        successTitle={`Bem-vindo, @${selectedUsuario?.login}!`}
+        successSubtitle="Entrando no sistema..."
+        errorTitle="Senha incorreta!"
+        errorSubtitle="Tente novamente..."
+        onAnimationComplete={() => {
+          if (validationState === 'error') {
+            setValidationState('idle');
+            setPasswordModalVisible(true); // Reabre modal (mantém selectedUsuario!)
+          }
+        }}
+      />
     </>
   );
 }

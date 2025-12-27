@@ -1,9 +1,10 @@
+import { ImmersiveLoadingScreen } from '@/components/ImmersiveLoadingScreen';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { ActivityIndicator, Animated, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -20,8 +21,6 @@ export default function Login() {
   const router = useRouter();
   const { login, isLoading, isAuthenticated } = useAuthStore();
   const [loadingState, setLoadingState] = useState<LoadingState>('idle');
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [scaleAnim] = useState(new Animated.Value(0));
 
   console.log('🔐 [Login] Componente renderizado. isAuthenticated:', isAuthenticated);
 
@@ -45,41 +44,6 @@ export default function Login() {
       router.replace('/(auth)/user-identification?flow=login');
     }
   }, [isAuthenticated]);
-
-  // Animação de entrada do loading screen
-  useEffect(() => {
-    if (loadingState === 'connecting') {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [loadingState]);
-
-  // Animação de erro (X vermelho)
-  useEffect(() => {
-    if (loadingState === 'error') {
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 3,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      // Após 1.8s, volta para idle
-      setTimeout(() => {
-        setLoadingState('idle');
-      }, 1800);
-    }
-  }, [loadingState]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -228,42 +192,16 @@ export default function Login() {
       </View>
 
       {/* Loading Screen Fullscreen */}
-      {(loadingState === 'connecting' || loadingState === 'error') && (
-        <Animated.View 
-          style={{ opacity: fadeAnim }}
-          className="absolute inset-0 bg-white justify-center items-center z-50"
-        >
-          {loadingState === 'connecting' && (
-            <View className="items-center">
-              <ActivityIndicator size="large" color="#3B82F6" />
-              <Text className="text-xl font-semibold text-gray-900 mt-6">
-                Conectando ao MK-Auth
-              </Text>
-              <Text className="text-sm text-gray-500 mt-2">
-                Aguarde um momento...
-              </Text>
-            </View>
-          )}
-
-          {loadingState === 'error' && (
-            <Animated.View 
-              style={{ transform: [{ scale: scaleAnim }] }}
-              className="items-center"
-            >
-              {/* X Icon Vermelho */}
-              <View className="w-20 h-20 bg-red-500 rounded-full items-center justify-center mb-6">
-                <Text className="text-white text-4xl font-bold">✕</Text>
-              </View>
-              <Text className="text-xl font-semibold text-gray-900">
-                Erro ao conectar!
-              </Text>
-              <Text className="text-sm text-gray-500 mt-2">
-                Verifique as credenciais...
-              </Text>
-            </Animated.View>
-          )}
-        </Animated.View>
-      )}
+      <ImmersiveLoadingScreen
+        visible={loadingState === 'connecting' || loadingState === 'error'}
+        state={loadingState === 'connecting' ? 'loading' : 'error'}
+        loadingTitle="Conectando ao MK-Auth"
+        loadingSubtitle="Aguarde um momento..."
+        successTitle="" // Not used in login flow
+        errorTitle="Erro ao conectar!"
+        errorSubtitle="Verifique as credenciais..."
+        onAnimationComplete={() => setLoadingState('idle')}
+      />
     </>
   );
 }
