@@ -1,9 +1,10 @@
 import { useAuthStore } from '@/stores/useAuthStore';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -14,9 +15,14 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+type LoadingState = 'idle' | 'connecting' | 'success';
+
 export default function Login() {
   const router = useRouter();
   const { login, isLoading, isAuthenticated } = useAuthStore();
+  const [loadingState, setLoadingState] = useState<LoadingState>('idle');
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [scaleAnim] = useState(new Animated.Value(0));
 
   console.log('🔐 [Login] Componente renderizado. isAuthenticated:', isAuthenticated);
 
@@ -35,34 +41,84 @@ export default function Login() {
 
   // Redireciona para tabs se já estiver autenticado (guards decidem o resto)
   useEffect(() => {
-    if (isAuthenticated) {
-      console.log('🚀 [Login] isAuthenticated mudou para true, redirecionando para /(app)/(tabs)');
-      router.replace('/(app)/(tabs)');
+    if (isAuthenticated && loadingState === 'success') {
+      // Aguarda animação de sucesso antes de redirecionar
+      const timer = setTimeout(() => {
+        console.log('🚀 [Login] Redirecionando para /(app)/(tabs)');
+        router.replace('/(app)/(tabs)');
+      }, 1800); // Tempo para ler a mensagem de sucesso
+      
+      return () => clearTimeout(timer);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loadingState]);
+
+  // Animação de entrada do loading screen
+  useEffect(() => {
+    if (loadingState === 'connecting') {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [loadingState]);
+
+  // Animação de sucesso (check verde)
+  useEffect(() => {
+    if (loadingState === 'success') {
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.2,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 3,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [loadingState]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
       console.log('📝 [Login] Iniciando processo de login...');
+      setLoadingState('connecting');
+      
       await login(data.ipMkAuth, data.clientId, data.clientSecret);
-      console.log('✅ [Login] Login concluído! useEffect vai redirecionar automaticamente...');
-      Alert.alert('Sucesso', 'Login realizado com sucesso!');
-      // ⚠️ Não redireciona aqui - deixa o useEffect fazer isso ao detectar isAuthenticated
+      console.log('✅ [Login] Login concluído!');
+      
+      // Transição para estado de sucesso
+      setLoadingState('success');
+      // O useEffect vai redirecionar após o tempo de leitura
     } catch (error) {
       console.error('❌ [Login] Erro no login:', error);
-      Alert.alert('Erro', error instanceof Error ? error.message : 'Erro ao fazer login');
+      setLoadingState('idle'); // Volta ao estado inicial
+      
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao conectar',
+        text2: error instanceof Error ? error.message : 'Verifique as credenciais',
+        visibilityTime: 3000,
+      });
     }
   };
 
   return (
-    <View className="flex-1 bg-gray-50 justify-center px-6">
-      {/* Header */}
-      <View className="mb-8">
+    <>
+      <View className="flex-1 bg-gray-50 justify-center px-6">
+        {/* Header */}
+        <View className="mb-8">
+        <Text className="text-sm font-semibold text-blue-600 mb-2">
+          ETAPA 1 DE 2
+        </Text>
         <Text className="text-4xl font-bold text-gray-900 mb-2">
-          MK-Auth Mobile
+          Conecte-se ao Sistema
         </Text>
         <Text className="text-lg text-gray-600">
-          Faça login para continuar
+          Informe as credenciais do provedor
         </Text>
       </View>
 
@@ -159,21 +215,65 @@ export default function Login() {
           disabled={isLoading}
         >
           {isLoading ? (
-            <ActivityIndicator color="#fff" />
+            <View className="flex-row items-center">
+              <ActivityIndicator color="#fff" />
+              <Text className="text-white font-semibold text-base ml-2">
+                Conectando ao provedor...
+              </Text>
+            </View>
           ) : (
             <Text className="text-white font-semibold text-lg">
-              Entrar
+              Conectar ao Sistema
             </Text>
           )}
         </TouchableOpacity>
       </View>
 
-      {/* Footer */}
-      <View className="mt-6 items-center">
-        <Text className="text-gray-500 text-sm">
-          Credenciais pré-preenchidas para teste
-        </Text>
+        {/* Footer */}
+        <View className="mt-6 items-center">
+          <Text className="text-gray-500 text-sm">
+            Credenciais pré-preenchidas para teste
+          </Text>
+        </View>
       </View>
-    </View>
+
+      {/* Loading Screen Fullscreen */}
+      {loadingState !== 'idle' && (
+        <Animated.View 
+          style={{ opacity: fadeAnim }}
+          className="absolute inset-0 bg-white justify-center items-center z-50"
+        >
+          {loadingState === 'connecting' && (
+            <View className="items-center">
+              <ActivityIndicator size="large" color="#3B82F6" />
+              <Text className="text-xl font-semibold text-gray-900 mt-6">
+                Conectando ao MK-Auth
+              </Text>
+              <Text className="text-sm text-gray-500 mt-2">
+                Aguarde um momento...
+              </Text>
+            </View>
+          )}
+
+          {loadingState === 'success' && (
+            <Animated.View 
+              style={{ transform: [{ scale: scaleAnim }] }}
+              className="items-center"
+            >
+              {/* Check Icon Verde */}
+              <View className="w-20 h-20 bg-green-500 rounded-full items-center justify-center mb-6">
+                <Text className="text-white text-4xl font-bold">✓</Text>
+              </View>
+              <Text className="text-xl font-semibold text-gray-900">
+                Conectado ao seu MK-Auth!
+              </Text>
+              <Text className="text-sm text-gray-500 mt-2">
+                Tudo certo! Vamos continuar...
+              </Text>
+            </Animated.View>
+          )}
+        </Animated.View>
+      )}
+    </>
   );
 }
