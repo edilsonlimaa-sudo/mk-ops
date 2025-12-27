@@ -2,6 +2,7 @@ import { fecharInstalacao } from '@/services/api/instalacao/instalacao.service';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { agendaKeys } from '../agenda/keys';
 import { historicoKeys } from '../historico/keys';
+import { instalacaoKeys } from './keys';
 
 /**
  * Hook para fechar uma instalação aberta
@@ -33,6 +34,9 @@ export const useFechaInstalacao = () => {
       
       // Invalida histórico (para onde a instalação vai)
       queryClient.invalidateQueries({ queryKey: historicoKeys.all });
+
+      // Invalida detalhes da instalação (garante que ao abrir detalhes, busca versão atualizada)
+      queryClient.invalidateQueries({ queryKey: instalacaoKeys.all });
     },
     
     onError: (error, uuid) => {

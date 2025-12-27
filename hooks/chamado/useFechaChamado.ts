@@ -2,6 +2,7 @@ import { fecharChamado } from '@/services/api/chamado';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { agendaKeys } from '../agenda/keys';
 import { historicoKeys } from '../historico/keys';
+import { chamadoKeys } from './keys';
 
 // 🎭 MOCK MODE - Ative para testar sem chamar API
 const MOCK_MODE = false;
@@ -31,13 +32,16 @@ export const useFechaChamado = () => {
       return fecharChamado(numeroChamado, motivo);
     },
     onSuccess: () => {
-      console.log('♻️ [useFechaChamado] Invalidando cache da agenda e histórico...');
+      console.log('♻️ [useFechaChamado] Invalidando cache da agenda, histórico e detalhes...');
 
       // Invalida agenda (chamado sai da lista de abertos)
       queryClient.invalidateQueries({ queryKey: agendaKeys.all });
 
       // Invalida histórico (chamado aparece nos fechados)
       queryClient.invalidateQueries({ queryKey: historicoKeys.all });
+
+      // Invalida detalhes do chamado (garante que ao abrir detalhes, busca versão atualizada)
+      queryClient.invalidateQueries({ queryKey: chamadoKeys.all });
 
       console.log('✅ [useFechaChamado] Cache invalidado com sucesso');
     },

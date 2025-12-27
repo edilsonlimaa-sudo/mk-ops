@@ -2,6 +2,7 @@ import { reabrirChamado } from '@/services/api/chamado/chamado.service';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { agendaKeys } from '../agenda/keys';
 import { historicoKeys } from '../historico/keys';
+import { chamadoKeys } from './keys';
 
 /**
  * Hook para reabrir um chamado fechado
@@ -33,6 +34,9 @@ export const useReabrirChamado = () => {
       
       // Invalida agenda (para onde o chamado vai)
       queryClient.invalidateQueries({ queryKey: agendaKeys.all });
+
+      // Invalida detalhes do chamado (garante que ao abrir detalhes, busca versão atualizada)
+      queryClient.invalidateQueries({ queryKey: chamadoKeys.all });
     },
     
     onError: (error, numeroChamado) => {
