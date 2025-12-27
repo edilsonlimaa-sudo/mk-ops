@@ -1,3 +1,4 @@
+import { validatePassword } from '@/services/api/usuario';
 import { UsuarioDetalhado } from '@/types/usuario';
 import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
@@ -10,6 +11,9 @@ interface UserState {
   
   // Identifica o usuário (salva dados completos no SecureStore, exceto sha)
   identifyUser: (usuario: UsuarioDetalhado) => Promise<void>;
+  
+  // Valida senha e identifica o usuário em uma única operação
+  validateAndIdentify: (usuarioUuid: string, password: string) => Promise<void>;
   
   // Limpa a identificação (mantém auth da API)
   clearIdentification: () => Promise<void>;
@@ -41,6 +45,23 @@ export const useUserStore = create<UserState>((set) => ({
       console.log('✅ [UserStore] Usuário identificado:', usuarioSemHash.login);
     } catch (error) {
       console.error('❌ [UserStore] Erro ao identificar usuário:', error);
+      throw error;
+    }
+  },
+
+  validateAndIdentify: async (usuarioUuid: string, password: string) => {
+    try {
+      console.log('🔐 [UserStore] Iniciando validação e identificação...');
+      
+      // Delega validação para o service layer
+      const usuarioDetalhado = await validatePassword(usuarioUuid, password);
+      
+      // Identifica usuário usando método existente
+      await useUserStore.getState().identifyUser(usuarioDetalhado);
+      
+      console.log('✨ [UserStore] Usuário validado e identificado com sucesso');
+    } catch (error) {
+      console.error('❌ [UserStore] Erro ao validar e identificar:', error);
       throw error;
     }
   },

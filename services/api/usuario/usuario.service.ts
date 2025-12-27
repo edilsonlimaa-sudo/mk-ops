@@ -1,4 +1,6 @@
 import { Usuario, UsuarioDetalhado, UsuarioListResponse } from '@/types/usuario';
+import bcrypt from 'bcryptjs';
+import * as Crypto from 'expo-crypto';
 import apiClient from '../core/apiClient';
 
 /**
@@ -107,5 +109,53 @@ export const searchUsuarioByLogin = async (login: string): Promise<UsuarioListRe
   } catch (error) {
     console.error(`❌ [UsuarioService] Erro ao buscar usuário ${login}:`, error);
     throw error;
+  }
+};
+
+/**
+ * Validates user password using SHA-256 + bcrypt and returns detailed user data if valid
+ * @param usuarioUuid - User UUID
+ * @param password - Plain text password
+ * @returns Detailed user information if password is valid
+ * @throws Error if password is invalid or user fetch fails
+ */
+export const validatePassword = async (
+  usuarioUuid: string,
+  password: string
+): Promise<UsuarioDetalhado> => {
+  console.log(`🔐 [UsuarioService] Validando senha para usuário ${usuarioUuid}...`);
+
+  try {
+    // 1. Fetch complete user data including password hash
+    const usuarioDetalhado = await fetchUsuarioDetail(usuarioUuid);
+    console.log('✅ [UsuarioService] Dados completos do usuário obtidos');
+
+    // 2. Hash password with SHA-256
+    console.log('🔒 [UsuarioService] Gerando hash SHA-256 da senha...');
+    const sha256Hash = await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      password
+    );
+
+    // 3. Convert PHP bcrypt format ($2y$) to JS format ($2a$)
+    const bcryptHash = usuarioDetalhado.sha.replace('$2y$', '$2a$');
+
+    // 4. Compare SHA-256 hash with stored bcrypt hash
+    console.log('🔍 [UsuarioService] Comparando hashes...');
+    const isValid = await bcrypt.compare(sha256Hash, bcryptHash);
+
+    if (!isValid) {
+      console.log('❌ [UsuarioService] Senha incorreta');
+      throw new Error('Senha incorreta');
+    }
+
+    console.log('✅ [UsuarioService] Senha validada com sucesso');
+    return usuarioDetalhado;
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Senha incorreta') {
+      throw error; // Re-throw validation error
+    }
+    console.error(`❌ [UsuarioService] Erro ao validar senha:`, error);
+    throw new Error('Erro ao validar senha');
   }
 };

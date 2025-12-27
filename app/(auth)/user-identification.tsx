@@ -1,12 +1,10 @@
 import { ImmersiveLoadingScreen } from '@/components/ImmersiveLoadingScreen';
 import { PasswordModal } from '@/components/PasswordModal';
 import { useUsuarios } from '@/hooks/usuario';
-import { fetchUsuarioDetail } from '@/services/api/usuario';
+import { validatePassword } from '@/services/api/usuario';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { Usuario } from '@/types/usuario';
-import bcrypt from 'bcryptjs';
-import * as Crypto from 'expo-crypto';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
@@ -69,47 +67,23 @@ export default function UserIdentification() {
       // Inicia loading imersivo
       setValidationState('validating');
       
-      // Busca dados completos do usuário incluindo hash
-      const usuarioDetalhado = await fetchUsuarioDetail(selectedUsuario.uuid);
-      console.log('✅ [UserIdentification] Dados completos do usuário obtidos');
-      
-      // Valida senha com SHA-256 + bcrypt
-      console.log('🔒 [UserIdentification] Gerando hash SHA-256 da senha...');
-      const sha256Hash = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        password
-      );
-      
-      // Converte $2y$ para $2a$ (compatibilidade PHP -> JS)
-      const bcryptHash = usuarioDetalhado.sha.replace('$2y$', '$2a$');
-      
-      // Compara hash SHA-256 da senha com bcrypt armazenado
-      console.log('🔍 [UserIdentification] Comparando hashes...');
-      const isValid = await bcrypt.compare(sha256Hash, bcryptHash);
-      
-      if (!isValid) {
-        console.log('❌ [UserIdentification] Senha incorreta');
-        setValidationState('error'); // Mostra X vermelho
-        // NÃO limpa selectedUsuario - mantém referência para reabrir modal
-        return; // Sai da função (useEffect cuida do resto)
-      }
-      
+      // Valida senha via service layer (retorna usuário validado)
+      const usuarioDetalhado = await validatePassword(selectedUsuario.uuid, password);
       console.log('✅ [UserIdentification] Senha validada com sucesso');
       
       // Mostra animação de sucesso
       setValidationState('success');
       
-      // Aguarda animação completar
+      // Aguarda animação completar ANTES de identificar (evita redirect prematuro)
       await new Promise(resolve => setTimeout(resolve, 1800));
       
       // Identifica o usuário (guard vai redirecionar automaticamente)
-      console.log('💾 [UserIdentification] Chamando identifyUser...');
+      console.log('💾 [UserIdentification] Identificando usuário...');
       await identifyUser(usuarioDetalhado);
       console.log('✨ [UserIdentification] Usuário identificado! Guard vai redirecionar...');
       
     } catch (error) {
       console.error('❌ [UserIdentification] Erro:', error);
-      // Em caso de erro genérico (não senha incorreta), mostra erro e reabre modal
       setValidationState('error');
       // Mantém selectedUsuario para poder tentar novamente
     }
