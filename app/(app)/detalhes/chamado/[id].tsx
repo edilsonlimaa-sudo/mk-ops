@@ -168,24 +168,6 @@ export default function ChamadoDetalhesScreen() {
                 </View>
               )}
 
-              {/* Informações de Fechamento - Destaque quando fechado */}
-              {chamado.status === 'fechado' && chamado.fechamento && chamado.fechamento !== '0000-00-00' && chamado.fechamento !== '0000-00-00 00:00:00' && (
-                <View className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-                  <View className="gap-2">
-                    <View>
-                      <Text className="text-gray-500 text-xs mb-0.5">Data de Fechamento</Text>
-                      <Text className="text-gray-900 font-bold">{formatarDataCompleta(chamado.fechamento)}</Text>
-                    </View>
-                    {chamado.motivo_fechar && (
-                      <View className="mt-2 pt-2 border-t border-gray-200">
-                        <Text className="text-gray-500 text-xs mb-0.5">Motivo</Text>
-                        <Text className="text-gray-900 font-medium">{chamado.motivo_fechar}</Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              )}
-
               {/* Informações em InfoRow */}
               <View className="gap-3">
                 {/* Status com badge */}
@@ -253,6 +235,68 @@ export default function ChamadoDetalhesScreen() {
                   {/* Linha vertical da timeline */}
                   <View className="absolute left-4 top-6 bottom-6 w-0.5 bg-gray-200" />
 
+                  {/* Evento de Abertura - aparece no início do histórico */}
+                  <View className="relative mb-4">
+                    {/* Círculo da timeline - azul para abertura */}
+                    <View className="absolute left-0 w-8 h-8 rounded-full bg-blue-500 items-center justify-center border-2 border-white z-10">
+                      <Text className="text-sm">📋</Text>
+                    </View>
+
+                    {/* Conteúdo da abertura */}
+                    <View className="ml-12 bg-blue-50 rounded-lg p-3 border border-blue-200">
+                      <View className="flex-row justify-between items-start mb-2">
+                        <View className="flex-1">
+                          <Text className="text-blue-900 font-bold text-sm">Chamado Aberto</Text>
+                          <Text className="text-blue-600 text-xs mt-0.5">
+                            {(() => {
+                              try {
+                                const data = new Date(chamado.abertura.replace(' ', 'T'));
+                                const hoje = new Date();
+                                const ontem = new Date(hoje);
+                                ontem.setDate(ontem.getDate() - 1);
+
+                                const dataFormatada = data.toLocaleDateString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                });
+                                const horaFormatada = data.toLocaleTimeString('pt-BR', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                });
+
+                                const dataData = new Date(data);
+                                dataData.setHours(0, 0, 0, 0);
+                                const hojeData = new Date(hoje);
+                                hojeData.setHours(0, 0, 0, 0);
+                                const ontemData = new Date(ontem);
+                                ontemData.setHours(0, 0, 0, 0);
+
+                                if (dataData.getTime() === hojeData.getTime()) {
+                                  return `Hoje às ${horaFormatada}`;
+                                } else if (dataData.getTime() === ontemData.getTime()) {
+                                  return `Ontem às ${horaFormatada}`;
+                                }
+                                return `${dataFormatada} às ${horaFormatada}`;
+                              } catch {
+                                return chamado.abertura;
+                              }
+                            })()}
+                          </Text>
+                        </View>
+                      </View>
+                      {chamado.atendente && (
+                        <Text className="text-blue-900 text-xs mb-1">
+                          por <Text className="font-semibold">{chamado.atendente}</Text>
+                        </Text>
+                      )}
+                      {chamado.assunto && (
+                        <Text className="text-blue-900 text-sm leading-5">
+                          {chamado.assunto}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+
                   {chamado.relatos.map((relato, index) => {
                     // Formatar data/hora
                     const formatarData = (dataStr: string) => {
@@ -316,6 +360,65 @@ export default function ChamadoDetalhesScreen() {
                       </View>
                     );
                   })}
+
+                  {/* Evento de Fechamento - aparece no final do histórico */}
+                  {chamado.status === 'fechado' && chamado.fechamento && chamado.fechamento !== '0000-00-00' && chamado.fechamento !== '0000-00-00 00:00:00' && (
+                    <View className={`relative ${chamado.relatos && chamado.relatos.length > 0 ? 'mt-4' : ''}`}>
+                      {/* Círculo da timeline - verde para fechamento */}
+                      <View className="absolute left-0 w-8 h-8 rounded-full bg-green-100 items-center justify-center border-2 border-white z-10">
+                        <Text className="text-sm">✅</Text>
+                      </View>
+
+                      {/* Conteúdo do fechamento */}
+                      <View className="ml-12 bg-green-50 rounded-lg p-3 border border-green-200">
+                        <View className="flex-row justify-between items-start mb-2">
+                          <View className="flex-1">
+                            <Text className="text-green-900 font-bold text-sm">Chamado Fechado</Text>
+                            <Text className="text-green-600 text-xs mt-0.5">
+                              {(() => {
+                                try {
+                                  const data = new Date(chamado.fechamento.replace(' ', 'T'));
+                                  const hoje = new Date();
+                                  const ontem = new Date(hoje);
+                                  ontem.setDate(ontem.getDate() - 1);
+
+                                  const dataFormatada = data.toLocaleDateString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                  });
+                                  const horaFormatada = data.toLocaleTimeString('pt-BR', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  });
+
+                                  const dataData = new Date(data);
+                                  dataData.setHours(0, 0, 0, 0);
+                                  const hojeData = new Date(hoje);
+                                  hojeData.setHours(0, 0, 0, 0);
+                                  const ontemData = new Date(ontem);
+                                  ontemData.setHours(0, 0, 0, 0);
+
+                                  if (dataData.getTime() === hojeData.getTime()) {
+                                    return `Hoje às ${horaFormatada}`;
+                                  } else if (dataData.getTime() === ontemData.getTime()) {
+                                    return `Ontem às ${horaFormatada}`;
+                                  }
+                                  return `${dataFormatada} às ${horaFormatada}`;
+                                } catch {
+                                  return chamado.fechamento;
+                                }
+                              })()}
+                            </Text>
+                          </View>
+                        </View>
+                        {chamado.motivo_fechar && (
+                          <Text className="text-green-900 text-sm leading-5">
+                            {chamado.motivo_fechar}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                  )}
                 </View>
               )}
             </View>
