@@ -294,7 +294,7 @@ export default function ClienteDetalhesScreen() {
             
             {/* Ações inline discretas */}
             {cliente.endereco && (
-              <View className="flex-row justify-end gap-2 pt-2 border-t border-gray-100 mt-2">
+              <View className="flex-row justify-end gap-2 mt-2">
                 <TouchableOpacity
                   onPress={() => {
                     const enderecoCompleto = [
@@ -384,19 +384,6 @@ export default function ClienteDetalhesScreen() {
                     <Ionicons name="copy-outline" size={16} color="#3b82f6" />
                   </TouchableOpacity>
                 </View>
-              </View>
-            )}
-
-            {/* Botão inline discreto para copiar Login:Senha */}
-            {cliente.login && cliente.senha && (
-              <View className="flex-row justify-end pt-2 border-t border-gray-100 mt-2">
-                <TouchableOpacity
-                  onPress={() => copiarParaClipboard(`${cliente.login}:${cliente.senha}`, 'Login e Senha')}
-                  className="bg-blue-50 p-2 rounded-lg active:bg-blue-100 flex-row items-center gap-1"
-                >
-                  <Ionicons name="copy-outline" size={14} color="#3b82f6" />
-                  <Text className="text-blue-600 text-xs font-medium">Copiar Login:Senha</Text>
-                </TouchableOpacity>
               </View>
             )}
 

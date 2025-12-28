@@ -1,6 +1,7 @@
 import { ClientSearchModal } from '@/components/ClientSearchModal';
 import { useChamadoDetail, useFechaChamado, useReabrirChamado } from '@/hooks/chamado';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -9,11 +10,12 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -27,6 +29,17 @@ export default function ChamadoDetalhesScreen() {
   const fechaChamadoMutation = useFechaChamado();
   const reabrirChamadoMutation = useReabrirChamado();
   const motivoInputRef = useRef<TextInput>(null);
+
+  const copiarParaClipboard = async (texto: string, label: string) => {
+    await Clipboard.setStringAsync(texto);
+    Toast.show({
+      type: 'success',
+      text1: `${label} copiado! 📋`,
+      position: 'top',
+      visibilityTime: 2000,
+      topOffset: 60,
+    });
+  };
 
   // Foca no input quando o modal abre
   useEffect(() => {
@@ -108,156 +121,119 @@ export default function ChamadoDetalhesScreen() {
       />
       <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
         <ScrollView className="flex-1">
-          <View className="p-4 gap-4">
-            {/* Status e Prioridade */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <View className="flex-row justify-between items-center">
-                <View>
-                  <Text className="text-gray-500 text-xs mb-1">Status</Text>
-                  <View className={`${statusColor} px-3 py-1 rounded-full self-start`}>
-                    <Text className={`${statusColor.split(' ')[1]} font-semibold text-sm`}>
+          <View className="p-4">
+            {/* Card Principal */}
+            <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
+              {/* Header */}
+              <View className="mb-4 pb-3 border-b border-gray-100">
+                <Text className="text-gray-400 text-xs">#{chamado.chamado}</Text>
+              </View>
+
+              {/* Cliente */}
+              <TouchableOpacity
+                onPress={() => setSearchModalVisible(true)}
+                className="active:opacity-70 mb-4"
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1">
+                    <Text className="text-gray-500 text-xs mb-1">CLIENTE</Text>
+                    <Text className="text-gray-900 text-xl font-bold mb-1">{chamado.nome || 'Cliente não informado'}</Text>
+                    {chamado.login && (
+                      <Text className="text-gray-500 text-sm">{chamado.login}</Text>
+                    )}
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+                </View>
+              </TouchableOpacity>
+
+              {/* Problema */}
+              <View className="mb-4">
+                <Text className="text-gray-500 text-xs mb-1">PROBLEMA</Text>
+                <Text className="text-gray-900 text-base font-medium">
+                  {chamado.assunto || 'Não informado'}
+                </Text>
+              </View>
+
+              {/* Visita Agendada - Destaque mais sutil */}
+              {chamado.visita && (
+                <View className="mb-4 pb-4 border-b border-gray-100">
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      <Text className="text-orange-600 text-xs font-semibold mb-1">VISITA AGENDADA</Text>
+                      <Text className="text-gray-900 font-bold">
+                        {formatarDataCompleta(chamado.visita)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Informações de Fechamento - Destaque quando fechado */}
+              {chamado.status === 'fechado' && chamado.fechamento && chamado.fechamento !== '0000-00-00' && chamado.fechamento !== '0000-00-00 00:00:00' && (
+                <View className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                  <View className="gap-2">
+                    <View>
+                      <Text className="text-gray-500 text-xs mb-0.5">Data de Fechamento</Text>
+                      <Text className="text-gray-900 font-bold">{formatarDataCompleta(chamado.fechamento)}</Text>
+                    </View>
+                    {chamado.motivo_fechar && (
+                      <View className="mt-2 pt-2 border-t border-gray-200">
+                        <Text className="text-gray-500 text-xs mb-0.5">Motivo</Text>
+                        <Text className="text-gray-900 font-medium">{chamado.motivo_fechar}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              )}
+
+              {/* Informações em InfoRow */}
+              <View className="gap-3">
+                {/* Status com badge */}
+                <View className="flex-row justify-between py-2 border-b border-gray-100">
+                  <Text className="text-gray-600 text-sm">Status</Text>
+                  <View className={`${statusColor} px-3 py-1 rounded-full`}>
+                    <Text className={`${statusColor.split(' ')[1]} font-semibold text-xs`}>
                       {chamado.status}
                     </Text>
                   </View>
                 </View>
-                <View>
-                  <Text className="text-gray-500 text-xs mb-1 text-right">Prioridade</Text>
+
+                {/* Prioridade com badge */}
+                <View className="flex-row justify-between py-2 border-b border-gray-100">
+                  <Text className="text-gray-600 text-sm">Prioridade</Text>
                   <View className={`${prioridadeColor} px-3 py-1 rounded-full`}>
-                    <Text className={`${prioridadeColor.split(' ')[1]} font-semibold text-sm`}>
+                    <Text className={`${prioridadeColor.split(' ')[1]} font-semibold text-xs`}>
                       {chamado.prioridade}
                     </Text>
                   </View>
                 </View>
-              </View>
-            </View>
 
-            {/* Informações do Chamado */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <Text className="text-lg font-bold text-gray-900 mb-3">Informações do Chamado</Text>
-
-              <View className="gap-3">
-                <View>
-                  <Text className="text-gray-500 text-xs mb-1">Número do Chamado</Text>
-                  <Text className="text-gray-900 font-semibold">#{chamado.chamado}</Text>
-                </View>
-
-                <View className="border-t border-gray-100 pt-3">
-                  <Text className="text-gray-500 text-xs mb-1">Assunto</Text>
-                  <Text className="text-gray-900 font-medium">{chamado.assunto || 'Não informado'}</Text>
-                </View>
-
-                {chamado.reply && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Problema Reportado</Text>
-                    <Text className="text-gray-900">{chamado.reply}</Text>
-                  </View>
+                <InfoRow 
+                  label="Aberto em" 
+                  value={formatarDataCompleta(chamado.abertura)} 
+                />
+                
+                {chamado.atendente && (
+                  <InfoRow label="Atendente" value={chamado.atendente} />
                 )}
-              </View>
-            </View>
 
-            {/* Informações do Cliente */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <Text className="text-lg font-bold text-gray-900 mb-3">Cliente</Text>
-
-              <View className="gap-3">
-                <TouchableOpacity
-                  onPress={() => setSearchModalVisible(true)}
-                  className="active:opacity-70"
-                >
-                  <View className="flex-row items-center justify-between border border-blue-200 bg-blue-50 rounded-lg p-3">
-                    <View className="flex-1">
-                      <Text className="text-blue-600 text-xs mb-1 font-medium">Nome (toque para buscar)</Text>
-                      <Text className="text-gray-900 font-semibold">{chamado.nome || 'Não informado'}</Text>
-                    </View>
-                    <Ionicons name="search" size={20} color="#2563eb" />
-                  </View>
-                </TouchableOpacity>
-
-                {chamado.login && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Login/CPF</Text>
-                    <Text className="text-gray-900">{chamado.login}</Text>
-                  </View>
+                {chamado.tecnico && (
+                  <InfoRow label="Técnico" value={`ID #${chamado.tecnico}`} />
                 )}
 
                 {chamado.email && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">E-mail</Text>
-                    <Text className="text-gray-900">{chamado.email}</Text>
-                  </View>
+                  <InfoRow label="E-mail" value={chamado.email} />
                 )}
 
                 {chamado.ramal && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Ramal</Text>
-                    <Text className="text-gray-900">{chamado.ramal}</Text>
-                  </View>
+                  <InfoRow label="Ramal" value={chamado.ramal} />
                 )}
               </View>
             </View>
 
-            {/* Atendimento */}
+            {/* Histórico de Atualizações */}
             <View className="bg-white rounded-lg p-4 shadow-sm">
-              <Text className="text-lg font-bold text-gray-900 mb-3">Atendimento</Text>
-
-              <View className="gap-3">
-                <View>
-                  <Text className="text-gray-500 text-xs mb-1">Atendente Responsável</Text>
-                  <Text className="text-gray-900 font-semibold">
-                    {chamado.atendente || 'Não atribuído'}
-                  </Text>
-                </View>
-
-                {chamado.tecnico && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">ID do Técnico</Text>
-                    <Text className="text-gray-900">{chamado.tecnico}</Text>
-                  </View>
-                )}
-
-                {chamado.visita && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Visita Agendada</Text>
-                    <Text className="text-gray-900 font-medium">{formatarDataCompleta(chamado.visita)}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-
-            {/* Datas */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <Text className="text-lg font-bold text-gray-900 mb-3">Datas</Text>
-
-              <View className="gap-3">
-                <View>
-                  <Text className="text-gray-500 text-xs mb-1">Data de Abertura</Text>
-                  <Text className="text-gray-900">{formatarDataCompleta(chamado.abertura)}</Text>
-                </View>
-
-                {chamado.fechamento && chamado.fechamento !== '0000-00-00' && chamado.fechamento !== '0000-00-00 00:00:00' && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Data de Fechamento</Text>
-                    <Text className="text-gray-900">{formatarDataCompleta(chamado.fechamento)}</Text>
-                  </View>
-                )}
-
-                {chamado.motivo_fechar && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Motivo do Fechamento</Text>
-                    <Text className="text-gray-900">{chamado.motivo_fechar}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-
-            {/* Histórico de Relatos */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <View className="flex-row items-center mb-4">
-                <View className="bg-blue-100 p-2 rounded-full mr-2">
-                  <Text className="text-blue-600 text-base">📝</Text>
-                </View>
-                <Text className="text-lg font-bold text-gray-900">Histórico de Atualizações</Text>
-              </View>
+              <Text className="text-xs text-gray-500 uppercase font-semibold mb-4">Histórico de Atualizações</Text>
 
               {!chamado.relatos && isFetching ? (
                 // Loading skeleton enquanto relatos carregam
@@ -344,91 +320,61 @@ export default function ChamadoDetalhesScreen() {
               )}
             </View>
 
-            {/* Botão Fechar Chamado */}
+            {/* Botão de Ação */}
             {chamado.status === 'aberto' && (
-              <View className="bg-white rounded-lg p-4 shadow-sm">
-                <TouchableOpacity
-                  onPress={() => setFecharModalVisible(true)}
-                  disabled={fechaChamadoMutation.isPending}
-                  className={`${fechaChamadoMutation.isPending ? 'bg-gray-400' : 'bg-green-600'
-                    } py-4 px-6 rounded-lg items-center`}
-                >
-                  <Text className="text-white font-bold text-base">
-                    {fechaChamadoMutation.isPending ? 'Fechando...' : 'Fechar Chamado'}
-                  </Text>
-                </TouchableOpacity>
-
-                {fechaChamadoMutation.isError && (
-                  <Text className="text-red-600 text-sm mt-2 text-center">
-                    Erro ao fechar chamado. Tente novamente.
-                  </Text>
-                )}
-
-                {fechaChamadoMutation.isSuccess && (
-                  <Text className="text-green-600 text-sm mt-2 text-center">
-                    Chamado fechado com sucesso!
-                  </Text>
-                )}
-              </View>
+              <TouchableOpacity
+                onPress={() => setFecharModalVisible(true)}
+                disabled={fechaChamadoMutation.isPending}
+                className="bg-green-600 py-3.5 rounded-lg shadow-sm active:opacity-90"
+              >
+                <Text className="text-white font-semibold text-center">
+                  {fechaChamadoMutation.isPending ? 'Fechando...' : 'Fechar Chamado'}
+                </Text>
+              </TouchableOpacity>
             )}
 
-            {/* Botão Reabrir Chamado */}
             {chamado.status === 'fechado' && (
-              <View className="bg-white rounded-lg p-4 shadow-sm">
-                <TouchableOpacity
-                  onPress={() => {
-                    Alert.alert(
-                      'Reabrir Chamado',
-                      'Tem certeza que deseja reabrir este chamado?',
-                      [
-                        {
-                          text: 'Cancelar',
-                          style: 'cancel',
+              <TouchableOpacity
+                onPress={() => {
+                  Alert.alert(
+                    'Reabrir Chamado',
+                    'Tem certeza que deseja reabrir este chamado?',
+                    [
+                      {
+                        text: 'Cancelar',
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'Reabrir',
+                        style: 'default',
+                        onPress: () => {
+                          reabrirChamadoMutation.mutate(chamado.chamado, {
+                            onSuccess: () => {
+                              router.back();
+                              setTimeout(() => {
+                                Toast.show({
+                                  type: 'success',
+                                  text1: 'Chamado reaberto com sucesso! 🔓',
+                                  text2: 'Você pode vê-lo na aba Agenda',
+                                  position: 'top',
+                                  visibilityTime: 4000,
+                                  topOffset: 60,
+                                });
+                              }, 300);
+                            },
+                          });
                         },
-                        {
-                          text: 'Reabrir',
-                          style: 'default',
-                          onPress: () => {
-                            reabrirChamadoMutation.mutate(chamado.chamado, {
-                              onSuccess: () => {
-                                router.back();
-                                setTimeout(() => {
-                                  Toast.show({
-                                    type: 'success',
-                                    text1: 'Chamado reaberto com sucesso! 🔓',
-                                    text2: 'Você pode vê-lo na aba Agenda',
-                                    position: 'top',
-                                    visibilityTime: 4000,
-                                    topOffset: 60,
-                                  });
-                                }, 300);
-                              },
-                            });
-                          },
-                        },
-                      ]
-                    );
-                  }}
-                  disabled={reabrirChamadoMutation.isPending}
-                  className={`${reabrirChamadoMutation.isPending ? 'bg-gray-400' : 'bg-blue-600'
-                    } py-4 px-6 rounded-lg items-center flex-row justify-center gap-2`}
-                >
-                  {reabrirChamadoMutation.isPending ? (
-                    <>
-                      <ActivityIndicator size="small" color="white" />
-                      <Text className="text-white font-bold text-base">Reabrindo...</Text>
-                    </>
-                  ) : (
-                    <Text className="text-white font-bold text-base">Reabrir Chamado</Text>
-                  )}
-                </TouchableOpacity>
-
-                {reabrirChamadoMutation.isError && (
-                  <Text className="text-red-600 text-sm mt-2 text-center">
-                    Erro ao reabrir chamado. Tente novamente.
-                  </Text>
-                )}
-              </View>
+                      },
+                    ]
+                  );
+                }}
+                disabled={reabrirChamadoMutation.isPending}
+                className="bg-blue-600 py-3.5 rounded-lg shadow-sm active:opacity-90"
+              >
+                <Text className="text-white font-semibold text-center">
+                  {reabrirChamadoMutation.isPending ? 'Reabrindo...' : 'Reabrir Chamado'}
+                </Text>
+              </TouchableOpacity>
             )}
           </View>
         </ScrollView>
@@ -536,5 +482,37 @@ export default function ChamadoDetalhesScreen() {
         </Modal>
       </SafeAreaView>
     </>
+  );
+}
+
+// Componente helper para exibir informações com long press para copiar
+function InfoRow({ label, value }: { label: string; value: string }) {
+  const copiarValor = async () => {
+    await Clipboard.setStringAsync(value);
+    Toast.show({
+      type: 'success',
+      text1: `${label} copiado! 📋`,
+      position: 'top',
+      visibilityTime: 2000,
+      topOffset: 60,
+    });
+  };
+
+  return (
+    <Pressable 
+      onLongPress={copiarValor}
+      delayLongPress={500}
+      className="flex-row justify-between py-2 border-b border-gray-100"
+      style={({ pressed }) => [
+        {
+          backgroundColor: pressed ? '#f3f4f6' : 'transparent',
+        }
+      ]}
+    >
+      <Text className="text-gray-600 text-sm">{label}</Text>
+      <Text className="text-gray-900 text-sm font-medium flex-1 text-right ml-4">
+        {value}
+      </Text>
+    </Pressable>
   );
 }
