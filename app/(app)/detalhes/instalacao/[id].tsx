@@ -1,9 +1,10 @@
 import { ClientSearchModal } from '@/components/ClientSearchModal';
 import { useFechaInstalacao, useInstalacaoDetail } from '@/hooks/instalacao';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
@@ -51,7 +52,7 @@ export default function InstalacaoDetalhesScreen() {
     );
   }
 
-  const statusColor = instalacao.instalado === 'sim' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+  const statusColor = instalacao.instalado === 'sim' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800';
   const statusText = instalacao.instalado === 'sim' ? 'Instalado' : 'Pendente';
 
   // Formatar data para dd/MM/yyyy HH:mm
@@ -95,304 +96,255 @@ export default function InstalacaoDetalhesScreen() {
       />
       <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
         <ScrollView className="flex-1">
-          <View className="p-4 gap-4">
-            {/* Status */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <View className="flex-row justify-between items-center">
-                <View>
-                  <Text className="text-gray-500 text-xs mb-1">Status</Text>
-                  <View className={`${statusColor} px-3 py-1 rounded-full self-start`}>
-                    <Text className={`${statusColor.split(' ')[1]} font-semibold text-sm`}>
+          <View className="p-4">
+            {/* Card Principal */}
+            <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
+              {/* Header */}
+              <View className="mb-4 pb-3 border-b border-gray-100">
+                <Text className="text-gray-400 text-xs">#{instalacao.id}</Text>
+              </View>
+
+              {/* Cliente */}
+              <TouchableOpacity
+                onPress={() => setSearchModalVisible(true)}
+                className="active:opacity-70 mb-4"
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1">
+                    <Text className="text-gray-500 text-xs mb-1">CLIENTE</Text>
+                    <Text className="text-gray-900 text-xl font-bold mb-1">{instalacao.nome}</Text>
+                    {instalacao.cpf && (
+                      <Text className="text-gray-500 text-sm">{instalacao.cpf}</Text>
+                    )}
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+                </View>
+              </TouchableOpacity>
+
+              {/* Plano */}
+              <View className="mb-4">
+                <Text className="text-gray-500 text-xs mb-1">PLANO</Text>
+                <Text className="text-gray-900 text-base font-medium">
+                  {instalacao.plano}
+                </Text>
+              </View>
+
+              {/* Visita Agendada - Destaque */}
+              {instalacao.visita && (
+                <View className="mb-4 pb-4 border-b border-gray-100">
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      <Text className="text-orange-600 text-xs font-semibold mb-1">VISITA AGENDADA</Text>
+                      <Text className="text-gray-900 font-bold">
+                        {formatarDataCompleta(instalacao.visita)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Informações de Conclusão - Destaque quando instalado */}
+              {instalacao.instalado === 'sim' && instalacao.data_feito && (
+                <View className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                  <View className="gap-2">
+                    <View>
+                      <Text className="text-gray-500 text-xs mb-0.5">Data de Conclusão</Text>
+                      <Text className="text-gray-900 font-bold">{formatarDataCompleta(instalacao.data_feito)}</Text>
+                    </View>
+                    {instalacao.nome_feito && (
+                      <View className="mt-2 pt-2 border-t border-gray-200">
+                        <Text className="text-gray-500 text-xs mb-0.5">Concluído por</Text>
+                        <Text className="text-gray-900 font-medium">{instalacao.nome_feito}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              )}
+
+              {/* Informações em InfoRow */}
+              <View className="gap-3">
+                {/* Status com badge */}
+                <View className="flex-row justify-between py-2 border-b border-gray-100">
+                  <Text className="text-gray-600 text-sm">Status</Text>
+                  <View className={`${statusColor} px-3 py-1 rounded-full`}>
+                    <Text className={`${statusColor.split(' ')[1]} font-semibold text-xs`}>
                       {statusText}
                     </Text>
                   </View>
                 </View>
+
                 {instalacao.termo && (
-                  <View>
-                    <Text className="text-gray-500 text-xs mb-1 text-right">Termo</Text>
-                    <Text className="text-gray-900 font-semibold">#{instalacao.termo}</Text>
-                  </View>
+                  <InfoRow label="Termo" value={`#${instalacao.termo}`} />
+                )}
+
+                <InfoRow 
+                  label="Processado em" 
+                  value={formatarDataCompleta(instalacao.processamento)} 
+                />
+
+                {instalacao.tecnico && (
+                  <InfoRow label="Técnico" value={instalacao.tecnico} />
+                )}
+
+                {instalacao.datainst && (
+                  <InfoRow label="Data de Instalação" value={formatarDataCompleta(instalacao.datainst)} />
+                )}
+
+                {instalacao.visitado && (
+                  <InfoRow label="Visitado" value={instalacao.visitado === 'sim' ? 'Sim' : 'Não'} />
                 )}
               </View>
             </View>
 
-            {/* Informações do Cliente */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <Text className="text-lg font-bold text-gray-900 mb-3">Informações do Cliente</Text>
-
+            {/* Contato */}
+            <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
+              <Text className="text-xs text-gray-500 uppercase font-semibold mb-3">Contato</Text>
+              
               <View className="gap-3">
-                <TouchableOpacity
-                  onPress={() => setSearchModalVisible(true)}
-                  className="active:opacity-70"
-                >
-                  <View className="flex-row items-center justify-between border border-blue-200 bg-blue-50 rounded-lg p-3">
-                    <View className="flex-1">
-                      <Text className="text-blue-600 text-xs mb-1 font-medium">Nome (toque para buscar)</Text>
-                      <Text className="text-gray-900 font-semibold">{instalacao.nome}</Text>
-                    </View>
-                    <Ionicons name="search" size={20} color="#2563eb" />
-                  </View>
-                </TouchableOpacity>
-
-                <View className="border-t border-gray-100 pt-3">
-                  <Text className="text-gray-500 text-xs mb-1">CPF</Text>
-                  <Text className="text-gray-900">{instalacao.cpf}</Text>
-                </View>
-
                 {instalacao.email && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">E-mail</Text>
-                    <Text className="text-gray-900">{instalacao.email}</Text>
-                  </View>
+                  <InfoRow label="E-mail" value={instalacao.email} />
                 )}
 
                 {instalacao.telefone && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Telefone</Text>
-                    <Text className="text-gray-900">{instalacao.telefone}</Text>
-                  </View>
+                  <InfoRow label="Telefone" value={instalacao.telefone} />
                 )}
 
                 {instalacao.celular && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Celular</Text>
-                    <Text className="text-gray-900">{instalacao.celular}</Text>
-                  </View>
+                  <InfoRow label="Celular" value={instalacao.celular} />
                 )}
               </View>
             </View>
 
-            {/* Endereço de Instalação */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <Text className="text-lg font-bold text-gray-900 mb-3">Endereço de Instalação</Text>
-
+            {/* Endereço */}
+            <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
+              <Text className="text-xs text-gray-500 uppercase font-semibold mb-3">Endereço de Instalação</Text>
+              
               <View className="gap-3">
-                <View>
-                  <Text className="text-gray-500 text-xs mb-1">Logradouro</Text>
-                  <Text className="text-gray-900">{instalacao.endereco}, {instalacao.numero}</Text>
-                </View>
+                <InfoRow 
+                  label="Logradouro" 
+                  value={`${instalacao.endereco}, ${instalacao.numero}`} 
+                />
 
                 {instalacao.complemento && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Complemento</Text>
-                    <Text className="text-gray-900">{instalacao.complemento}</Text>
-                  </View>
+                  <InfoRow label="Complemento" value={instalacao.complemento} />
                 )}
 
-                <View className="border-t border-gray-100 pt-3">
-                  <Text className="text-gray-500 text-xs mb-1">Bairro</Text>
-                  <Text className="text-gray-900">{instalacao.bairro}</Text>
-                </View>
+                <InfoRow label="Bairro" value={instalacao.bairro} />
 
-                <View className="border-t border-gray-100 pt-3">
-                  <Text className="text-gray-500 text-xs mb-1">Cidade/Estado</Text>
-                  <Text className="text-gray-900">{instalacao.cidade} - {instalacao.estado}</Text>
-                </View>
+                <InfoRow 
+                  label="Cidade/Estado" 
+                  value={`${instalacao.cidade} - ${instalacao.estado}`} 
+                />
 
-                <View className="border-t border-gray-100 pt-3">
-                  <Text className="text-gray-500 text-xs mb-1">CEP</Text>
-                  <Text className="text-gray-900">{instalacao.cep}</Text>
-                </View>
+                <InfoRow label="CEP" value={instalacao.cep} />
               </View>
             </View>
 
             {/* Plano e Serviço */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <Text className="text-lg font-bold text-gray-900 mb-3">Plano e Serviço</Text>
-
+            <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
+              <Text className="text-xs text-gray-500 uppercase font-semibold mb-3">Plano e Serviço</Text>
+              
               <View className="gap-3">
-                <View>
-                  <Text className="text-gray-500 text-xs mb-1">Plano Contratado</Text>
-                  <Text className="text-gray-900 font-semibold">{instalacao.plano}</Text>
-                </View>
-
                 {instalacao.valor && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Valor</Text>
-                    <Text className="text-gray-900 font-medium">R$ {instalacao.valor}</Text>
-                  </View>
+                  <InfoRow label="Valor" value={`R$ ${instalacao.valor}`} />
                 )}
 
-                <View className="border-t border-gray-100 pt-3">
-                  <Text className="text-gray-500 text-xs mb-1">Vencimento</Text>
-                  <Text className="text-gray-900">{instalacao.vencimento}</Text>
-                </View>
+                <InfoRow label="Vencimento" value={instalacao.vencimento} />
 
                 {instalacao.login && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Login de Acesso</Text>
-                    <Text className="text-gray-900 font-mono">{instalacao.login}</Text>
-                  </View>
+                  <InfoRow label="Login de Acesso" value={instalacao.login} />
                 )}
 
-                <View className="border-t border-gray-100 pt-3">
-                  <Text className="text-gray-500 text-xs mb-1">Comodato</Text>
-                  <Text className="text-gray-900">{instalacao.comodato === 'sim' ? 'Sim' : 'Não'}</Text>
-                </View>
+                <InfoRow 
+                  label="Comodato" 
+                  value={instalacao.comodato === 'sim' ? 'Sim' : 'Não'} 
+                />
 
                 {instalacao.equipamento && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Equipamento</Text>
-                    <Text className="text-gray-900">{instalacao.equipamento}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-
-            {/* Técnico e Agendamento */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <Text className="text-lg font-bold text-gray-900 mb-3">Técnico e Agendamento</Text>
-
-              <View className="gap-3">
-                <View>
-                  <Text className="text-gray-500 text-xs mb-1">Técnico Responsável</Text>
-                  <Text className="text-gray-900 font-semibold">
-                    {instalacao.tecnico || 'Não atribuído'}
-                  </Text>
-                </View>
-
-                {instalacao.visita && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Visita Agendada</Text>
-                    <Text className="text-gray-900 font-medium">{formatarDataCompleta(instalacao.visita)}</Text>
-                  </View>
-                )}
-
-                <View className="border-t border-gray-100 pt-3">
-                  <Text className="text-gray-500 text-xs mb-1">Visitado</Text>
-                  <Text className="text-gray-900">{instalacao.visitado === 'sim' ? 'Sim' : 'Não'}</Text>
-                </View>
-
-                {instalacao.datainst && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Data da Instalação</Text>
-                    <Text className="text-gray-900">{formatarDataCompleta(instalacao.datainst)}</Text>
-                  </View>
+                  <InfoRow label="Equipamento" value={instalacao.equipamento} />
                 )}
               </View>
             </View>
 
             {/* Informações Técnicas */}
             {(instalacao.ip || instalacao.mac || instalacao.coordenadas) && (
-              <View className="bg-white rounded-lg p-4 shadow-sm">
-                <Text className="text-lg font-bold text-gray-900 mb-3">Informações Técnicas</Text>
+              <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
+                <Text className="text-xs text-gray-500 uppercase font-semibold mb-3">Informações Técnicas</Text>
 
                 <View className="gap-3">
                   {instalacao.ip && (
-                    <View>
-                      <Text className="text-gray-500 text-xs mb-1">IP</Text>
-                      <Text className="text-gray-900 font-mono">{instalacao.ip}</Text>
-                    </View>
+                    <InfoRow label="IP" value={instalacao.ip} />
                   )}
 
                   {instalacao.mac && (
-                    <View className="border-t border-gray-100 pt-3">
-                      <Text className="text-gray-500 text-xs mb-1">MAC Address</Text>
-                      <Text className="text-gray-900 font-mono">{instalacao.mac}</Text>
-                    </View>
+                    <InfoRow label="MAC Address" value={instalacao.mac} />
                   )}
 
                   {instalacao.coordenadas && (
-                    <View className="border-t border-gray-100 pt-3">
-                      <Text className="text-gray-500 text-xs mb-1">Coordenadas GPS</Text>
-                      <Text className="text-gray-900 font-mono">{instalacao.coordenadas}</Text>
-                    </View>
+                    <InfoRow label="Coordenadas GPS" value={instalacao.coordenadas} />
                   )}
                 </View>
               </View>
             )}
 
-            {/* Datas */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <Text className="text-lg font-bold text-gray-900 mb-3">Datas</Text>
-
-              <View className="gap-3">
-                <View>
-                  <Text className="text-gray-500 text-xs mb-1">Data de Processamento</Text>
-                  <Text className="text-gray-900">{formatarDataCompleta(instalacao.processamento)}</Text>
-                </View>
-
-                {instalacao.data_feito && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Concluído em</Text>
-                    <Text className="text-gray-900">{formatarDataCompleta(instalacao.data_feito)}</Text>
-                  </View>
-                )}
-
-                {instalacao.nome_feito && (
-                  <View className="border-t border-gray-100 pt-3">
-                    <Text className="text-gray-500 text-xs mb-1">Concluído por</Text>
-                    <Text className="text-gray-900">{instalacao.nome_feito}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-
             {/* Observações */}
             {instalacao.obs && (
-              <View className="bg-white rounded-lg p-4 shadow-sm">
-                <Text className="text-lg font-bold text-gray-900 mb-3">Observações</Text>
+              <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
+                <Text className="text-xs text-gray-500 uppercase font-semibold mb-2">
+                  Observações
+                </Text>
                 <Text className="text-gray-800 leading-5">{instalacao.obs}</Text>
               </View>
             )}
 
-            {/* Botão Concluir Instalação */}
+            {/* Botão de Ação */}
             {instalacao.status === 'aberto' && (
-              <View className="bg-white rounded-lg p-4 shadow-sm">
-                <TouchableOpacity
-                  onPress={() => {
-                    Alert.alert(
-                      'Concluir Instalação',
-                      'Tem certeza que deseja concluir esta instalação?',
-                      [
-                        {
-                          text: 'Cancelar',
-                          style: 'cancel',
-                        },
-                        {
-                          text: 'Concluir',
-                          style: 'default',
-                          onPress: () => {
-                            fechaInstalacaoMutation.mutate(instalacao.uuid_solic, {
-                              onSuccess: () => {
-                                router.back();
-                                setTimeout(() => {
-                                  Toast.show({
-                                    type: 'success',
-                                    text1: 'Instalação concluída com sucesso! ✅',
+              <TouchableOpacity
+                onPress={() => {
+                  Alert.alert(
+                    'Concluir Instalação',
+                    'Tem certeza que deseja concluir esta instalação?',
+                    [
+                      {
+                        text: 'Cancelar',
+                        style: 'cancel',
+                      },
+                      {
+                        text: 'Concluir',
+                        style: 'default',
+                        onPress: () => {
+                          fechaInstalacaoMutation.mutate(instalacao.uuid_solic, {
+                            onSuccess: () => {
+                              router.back();
+                              setTimeout(() => {
+                                Toast.show({
+                                  type: 'success',
+                                  text1: 'Instalação concluída com sucesso! ✅',
                                   text2: 'Você pode vê-la na aba Histórico',
-                                    position: 'top',
-                                    visibilityTime: 4000,
-                                    topOffset: 60,
-                                  });
-                                }, 300);
-                              },
-                            });
-                          },
+                                  position: 'top',
+                                  visibilityTime: 4000,
+                                  topOffset: 60,
+                                });
+                              }, 300);
+                            },
+                          });
                         },
-                      ]
-                    );
-                  }}
-                  disabled={fechaInstalacaoMutation.isPending}
-                  className={`${fechaInstalacaoMutation.isPending ? 'bg-gray-400' : 'bg-green-600'
-                    } py-4 px-6 rounded-lg items-center flex-row justify-center gap-2`}
-                >
-                  {fechaInstalacaoMutation.isPending ? (
-                    <>
-                      <ActivityIndicator size="small" color="white" />
-                      <Text className="text-white font-bold text-base">Concluindo...</Text>
-                    </>
-                  ) : (
-                    <Text className="text-white font-bold text-base">Concluir Instalação</Text>
-                  )}
-                </TouchableOpacity>
-
-                {fechaInstalacaoMutation.isError && (
-                  <Text className="text-red-600 text-sm mt-2 text-center">
-                    Erro ao concluir instalação. Tente novamente.
-                  </Text>
+                      },
+                    ]
+                  );
+                }}
+                disabled={fechaInstalacaoMutation.isPending}
+                className="bg-green-600 py-3.5 rounded-lg shadow-sm active:opacity-90"
+              >
+                {fechaInstalacaoMutation.isPending ? (
+                  <View className="flex-row items-center justify-center gap-2">
+                    <ActivityIndicator size="small" color="white" />
+                    <Text className="text-white font-semibold text-center">Concluindo...</Text>
+                  </View>
+                ) : (
+                  <Text className="text-white font-semibold text-center">Concluir Instalação</Text>
                 )}
-              </View>
+              </TouchableOpacity>
             )}
           </View>
         </ScrollView>
@@ -405,5 +357,37 @@ export default function InstalacaoDetalhesScreen() {
         />
       </SafeAreaView>
     </>
+  );
+}
+
+// Componente helper para exibir informações com long press para copiar
+function InfoRow({ label, value }: { label: string; value: string }) {
+  const copiarValor = async () => {
+    await Clipboard.setStringAsync(value);
+    Toast.show({
+      type: 'success',
+      text1: `${label} copiado! 📋`,
+      position: 'top',
+      visibilityTime: 2000,
+      topOffset: 60,
+    });
+  };
+
+  return (
+    <Pressable 
+      onLongPress={copiarValor}
+      delayLongPress={500}
+      className="flex-row justify-between py-2 border-b border-gray-100"
+      style={({ pressed }) => [
+        {
+          backgroundColor: pressed ? '#f3f4f6' : 'transparent',
+        }
+      ]}
+    >
+      <Text className="text-gray-600 text-sm">{label}</Text>
+      <Text className="text-gray-900 text-sm font-medium flex-1 text-right ml-4">
+        {value}
+      </Text>
+    </Pressable>
   );
 }
