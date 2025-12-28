@@ -1,12 +1,138 @@
 import { useClientDetail } from '@/hooks/cliente';
 import type { ClienteDetalhesParams } from '@/types/navigation';
+import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Alert, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Share, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 
 export default function ClienteDetalhesScreen() {
   const { id } = useLocalSearchParams<ClienteDetalhesParams>();
   const { data: cliente, isLoading, error } = useClientDetail(id);
+  const [senhaVisivel, setSenhaVisivel] = useState(false);
+
+  const copiarParaClipboard = async (texto: string, label: string) => {
+    await Clipboard.setStringAsync(texto);
+    Toast.show({
+      type: 'success',
+      text1: `${label} copiado! 📋`,
+      position: 'top',
+      visibilityTime: 2000,
+      topOffset: 60,
+    });
+  };
+
+  const compartilharTexto = async (texto: string, titulo: string) => {
+    try {
+      await Share.share({
+        message: texto,
+        title: titulo,
+      });
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+    }
+  };
+
+  const ligarParaCliente = async () => {
+    const telefone = cliente?.celular || cliente?.fone;
+    
+    if (!telefone) {
+      Alert.alert('Atenção', 'Nenhum número de telefone disponível para este cliente.');
+      return;
+    }
+
+    // Remover caracteres não numéricos
+    const numeroLimpo = telefone.replace(/\D/g, '');
+    const url = `tel:${numeroLimpo}`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Erro', 'Não foi possível abrir o discador de telefone.');
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível realizar a ligação.');
+      console.error('Erro ao ligar:', error);
+    }
+  };
+
+  const navegarParaCliente = async () => {
+    if (!cliente?.coordenadas || cliente.coordenadas === '-38.5748,-3.741162,0') {
+      Alert.alert('Atenção', 'Coordenadas GPS não disponíveis para este cliente.');
+      return;
+    }
+
+    try {
+      // Parse coordinates
+      const parts = cliente.coordenadas.split(',');
+      
+      if (parts.length < 2) {
+        Alert.alert('Erro', 'Formato de coordenadas inválido');
+        return;
+      }
+
+      const firstValue = parseFloat(parts[0]?.trim() || '');
+      const secondValue = parseFloat(parts[1]?.trim() || '');
+      
+      if (isNaN(firstValue) || isNaN(secondValue) || !isFinite(firstValue) || !isFinite(secondValue)) {
+        Alert.alert('Erro', 'Coordenadas inválidas');
+        return;
+      }
+
+      if (Math.abs(firstValue) > 180 || Math.abs(secondValue) > 180) {
+        Alert.alert('Erro', 'Coordenadas fora do intervalo válido');
+        return;
+      }
+      
+      const lat = Math.abs(firstValue) < Math.abs(secondValue) ? firstValue : secondValue;
+      const lng = Math.abs(firstValue) < Math.abs(secondValue) ? secondValue : firstValue;
+      
+      const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+      
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Erro', 'Não foi possível abrir o Google Maps');
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível abrir o mapa');
+      console.error('Erro ao abrir mapa:', error);
+    }
+  };
+
+  const enviarWhatsApp = async () => {
+    const celular = cliente?.celular;
+    
+    if (!celular) {
+      Alert.alert('Atenção', 'Número de celular não disponível para este cliente.');
+      return;
+    }
+
+    // Remover caracteres não numéricos
+    const numeroLimpo = celular.replace(/\D/g, '');
+    
+    // Adicionar código do país (55 para Brasil) se não tiver
+    const numeroCompleto = numeroLimpo.startsWith('55') ? numeroLimpo : `55${numeroLimpo}`;
+    
+    const url = `https://wa.me/${numeroCompleto}`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Erro', 'Não foi possível abrir o WhatsApp. Verifique se o app está instalado.');
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível abrir o WhatsApp.');
+      console.error('Erro ao abrir WhatsApp:', error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -69,7 +195,33 @@ export default function ClienteDetalhesScreen() {
                 {cliente.bloqueado === 'sim' ? '🚫 Bloqueado' : '✅ Ativo'}
               </Text>
             </View>
-            <Text className="text-xs text-gray-500">#{cliente.codigo}</Text>
+            <View className="flex-row items-center gap-2">
+              {/* Botões de ação rápida como ícones */}
+              {(cliente.celular || cliente.fone) && (
+                <TouchableOpacity
+                  onPress={ligarParaCliente}
+                  className="bg-green-500 p-2.5 rounded-full active:bg-green-600"
+                >
+                  <Ionicons name="call" size={18} color="white" />
+                </TouchableOpacity>
+              )}
+              {cliente.celular && (
+                <TouchableOpacity
+                  onPress={enviarWhatsApp}
+                  className="bg-emerald-500 p-2.5 rounded-full active:bg-emerald-600"
+                >
+                  <Ionicons name="logo-whatsapp" size={18} color="white" />
+                </TouchableOpacity>
+              )}
+              {cliente.coordenadas && cliente.coordenadas !== '-38.5748,-3.741162,0' && (
+                <TouchableOpacity
+                  onPress={navegarParaCliente}
+                  className="bg-blue-500 p-2.5 rounded-full active:bg-blue-600"
+                >
+                  <Ionicons name="location" size={18} color="white" />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
 
           {/* Informações Básicas */}
@@ -99,7 +251,23 @@ export default function ClienteDetalhesScreen() {
             <Text className="text-xs text-gray-500 uppercase font-semibold mb-3">
               Contato
             </Text>
-            {cliente.celular && <InfoRow label="Celular" value={cliente.celular} />}
+            
+            {/* Celular com botão WhatsApp */}
+            {cliente.celular && (
+              <View className="flex-row justify-between items-center py-2 border-b border-gray-100">
+                <Text className="text-gray-600 text-sm">Celular</Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-gray-900 text-sm font-medium">{cliente.celular}</Text>
+                  <TouchableOpacity
+                    onPress={enviarWhatsApp}
+                    className="bg-emerald-50 p-2 rounded-lg active:bg-emerald-100"
+                  >
+                    <Ionicons name="logo-whatsapp" size={16} color="#10b981" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            
             {cliente.fone && <InfoRow label="Telefone" value={cliente.fone} />}
             {cliente.email && <InfoRow label="Email" value={cliente.email} />}
           </View>
@@ -123,6 +291,49 @@ export default function ClienteDetalhesScreen() {
               <InfoRow label="Cidade/Estado" value={`${cliente.cidade} - ${cliente.estado}`} />
             )}
             {cliente.cep && <InfoRow label="CEP" value={cliente.cep} />}
+            
+            {/* Ações inline discretas */}
+            {cliente.endereco && (
+              <View className="flex-row justify-end gap-2 pt-2 border-t border-gray-100 mt-2">
+                <TouchableOpacity
+                  onPress={() => {
+                    const enderecoCompleto = [
+                      cliente.endereco && cliente.numero ? `${cliente.endereco}, ${cliente.numero}` : cliente.endereco,
+                      cliente.complemento,
+                      cliente.bairro,
+                      cliente.cidade && cliente.estado ? `${cliente.cidade} - ${cliente.estado}` : null,
+                      cliente.cep,
+                    ]
+                      .filter(Boolean)
+                      .join(', ');
+                    copiarParaClipboard(enderecoCompleto, 'Endereço');
+                  }}
+                  className="bg-blue-50 p-2 rounded-lg active:bg-blue-100 flex-row items-center gap-1"
+                >
+                  <Ionicons name="copy-outline" size={14} color="#3b82f6" />
+                  <Text className="text-blue-600 text-xs font-medium">Copiar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    const enderecoCompleto = [
+                      cliente.endereco && cliente.numero ? `${cliente.endereco}, ${cliente.numero}` : cliente.endereco,
+                      cliente.complemento,
+                      cliente.bairro,
+                      cliente.cidade && cliente.estado ? `${cliente.cidade} - ${cliente.estado}` : null,
+                      cliente.cep,
+                    ]
+                      .filter(Boolean)
+                      .join('\n');
+                    compartilharTexto(enderecoCompleto, 'Endereço do Cliente');
+                  }}
+                  className="bg-green-50 p-2 rounded-lg active:bg-green-100 flex-row items-center gap-1"
+                >
+                  <Ionicons name="share-outline" size={14} color="#10b981" />
+                  <Text className="text-green-600 text-xs font-medium">Compartilhar</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* Plano e Serviços */}
@@ -131,8 +342,64 @@ export default function ClienteDetalhesScreen() {
               Plano e Serviços
             </Text>
             {cliente.plano && <InfoRow label="Plano" value={cliente.plano} />}
-            {cliente.login && <InfoRow label="Login" value={cliente.login} />}
-            {cliente.senha && <InfoRow label="Senha" value={cliente.senha} />}
+            
+            {/* Login com ação de copiar */}
+            {cliente.login && (
+              <View className="flex-row justify-between items-center py-2 border-b border-gray-100">
+                <Text className="text-gray-600 text-sm">Login</Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-gray-900 text-sm font-medium">{cliente.login}</Text>
+                  <TouchableOpacity
+                    onPress={() => copiarParaClipboard(cliente.login!, 'Login')}
+                    className="bg-blue-50 p-2 rounded-lg active:bg-blue-100"
+                  >
+                    <Ionicons name="copy-outline" size={16} color="#3b82f6" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* Senha com ação de copiar e toggle de visibilidade */}
+            {cliente.senha && (
+              <View className="flex-row justify-between items-center py-2 border-b border-gray-100">
+                <Text className="text-gray-600 text-sm">Senha</Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-gray-900 text-sm font-medium font-mono">
+                    {senhaVisivel ? cliente.senha : '••••••••'}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setSenhaVisivel(!senhaVisivel)}
+                    className="bg-gray-50 p-2 rounded-lg active:bg-gray-100"
+                  >
+                    <Ionicons 
+                      name={senhaVisivel ? "eye-off-outline" : "eye-outline"} 
+                      size={16} 
+                      color="#6b7280" 
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => copiarParaClipboard(cliente.senha!, 'Senha')}
+                    className="bg-blue-50 p-2 rounded-lg active:bg-blue-100"
+                  >
+                    <Ionicons name="copy-outline" size={16} color="#3b82f6" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* Botão inline discreto para copiar Login:Senha */}
+            {cliente.login && cliente.senha && (
+              <View className="flex-row justify-end pt-2 border-t border-gray-100 mt-2">
+                <TouchableOpacity
+                  onPress={() => copiarParaClipboard(`${cliente.login}:${cliente.senha}`, 'Login e Senha')}
+                  className="bg-blue-50 p-2 rounded-lg active:bg-blue-100 flex-row items-center gap-1"
+                >
+                  <Ionicons name="copy-outline" size={14} color="#3b82f6" />
+                  <Text className="text-blue-600 text-xs font-medium">Copiar Login:Senha</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {cliente.venc && <InfoRow label="Vencimento" value={`Dia ${cliente.venc}`} />}
             {cliente.contrato && <InfoRow label="Contrato" value={cliente.contrato} />}
             {cliente.tipo && <InfoRow label="Tipo de Conexão" value={cliente.tipo.toUpperCase()} />}
@@ -172,9 +439,41 @@ export default function ClienteDetalhesScreen() {
             )}
             {cliente.armario_olt && <InfoRow label="Armário OLT" value={cliente.armario_olt} />}
             {cliente.caixa_herm && <InfoRow label="Caixa Hermética" value={cliente.caixa_herm} />}
-            {cliente.ssid && <InfoRow label="SSID (WiFi)" value={cliente.ssid} />}
-            {cliente.ip && <InfoRow label="IP" value={cliente.ip} />}
-            {cliente.mac && <InfoRow label="MAC Address" value={cliente.mac} />}
+            
+            {/* SSID - removido pois o campo não contém o SSID real da rede WiFi */}
+            {/* {cliente.ssid && (...)} */}
+
+            {/* IP com ação de copiar */}
+            {cliente.ip && (
+              <View className="flex-row justify-between items-center py-2 border-b border-gray-100">
+                <Text className="text-gray-600 text-sm">IP</Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-gray-900 text-sm font-medium font-mono">{cliente.ip}</Text>
+                  <TouchableOpacity
+                    onPress={() => copiarParaClipboard(cliente.ip!, 'IP')}
+                    className="bg-blue-50 p-2 rounded-lg active:bg-blue-100"
+                  >
+                    <Ionicons name="copy-outline" size={16} color="#3b82f6" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* MAC Address com ação de copiar */}
+            {cliente.mac && (
+              <View className="flex-row justify-between items-center py-2 border-b border-gray-100">
+                <Text className="text-gray-600 text-sm">MAC Address</Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-gray-900 text-sm font-medium font-mono">{cliente.mac}</Text>
+                  <TouchableOpacity
+                    onPress={() => copiarParaClipboard(cliente.mac!, 'MAC Address')}
+                    className="bg-blue-50 p-2 rounded-lg active:bg-blue-100"
+                  >
+                    <Ionicons name="copy-outline" size={16} color="#3b82f6" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
             {cliente.comodato && cliente.comodato !== 'nao' && (
               <View className="flex-row justify-between py-2 border-b border-gray-100">
                 <Text className="text-gray-600 text-sm">Comodato</Text>
@@ -186,8 +485,8 @@ export default function ClienteDetalhesScreen() {
               </View>
             )}
             {cliente.coordenadas && cliente.coordenadas !== '-38.5748,-3.741162,0' && (
-              <View className="py-2">
-                <Text className="text-gray-600 text-sm mb-2">Localização GPS</Text>
+              <View className="flex-row justify-between items-center py-2">
+                <Text className="text-gray-600 text-sm">Localização GPS</Text>
                 <TouchableOpacity
                   onPress={async () => {
                     try {
@@ -248,11 +547,10 @@ export default function ClienteDetalhesScreen() {
                       console.error('Erro ao abrir mapa:', error);
                     }
                   }}
-                  className="bg-blue-500 rounded-lg py-2 px-4 items-center"
+                  className="bg-blue-50 p-2 rounded-lg active:bg-blue-100 flex-row items-center gap-1"
                 >
-                  <Text className="text-white font-semibold text-sm">
-                    📍 Abrir no Google Maps
-                  </Text>
+                  <Ionicons name="navigate-outline" size={14} color="#3b82f6" />
+                  <Text className="text-blue-600 text-xs font-medium">Abrir Mapa</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -296,14 +594,34 @@ export default function ClienteDetalhesScreen() {
   );
 }
 
-// Componente helper para exibir informações
+// Componente helper para exibir informações com long press para copiar
 function InfoRow({ label, value }: { label: string; value: string }) {
+  const copiarValor = async () => {
+    await Clipboard.setStringAsync(value);
+    Toast.show({
+      type: 'success',
+      text1: `${label} copiado! 📋`,
+      position: 'top',
+      visibilityTime: 2000,
+      topOffset: 60,
+    });
+  };
+
   return (
-    <View className="flex-row justify-between py-2 border-b border-gray-100">
+    <Pressable 
+      onLongPress={copiarValor}
+      delayLongPress={500}
+      className="flex-row justify-between py-2 border-b border-gray-100"
+      style={({ pressed }) => [
+        {
+          backgroundColor: pressed ? '#f3f4f6' : 'transparent',
+        }
+      ]}
+    >
       <Text className="text-gray-600 text-sm">{label}</Text>
       <Text className="text-gray-900 text-sm font-medium flex-1 text-right ml-4">
         {value}
       </Text>
-    </View>
+    </Pressable>
   );
 }
