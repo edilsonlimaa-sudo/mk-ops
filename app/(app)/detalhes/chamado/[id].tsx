@@ -428,7 +428,7 @@ export default function ChamadoDetalhesScreen() {
               <TouchableOpacity
                 onPress={() => setFecharModalVisible(true)}
                 disabled={fechaChamadoMutation.isPending}
-                className="bg-green-600 py-3.5 rounded-lg shadow-sm active:opacity-90"
+                className="bg-green-600 py-3.5 rounded-lg shadow-sm active:opacity-90 mt-3"
               >
                 <Text className="text-white font-semibold text-center">
                   {fechaChamadoMutation.isPending ? 'Fechando...' : 'Fechar Chamado'}
@@ -472,7 +472,7 @@ export default function ChamadoDetalhesScreen() {
                   );
                 }}
                 disabled={reabrirChamadoMutation.isPending}
-                className="bg-blue-600 py-3.5 rounded-lg shadow-sm active:opacity-90"
+                className="bg-blue-600 py-3.5 rounded-lg shadow-sm active:opacity-90 mt-3"
               >
                 <Text className="text-white font-semibold text-center">
                   {reabrirChamadoMutation.isPending ? 'Reabrindo...' : 'Reabrir Chamado'}
