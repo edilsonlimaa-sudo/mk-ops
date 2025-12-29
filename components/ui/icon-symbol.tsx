@@ -23,6 +23,7 @@ const MAPPING = {
   'calendar': 'event',
   'tray.fill': 'archive',
   'checkmark.circle.fill': 'check-circle',
+  'gearshape.fill': 'settings',
 } as IconMapping;
 
 /**

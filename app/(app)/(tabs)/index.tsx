@@ -7,7 +7,7 @@ import { Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { logout, ipMkAuth } = useAuthStore();
+  const { ipMkAuth } = useAuthStore();
   const { clearIdentification, currentUser } = useUserStore();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -30,15 +30,6 @@ export default function HomeScreen() {
     // Vai para /(auth)/user-identification (trocar usuário)
     console.log('➡️ [Home] Redirecionando para /(auth)/user-identification');
     router.replace('/(auth)/user-identification?flow=switchUser');
-  };
-
-  const handleLogout = async () => {
-    console.log('👋 [Home] Fazendo logout completo...');
-    setShowProfileMenu(false);
-    
-    // Limpa identificação e auth
-    await clearIdentification();
-    await logout(); // Limpa auth e redireciona automaticamente
   };
 
   return (
@@ -181,26 +172,14 @@ export default function HomeScreen() {
                 onPress={handleSwitchUser}
                 className="flex-row items-center px-6 py-4 active:bg-gray-50"
               >
-                <View className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center mr-4">
-                  <Ionicons name="swap-horizontal" size={20} color="#374151" />
+                <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-4">
+                  <Ionicons name="swap-horizontal" size={20} color="#3b82f6" />
                 </View>
                 <View className="flex-1">
                   <Text className="text-gray-900 font-semibold">Trocar Usuário</Text>
                   <Text className="text-gray-500 text-xs">Fazer login com outro usuário</Text>
                 </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleLogout}
-                className="flex-row items-center px-6 py-4 active:bg-gray-50"
-              >
-                <View className="w-10 h-10 bg-red-50 rounded-full items-center justify-center mr-4">
-                  <Ionicons name="log-out-outline" size={20} color="#dc2626" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-red-600 font-semibold">Sair</Text>
-                  <Text className="text-gray-500 text-xs">Desconectar da API</Text>
-                </View>
+                <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
               </TouchableOpacity>
             </View>
 
