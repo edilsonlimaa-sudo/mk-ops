@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Linking, Modal, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -28,13 +28,16 @@ export default function InstalacaoDetalhesScreen() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editField, setEditField] = useState<'visita' | 'tecnico' | 'obs' | 'plano' | 'email' | 'telefone' | 'celular' | 'endereco' | 'numero' | 'complemento' | 'bairro' | 'cidade' | 'estado' | 'cep' | 'valor' | 'vencimento' | 'login' | 'comodato' | 'equipamento' | 'ip' | 'mac' | 'coordenadas' | null>(null);
   const [editValue, setEditValue] = useState('');
+  
+  // Ref para ScrollView do modal de finalização
+  const finalizacaoScrollRef = useRef<ScrollView>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [comodatoModalVisible, setComodatoModalVisible] = useState(false);
   const [finalizacaoModalVisible, setFinalizacaoModalVisible] = useState(false);
 
   // Estados para finalização
-  const [instaladoSim, setInstaladoSim] = useState(true);
+  const [instaladoSim, setInstaladoSim] = useState<boolean | null>(null);
   const [dataInstalacao, setDataInstalacao] = useState(new Date());
   const [valorInstalacao, setValorInstalacao] = useState('');
 
@@ -43,6 +46,26 @@ export default function InstalacaoDetalhesScreen() {
   const [contatoOptions, setContatoOptions] = useState<Array<{ label: string; value: string; icon: string; action: () => void }>>([]);
   const [contatoModalTitle, setContatoModalTitle] = useState('');
   const [visitadoSim, setVisitadoSim] = useState(false);
+
+  // Funções auxiliares para formatação de moeda
+  const formatarMoeda = (valor: number): string => {
+    return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const parseValor = (valor: string): number => {
+    if (!valor) return 0;
+    // Remove tudo exceto números
+    const apenasNumeros = valor.replace(/\D/g, '');
+    if (!apenasNumeros) return 0;
+    // Se o valor original tinha vírgula ou ponto, trata como centavos
+    // Senão, trata como reais inteiros
+    if (valor.includes(',') || valor.includes('.')) {
+      // Converte centavos para reais (ex: "5000" centavos = 50.00 reais)
+      return parseInt(apenasNumeros) / 100;
+    }
+    // Valor digitado sem vírgula/ponto = reais inteiros
+    return parseInt(apenasNumeros);
+  };
 
   if (!id) {
     return (
@@ -56,8 +79,13 @@ export default function InstalacaoDetalhesScreen() {
 
   // Pré-preencher valor da instalação quando abrir o modal de finalização
   useEffect(() => {
-    if (finalizacaoModalVisible && instalacao?.valor) {
-      setValorInstalacao(instalacao.valor);
+    if (finalizacaoModalVisible) {
+      if (instalacao?.valor) {
+        const valorNumerico = parseValor(instalacao.valor);
+        setValorInstalacao(formatarMoeda(valorNumerico));
+      } else {
+        setValorInstalacao('0,00');
+      }
     }
   }, [finalizacaoModalVisible, instalacao?.valor]);
 
@@ -1267,104 +1295,242 @@ export default function InstalacaoDetalhesScreen() {
         {/* Modal de Finalização */}
         <Modal
           visible={finalizacaoModalVisible}
-          animationType="fade"
-          transparent={true}
+          animationType="slide"
+          presentationStyle="pageSheet"
           onRequestClose={() => setFinalizacaoModalVisible(false)}
         >
-          <View className="flex-1 bg-black/50 justify-end">
-            <View className="bg-white rounded-t-3xl p-6">
-              <View className="flex-row items-center justify-between mb-6">
-                <Text className="text-base font-bold text-gray-900">Finalizar Instalação</Text>
-                <TouchableOpacity onPress={() => setFinalizacaoModalVisible(false)}>
-                  <Ionicons name="close" size={24} color="#6b7280" />
+          <SafeAreaView className="flex-1 bg-purple-50" edges={['top']}>
+            {/* Header Celebrativo */}
+            <View className="bg-purple-600 px-6 pt-6 pb-8">
+              <View className="flex-row items-center justify-between mb-4">
+                <View className="flex-1">
+                  <Text className="text-xl font-bold text-white mb-1">Finalizar Instalação</Text>
+                  <Text className="text-purple-100 text-sm">Complete as informações da instalação</Text>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => setFinalizacaoModalVisible(false)} 
+                  className="bg-white/20 p-2 rounded-full"
+                >
+                  <Ionicons name="close" size={24} color="white" />
                 </TouchableOpacity>
               </View>
+              
+              {/* Ícone Central Celebrativo */}
+              <View className="items-center">
+                <View className="bg-white/20 w-20 h-20 rounded-full items-center justify-center">
+                  <View className="bg-white w-16 h-16 rounded-full items-center justify-center">
+                    <Ionicons name="rocket" size={28} color="#9333ea" />
+                  </View>
+                </View>
+              </View>
+            </View>
 
-              <ScrollView className="mb-4" style={{ maxHeight: 400 }}>
-                {/* 1. Cliente foi visitado? */}
-                <View className="mb-5">
-                  <Text className="text-sm font-semibold text-gray-700 mb-3">Cliente foi visitado?</Text>
+            <ScrollView 
+              ref={finalizacaoScrollRef}
+              className="flex-1" 
+              showsVerticalScrollIndicator={false}
+            >
+              <View className="px-6 py-6">
+                {/* Card 1: Visita */}
+                <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
+                  <View className="flex-row items-center mb-4">
+                    <View className="bg-purple-100 w-10 h-10 rounded-full items-center justify-center mr-3">
+                      <Text className="text-purple-600 font-bold text-base">1</Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-base font-bold text-gray-900">Visita ao Cliente</Text>
+                      <Text className="text-xs text-gray-500">O cliente foi visitado?</Text>
+                    </View>
+                  </View>
+                  
                   <View className="flex-row gap-3">
                     <TouchableOpacity
-                      onPress={() => setVisitadoSim(true)}
-                      className={`flex-1 p-4 rounded-lg border-2 ${visitadoSim ? 'bg-blue-50 border-blue-500' : 'bg-gray-50 border-gray-200'}`}
+                      onPress={() => {
+                        setVisitadoSim(true);
+                        setInstaladoSim(null);
+                      }}
+                      style={{
+                        backgroundColor: visitadoSim ? '#f0fdf4' : '#f9fafb',
+                        borderColor: visitadoSim ? '#22c55e' : '#e5e7eb',
+                        borderWidth: 2,
+                      }}
+                      className="flex-1 py-3 rounded-xl"
                     >
-                      <View className="items-center">
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={32}
-                          color={visitadoSim ? "#3b82f6" : "#9ca3af"}
-                        />
-                        <Text className={`mt-2 font-semibold ${visitadoSim ? 'text-blue-700' : 'text-gray-600'}`}>
-                          Sim
+                      <View className="items-center gap-2">
+                        <View 
+                          style={{ backgroundColor: visitadoSim ? '#22c55e' : '#e5e7eb' }}
+                          className="w-10 h-10 rounded-full items-center justify-center"
+                        >
+                          <Ionicons
+                            name="checkmark"
+                            size={20}
+                            color={visitadoSim ? "white" : "#9ca3af"}
+                          />
+                        </View>
+                        <Text style={{ color: visitadoSim ? '#15803d' : '#4b5563' }} className="font-bold">
+                          Sim, visitado
                         </Text>
                       </View>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      onPress={() => setVisitadoSim(false)}
-                      className={`flex-1 p-4 rounded-lg border-2 ${!visitadoSim ? 'bg-gray-50 border-gray-500' : 'bg-gray-50 border-gray-200'}`}
+                      onPress={() => {
+                        setVisitadoSim(false);
+                        setInstaladoSim(null);
+                      }}
+                      style={{
+                        backgroundColor: visitadoSim === false ? '#f3f4f6' : '#f9fafb',
+                        borderColor: visitadoSim === false ? '#9ca3af' : '#e5e7eb',
+                        borderWidth: 2,
+                      }}
+                      className="flex-1 py-3 rounded-xl"
                     >
-                      <View className="items-center">
-                        <Ionicons
-                          name="close-circle"
-                          size={32}
-                          color={!visitadoSim ? "#6b7280" : "#9ca3af"}
-                        />
-                        <Text className={`mt-2 font-semibold ${!visitadoSim ? 'text-gray-700' : 'text-gray-600'}`}>
-                          Não
+                      <View className="items-center gap-2">
+                        <View 
+                          style={{ backgroundColor: visitadoSim === false ? '#6b7280' : '#e5e7eb' }}
+                          className="w-10 h-10 rounded-full items-center justify-center"
+                        >
+                          <Ionicons
+                            name="close"
+                            size={20}
+                            color={visitadoSim === false ? "white" : "#9ca3af"}
+                          />
+                        </View>
+                        <Text style={{ color: visitadoSim === false ? '#374151' : '#4b5563' }} className="font-bold">
+                          Não visitado
                         </Text>
                       </View>
                     </TouchableOpacity>
                   </View>
                 </View>
 
-                {/* 2. Instalação realizada? - Só aparece se visitado=sim */}
-                {visitadoSim && (
-                  <View className="mb-5">
-                    <Text className="text-sm font-semibold text-gray-700 mb-3">Instalação foi realizada?</Text>
-                    <View className="flex-row gap-3">
-                      <TouchableOpacity
-                        onPress={() => setInstaladoSim(true)}
-                        className={`flex-1 p-4 rounded-lg border-2 ${instaladoSim ? 'bg-purple-50 border-purple-500' : 'bg-gray-50 border-gray-200'}`}
-                      >
-                        <View className="items-center">
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={32}
-                            color={instaladoSim ? "#9333ea" : "#9ca3af"}
-                          />
-                          <Text className={`mt-2 font-semibold ${instaladoSim ? 'text-purple-700' : 'text-gray-600'}`}>
-                            Sim
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        onPress={() => setInstaladoSim(false)}
-                        className={`flex-1 p-4 rounded-lg border-2 ${!instaladoSim ? 'bg-red-50 border-red-500' : 'bg-gray-50 border-gray-200'}`}
-                      >
-                        <View className="items-center">
-                          <Ionicons
-                            name="close-circle"
-                            size={32}
-                            color={!instaladoSim ? "#ef4444" : "#9ca3af"}
-                          />
-                          <Text className={`mt-2 font-semibold ${!instaladoSim ? 'text-red-700' : 'text-gray-600'}`}>
-                            Não
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
+                {/* Card 2: Instalação */}
+                <View className={`bg-white rounded-2xl p-5 mb-4 shadow-sm border ${
+                  visitadoSim ? 'border-gray-100' : 'border-gray-200 opacity-50'
+                }`}>
+                  <View className="flex-row items-center mb-4">
+                    <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                      visitadoSim ? 'bg-purple-100' : 'bg-gray-100'
+                    }`}>
+                      <Text className={`font-bold text-base ${
+                        visitadoSim ? 'text-purple-600' : 'text-gray-400'
+                      }`}>2</Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className={`text-base font-bold ${
+                        visitadoSim ? 'text-gray-900' : 'text-gray-400'
+                      }`}>Status da Instalação</Text>
+                      <Text className={`text-xs ${
+                        visitadoSim ? 'text-gray-500' : 'text-gray-400'
+                      }`}>A instalação foi realizada?</Text>
                     </View>
                   </View>
-                )}
-
-                {/* 3. Data da Instalação - Só aparece se visitado=sim E instalado=sim */}
-                {visitadoSim && instaladoSim && (
-                  <View className="mb-5">
-                    <Text className="text-sm font-semibold text-gray-700 mb-2">Data da Instalação</Text>
+                  
+                  <View className="flex-row gap-3">
                     <TouchableOpacity
                       onPress={() => {
+                        if (visitadoSim) {
+                          setInstaladoSim(true);
+                          setDataInstalacao(new Date());
+                          // Scroll para mostrar os cards 3 e 4
+                          setTimeout(() => {
+                            finalizacaoScrollRef.current?.scrollTo({ y: 300, animated: true });
+                          }, 100);
+                        }
+                      }}
+                      disabled={!visitadoSim}
+                      style={{
+                        backgroundColor: !visitadoSim ? '#f9fafb' : instaladoSim === true ? '#faf5ff' : '#f9fafb',
+                        borderColor: !visitadoSim ? '#e5e7eb' : instaladoSim === true ? '#9333ea' : '#e5e7eb',
+                        borderWidth: 2,
+                      }}
+                      className="flex-1 py-3 rounded-xl"
+                    >
+                      <View className="items-center gap-2">
+                        <View 
+                          style={{ 
+                            backgroundColor: !visitadoSim ? '#e5e7eb' : instaladoSim === true ? '#9333ea' : '#e5e7eb'
+                          }}
+                          className="w-10 h-10 rounded-full items-center justify-center"
+                        >
+                          <Ionicons
+                            name="checkmark"
+                            size={20}
+                            color={!visitadoSim ? "#d1d5db" : instaladoSim === true ? "white" : "#9ca3af"}
+                          />
+                        </View>
+                        <Text 
+                          style={{ 
+                            color: !visitadoSim ? '#9ca3af' : instaladoSim === true ? '#6b21a8' : '#4b5563'
+                          }} 
+                          className="font-bold"
+                        >
+                          Sim, instalado
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => visitadoSim && setInstaladoSim(false)}
+                      disabled={!visitadoSim}
+                      style={{
+                        backgroundColor: !visitadoSim ? '#f9fafb' : instaladoSim === false ? '#fff7ed' : '#f9fafb',
+                        borderColor: !visitadoSim ? '#e5e7eb' : instaladoSim === false ? '#f97316' : '#e5e7eb',
+                        borderWidth: 2,
+                      }}
+                      className="flex-1 py-3 rounded-xl"
+                    >
+                      <View className="items-center gap-2">
+                        <View 
+                          style={{ 
+                            backgroundColor: !visitadoSim ? '#e5e7eb' : instaladoSim === false ? '#f97316' : '#e5e7eb'
+                          }}
+                          className="w-10 h-10 rounded-full items-center justify-center"
+                        >
+                          <Ionicons
+                            name="close"
+                            size={20}
+                            color={!visitadoSim ? "#d1d5db" : instaladoSim === false ? "white" : "#9ca3af"}
+                          />
+                        </View>
+                        <Text 
+                          style={{ 
+                            color: !visitadoSim ? '#9ca3af' : instaladoSim === false ? '#c2410c' : '#4b5563'
+                          }} 
+                          className="font-bold"
+                        >
+                          Não instalado
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Card 3: Data */}
+                <View className={`bg-white rounded-2xl p-5 mb-4 shadow-sm border ${
+                  instaladoSim === true ? 'border-gray-100' : 'border-gray-200 opacity-50'
+                }`}>
+                  <View className="flex-row items-center mb-4">
+                    <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                      instaladoSim === true ? 'bg-purple-100' : 'bg-gray-100'
+                    }`}>
+                      <Text className={`font-bold text-base ${
+                        instaladoSim === true ? 'text-purple-600' : 'text-gray-400'
+                      }`}>3</Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className={`text-base font-bold ${
+                        instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
+                      }`}>Data da Instalação</Text>
+                      <Text className={`text-xs ${
+                        instaladoSim === true ? 'text-gray-500' : 'text-gray-400'
+                      }`}>Quando foi realizada?</Text>
+                    </View>
+                  </View>
+                  
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (instaladoSim === true) {
                         if (Platform.OS === 'android') {
                           DateTimePickerAndroid.open({
                             value: dataInstalacao,
@@ -1377,40 +1543,157 @@ export default function InstalacaoDetalhesScreen() {
                         } else {
                           setShowDatePicker(true);
                         }
-                      }}
-                      className="bg-gray-50 border border-gray-200 rounded-lg p-4"
-                    >
-                      <View className="flex-row items-center justify-between">
-                        <View className="flex-row items-center gap-2">
-                          <Ionicons name="calendar-outline" size={20} color="#6b7280" />
-                          <Text className="text-gray-900 font-medium">
-                            {dataInstalacao.toLocaleDateString('pt-BR')}
+                      }
+                    }}
+                    disabled={instaladoSim !== true}
+                    className={`rounded-xl p-2 border-2 ${
+                      instaladoSim === true
+                        ? 'bg-purple-50 border-purple-200'
+                        : 'bg-gray-50 border-gray-200'
+                    }`}
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center gap-2">
+                        <View className={`w-9 h-9 rounded-full items-center justify-center ${
+                          instaladoSim === true ? 'bg-purple-600' : 'bg-gray-200'
+                        }`}>
+                          <Ionicons
+                            name="calendar"
+                            size={18}
+                            color={instaladoSim === true ? "white" : "#d1d5db"}
+                          />
+                        </View>
+                        <View>
+                          <Text className={`text-xs mb-1 ${
+                            instaladoSim === true ? 'text-purple-600' : 'text-gray-400'
+                          }`}>Data selecionada</Text>
+                          <Text className={`font-bold text-base ${
+                            instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
+                          }`}>
+                            {dataInstalacao.toLocaleDateString('pt-BR', { 
+                              day: '2-digit', 
+                              month: 'long', 
+                              year: 'numeric' 
+                            })}
                           </Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
                       </View>
-                    </TouchableOpacity>
-                  </View>
-                )}
+                      {instaladoSim === true && (
+                        <Ionicons name="chevron-forward" size={24} color="#9333ea" />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                </View>
 
-                {/* 4. Valor - Só aparece se visitado=sim E instalado=sim */}
-                {visitadoSim && instaladoSim && (
-                  <View className="mb-3">
-                    <Text className="text-sm font-semibold text-gray-700 mb-2">Valor da Instalação (opcional)</Text>
-                    <TextInput
-                      value={valorInstalacao}
-                      onChangeText={setValorInstalacao}
-                      placeholder="R$ 0,00"
-                      keyboardType="numeric"
-                      className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-gray-900"
-                    />
+                {/* Card 4: Valor */}
+                <View className={`bg-white rounded-2xl p-5 mb-4 shadow-sm border ${
+                  instaladoSim === true ? 'border-gray-100' : 'border-gray-200 opacity-50'
+                }`}>
+                  <View className="flex-row items-center mb-4">
+                    <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                      instaladoSim === true ? 'bg-purple-100' : 'bg-gray-100'
+                    }`}>
+                      <Text className={`font-bold text-base ${
+                        instaladoSim === true ? 'text-purple-600' : 'text-gray-400'
+                      }`}>4</Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className={`text-base font-bold ${
+                        instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
+                      }`}>Valor Cobrado</Text>
+                      <Text className={`text-xs ${
+                        instaladoSim === true ? 'text-gray-500' : 'text-gray-400'
+                      }`}>Opcional - taxa de ativação</Text>
+                    </View>
                   </View>
-                )}
-              </ScrollView>
+                  
+                  <View className="gap-2">
+                    {/* Input de Valor */}
+                    <View className={`flex-row items-center rounded-xl p-1 border-2 ${
+                      instaladoSim === true
+                        ? 'bg-green-50 border-green-200'
+                        : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      <View className={`w-7 h-7 rounded-full items-center justify-center mr-2 ${
+                        instaladoSim === true ? 'bg-green-600' : 'bg-gray-200'
+                      }`}>
+                        <Ionicons
+                          name="cash"
+                          size={14}
+                          color={instaladoSim === true ? "white" : "#d1d5db"}
+                        />
+                      </View>
+                      <Text className={`text-lg font-bold mr-1 ${
+                        instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
+                      }`}>R$</Text>
+                      <TextInput
+                        value={valorInstalacao}
+                        onChangeText={(text) => {
+                          // Remove tudo exceto números
+                          const apenasNumeros = text.replace(/\D/g, '');
+                          if (!apenasNumeros) {
+                            setValorInstalacao('');
+                            return;
+                          }
+                          // Converte para número (centavos) e formata
+                          const valorEmCentavos = parseInt(apenasNumeros);
+                          const valorEmReais = valorEmCentavos / 100;
+                          setValorInstalacao(formatarMoeda(valorEmReais));
+                        }}
+                        onFocus={() => {
+                          // Scroll para mostrar o campo de valor
+                          setTimeout(() => {
+                            finalizacaoScrollRef.current?.scrollToEnd({ animated: true });
+                          }, 100);
+                        }}
+                        placeholder="0,00"
+                        placeholderTextColor={instaladoSim === true ? "#9ca3af" : "#d1d5db"}
+                        keyboardType="numeric"
+                        editable={instaladoSim === true}
+                        selectTextOnFocus={true}
+                        className={`flex-1 text-lg font-bold ${
+                          instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
+                        }`}
+                      />
+                    </View>
+                    
+                    {/* Botões Stepper */}
+                    {instaladoSim === true && (
+                      <View className="flex-row gap-2">
+                        <TouchableOpacity
+                          onPress={() => {
+                            const currentValue = parseValor(valorInstalacao);
+                            const newValue = Math.max(0, currentValue - 10);
+                            setValorInstalacao(formatarMoeda(newValue));
+                          }}
+                          className="flex-1 bg-gray-100 py-2 rounded-lg flex-row items-center justify-center gap-1"
+                        >
+                          <Ionicons name="remove" size={16} color="#374151" />
+                          <Text className="text-gray-700 font-semibold text-sm">R$ 10</Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                          onPress={() => {
+                            const currentValue = parseValor(valorInstalacao);
+                            const newValue = currentValue + 10;
+                            setValorInstalacao(formatarMoeda(newValue));
+                          }}
+                          className="flex-1 bg-green-600 py-2 rounded-lg flex-row items-center justify-center gap-1"
+                        >
+                          <Ionicons name="add" size={16} color="white" />
+                          <Text className="text-white font-semibold text-sm">R$ 10</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </View>
+            </ScrollView>
 
-              {/* Botões */}
-              <View className="gap-3">
-                <TouchableOpacity
+            {/* Botões fixos no rodapé */}
+            <View className="bg-white border-t border-gray-200 px-6 py-4">
+              {/* Botão Principal - Finalizar */}
+              <TouchableOpacity
                   onPress={() => {
                     // Lógica consistente: se não visitou, nada mais aconteceu
                     let dados: any = {
@@ -1425,10 +1708,10 @@ export default function InstalacaoDetalhesScreen() {
                     }
                     // Se visitou, verifica se instalou
                     else {
-                      dados.instalado = instaladoSim ? 'sim' : 'nao';
+                      dados.instalado = instaladoSim === true ? 'sim' : 'nao';
 
                       // Se não instalou, não tem data nem valor
-                      if (!instaladoSim) {
+                      if (instaladoSim !== true) {
                         dados.datainst = undefined;
                         dados.valor = undefined;
                       }
@@ -1484,27 +1767,30 @@ export default function InstalacaoDetalhesScreen() {
                     );
                   }}
                   disabled={fechaInstalacaoMutation.isPending || editaInstalacaoMutation.isPending}
-                  className="bg-purple-600 py-4 rounded-lg"
+                  className="bg-green-600 py-4 rounded-2xl mb-3 shadow-lg"
                 >
                   {(fechaInstalacaoMutation.isPending || editaInstalacaoMutation.isPending) ? (
                     <View className="flex-row items-center justify-center gap-2">
                       <ActivityIndicator size="small" color="white" />
-                      <Text className="text-white font-bold text-center">Finalizando...</Text>
+                      <Text className="text-white font-bold text-base">Finalizando...</Text>
                     </View>
                   ) : (
-                    <Text className="text-white font-bold text-center">Finalizar Instalação</Text>
+                    <View className="flex-row items-center justify-center gap-2">
+                      <Ionicons name="checkmark-circle" size={20} color="white" />
+                      <Text className="text-white font-bold text-base">Confirmar e Finalizar</Text>
+                    </View>
                   )}
                 </TouchableOpacity>
 
+                {/* Botão Secundário - Cancelar */}
                 <TouchableOpacity
                   onPress={() => setFinalizacaoModalVisible(false)}
-                  className="bg-gray-100 py-4 rounded-lg"
+                  className="bg-gray-100 py-4 rounded-xl"
                 >
-                  <Text className="text-gray-700 font-semibold text-center">Cancelar</Text>
+                  <Text className="text-gray-700 font-semibold text-center text-base">Cancelar</Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          </View>
+            </SafeAreaView>
         </Modal>
 
         {/* Modal de Seleção de Contato */}
