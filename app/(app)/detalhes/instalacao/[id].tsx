@@ -1020,18 +1020,18 @@ export default function InstalacaoDetalhesScreen() {
                   )}
                   <View className="flex-row items-center gap-4">
                     <View className="flex-row items-center">
-                      <Ionicons name="arrow-down-circle" size={16} color="#10b981" />
+                      <Ionicons name="arrow-down-circle" size={16} color="#9333ea" />
                       <Text className="text-xs text-gray-600 ml-1">
                         {item.veldown} Mbps
                       </Text>
                     </View>
                     <View className="flex-row items-center">
-                      <Ionicons name="arrow-up-circle" size={16} color="#3b82f6" />
+                      <Ionicons name="arrow-up-circle" size={16} color="#a855f7" />
                       <Text className="text-xs text-gray-600 ml-1">
                         {item.velup} Mbps
                       </Text>
                     </View>
-                    <Text className="text-sm font-bold text-green-600">
+                    <Text className="text-sm font-bold text-purple-600">
                       R$ {item.valor}
                     </Text>
                   </View>
@@ -1042,7 +1042,7 @@ export default function InstalacaoDetalhesScreen() {
                   <Ionicons
                     name={instalacao?.plano === item.nome ? "checkmark-circle" : "chevron-forward"}
                     size={24}
-                    color={instalacao?.plano === item.nome ? "#10b981" : "#9ca3af"}
+                    color={instalacao?.plano === item.nome ? "#9333ea" : "#9ca3af"}
                   />
                 )}
               </View>
@@ -1326,15 +1326,15 @@ export default function InstalacaoDetalhesScreen() {
                     <View className="flex-row gap-3">
                       <TouchableOpacity
                         onPress={() => setInstaladoSim(true)}
-                        className={`flex-1 p-4 rounded-lg border-2 ${instaladoSim ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-200'}`}
+                        className={`flex-1 p-4 rounded-lg border-2 ${instaladoSim ? 'bg-purple-50 border-purple-500' : 'bg-gray-50 border-gray-200'}`}
                       >
                         <View className="items-center">
                           <Ionicons
                             name="checkmark-circle"
                             size={32}
-                            color={instaladoSim ? "#10b981" : "#9ca3af"}
+                            color={instaladoSim ? "#9333ea" : "#9ca3af"}
                           />
-                          <Text className={`mt-2 font-semibold ${instaladoSim ? 'text-green-700' : 'text-gray-600'}`}>
+                          <Text className={`mt-2 font-semibold ${instaladoSim ? 'text-purple-700' : 'text-gray-600'}`}>
                             Sim
                           </Text>
                         </View>
@@ -1484,7 +1484,7 @@ export default function InstalacaoDetalhesScreen() {
                     );
                   }}
                   disabled={fechaInstalacaoMutation.isPending || editaInstalacaoMutation.isPending}
-                  className="bg-green-600 py-4 rounded-lg"
+                  className="bg-purple-600 py-4 rounded-lg"
                 >
                   {(fechaInstalacaoMutation.isPending || editaInstalacaoMutation.isPending) ? (
                     <View className="flex-row items-center justify-center gap-2">
@@ -1536,12 +1536,11 @@ export default function InstalacaoDetalhesScreen() {
                     className="flex-row items-center justify-between bg-gray-50 p-4 rounded-xl active:bg-gray-100"
                   >
                     <View className="flex-row items-center gap-3 flex-1">
-                      <View className={`w-10 h-10 rounded-full items-center justify-center ${option.icon === 'call' ? 'bg-green-100' : 'bg-emerald-100'
-                        }`}>
+                      <View className="w-10 h-10 rounded-full items-center justify-center bg-purple-100">
                         <Ionicons
                           name={option.icon as any}
                           size={20}
-                          color={option.icon === 'call' ? '#10b981' : '#059669'}
+                          color="#9333ea"
                         />
                       </View>
                       <View className="flex-1">
