@@ -349,41 +349,43 @@ export default function InstalacaoDetalhesScreen() {
 
               {/* Informações Principais em Grid */}
               <View className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-                <View className="flex-row justify-between mb-2">
-                  <View className="flex-1">
-                    <Text className="text-gray-500 text-xs font-medium mb-1">Técnico</Text>
+                <TouchableOpacity
+                  onPress={() => abrirEdicao('tecnico', instalacao.tecnico || '')}
+                  disabled={instalacao.status !== 'aberto'}
+                  className="flex-row items-center justify-between mb-2 active:bg-white rounded-lg px-2 py-1"
+                >
+                  <View className="flex-1 justify-center">
+                    <Text className="text-gray-500 text-xs font-medium">Técnico</Text>
                     <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
                       {instalacao.tecnico || 'Não atribuído'}
                     </Text>
                   </View>
                   {instalacao.status === 'aberto' && (
-                    <TouchableOpacity
-                      onPress={() => abrirEdicao('tecnico', instalacao.tecnico || '')}
-                      className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center"
-                    >
+                    <View className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
                       <Ionicons name="pencil" size={14} color="white" />
-                    </TouchableOpacity>
+                    </View>
                   )}
-                </View>
+                </TouchableOpacity>
 
                 <View className="h-px bg-gray-200 my-2" />
 
-                <View className="flex-row justify-between mb-2">
-                  <View className="flex-1">
-                    <Text className="text-gray-500 text-xs font-medium mb-1">Visita Agendada</Text>
+                <TouchableOpacity
+                  onPress={() => abrirEdicao('visita', instalacao.visita || '')}
+                  disabled={instalacao.status !== 'aberto'}
+                  className="flex-row items-center justify-between mb-2 active:bg-white rounded-lg px-2 py-1"
+                >
+                  <View className="flex-1 justify-center">
+                    <Text className="text-gray-500 text-xs font-medium">Visita Agendada</Text>
                     <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
                       {instalacao.visita ? formatarDataCompleta(instalacao.visita) : 'Não agendada'}
                     </Text>
                   </View>
                   {instalacao.status === 'aberto' && (
-                    <TouchableOpacity
-                      onPress={() => abrirEdicao('visita', instalacao.visita || '')}
-                      className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center"
-                    >
+                    <View className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
                       <Ionicons name="calendar-outline" size={14} color="white" />
-                    </TouchableOpacity>
+                    </View>
                   )}
-                </View>
+                </TouchableOpacity>
               </View>
             </View>
 
