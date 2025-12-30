@@ -28,12 +28,12 @@ export default function InstalacaoDetalhesScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [comodatoModalVisible, setComodatoModalVisible] = useState(false);
   const [finalizacaoModalVisible, setFinalizacaoModalVisible] = useState(false);
-  
+
   // Estados para finalização
   const [instaladoSim, setInstaladoSim] = useState(true);
   const [dataInstalacao, setDataInstalacao] = useState(new Date());
   const [valorInstalacao, setValorInstalacao] = useState('');
-  
+
   // Estados para modal de seleção de contato
   const [contatoModalVisible, setContatoModalVisible] = useState(false);
   const [contatoOptions, setContatoOptions] = useState<Array<{ label: string; value: string; icon: string; action: () => void }>>([]);
@@ -283,6 +283,19 @@ export default function InstalacaoDetalhesScreen() {
     }
   };
 
+  const formatarNome = (nome: string) => {
+    if (!nome) return '';
+
+    // Remove espaços extras e coloca em Title Case
+    return nome
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase()
+      .split(' ')
+      .map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1))
+      .join(' ');
+  };
+
   return (
     <>
       <Stack.Screen
@@ -292,259 +305,428 @@ export default function InstalacaoDetalhesScreen() {
         }}
       />
       <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
-        <ScrollView className="flex-1">
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="p-4">
-            {/* Status Badge e Ações Rápidas */}
-            <View className="flex-row justify-between items-center mb-4">
-              <View className={`${instalacao.status === 'aberto' ? 'bg-green-100' : 'bg-gray-100'} px-3 py-1.5 rounded-full`}>
-                <Text className={`${instalacao.status === 'aberto' ? 'text-green-700' : 'text-gray-700'} font-semibold text-xs`}>
-                  {instalacao.status === 'aberto' ? 'Aberto' : instalacao.status === 'concluido' ? 'Concluído' : instalacao.status}
-                </Text>
+            {/* HERO SECTION - Informações Críticas */}
+            <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
+              {/* Status Badge */}
+              <View className="flex-row justify-between items-start mb-4">
+                <View className={`${instalacao.status === 'aberto' ? 'bg-amber-400' : 'bg-green-400'} px-3 py-1.5 rounded-full`}>
+                  <Text className={`${instalacao.status === 'aberto' ? 'text-amber-900' : 'text-green-900'} font-bold text-xs uppercase tracking-wide`}>
+                    {instalacao.status === 'aberto' ? 'Aberto' : instalacao.status === 'concluido' ? 'Concluído' : instalacao.status}
+                  </Text>
+                </View>
+                <Text className="text-gray-500 text-xs font-medium">#{instalacao.id}</Text>
               </View>
-              
-              <View className="flex-row items-center gap-2">
-                {/* Botões de ação rápida como ícones */}
-                {(instalacao.celular || instalacao.telefone) && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      const telefones = [
-                        instalacao.celular && { label: 'Celular', numero: instalacao.celular },
-                        instalacao.telefone && { label: 'Telefone', numero: instalacao.telefone },
-                        instalacao.celular2 && { label: 'Celular 2', numero: instalacao.celular2 },
-                      ].filter(Boolean) as Array<{ label: string; numero: string }>;
 
-                      if (telefones.length === 1) {
-                        // Se tem apenas um, liga diretamente
-                        const numeroLimpo = telefones[0].numero.replace(/\D/g, '');
-                        const url = `tel:${numeroLimpo}`;
-                        Linking.openURL(url).catch(() => {
-                          Toast.show({
-                            type: 'error',
-                            text1: 'Erro ao ligar',
-                            position: 'top',
-                            topOffset: 60,
-                          });
-                        });
-                      } else {
-                        // Se tem mais de um, mostra o modal
-                        setContatoModalTitle('Selecionar Telefone');
-                        setContatoOptions(
-                          telefones.map(t => ({
-                            label: t.label,
-                            value: t.numero,
-                            icon: 'call',
-                            action: () => {
-                              const numeroLimpo = t.numero.replace(/\D/g, '');
-                              const url = `tel:${numeroLimpo}`;
-                              Linking.openURL(url).catch(() => {
-                                Toast.show({
-                                  type: 'error',
-                                  text1: 'Erro ao ligar',
-                                  position: 'top',
-                                  topOffset: 60,
-                                });
-                              });
-                              setContatoModalVisible(false);
-                            },
-                          }))
-                        );
-                        setContatoModalVisible(true);
-                      }
-                    }}
-                    className="bg-green-500 p-2.5 rounded-full active:bg-green-600"
-                  >
-                    <Ionicons name="call" size={18} color="white" />
-                  </TouchableOpacity>
-                )}
-                {(instalacao.celular || instalacao.telefone || instalacao.celular2) && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      const celulares = [
-                        instalacao.celular && { label: 'Celular', numero: instalacao.celular },
-                        instalacao.telefone && { label: 'Telefone', numero: instalacao.telefone },
-                        instalacao.celular2 && { label: 'Celular 2', numero: instalacao.celular2 },
-                      ].filter(Boolean) as Array<{ label: string; numero: string }>;
+              {/* Cliente - Destaque Principal */}
+              <TouchableOpacity
+                onPress={() => router.push(`/detalhes/instalacao/cliente-info?id=${instalacao.uuid_solic}`)}
+                className="mb-4 active:opacity-80"
+              >
+                <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1">Cliente</Text>
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-gray-900 text-base font-bold flex-1" numberOfLines={2}>
+                    {formatarNome(instalacao.nome)}
+                  </Text>
+                  <View className="bg-gray-100 p-2 rounded-full ml-2">
+                    <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+                  </View>
+                </View>
+              </TouchableOpacity>
 
-                      if (celulares.length === 1) {
-                        // Se tem apenas um, abre diretamente
-                        const numeroLimpo = celulares[0].numero.replace(/\D/g, '');
-                        const numeroCompleto = numeroLimpo.startsWith('55') ? numeroLimpo : `55${numeroLimpo}`;
-                        const url = `https://wa.me/${numeroCompleto}`;
-                        Linking.openURL(url).catch(() => {
-                          Toast.show({
-                            type: 'error',
-                            text1: 'Erro ao abrir WhatsApp',
-                            position: 'top',
-                            topOffset: 60,
-                          });
-                        });
-                      } else {
-                        // Se tem mais de um, mostra o modal
-                        setContatoModalTitle('Selecionar Número para WhatsApp');
-                        setContatoOptions(
-                          celulares.map(c => ({
-                            label: c.label,
-                            value: c.numero,
-                            icon: 'logo-whatsapp',
-                            action: () => {
-                              const numeroLimpo = c.numero.replace(/\D/g, '');
-                              const numeroCompleto = numeroLimpo.startsWith('55') ? numeroLimpo : `55${numeroLimpo}`;
-                              const url = `https://wa.me/${numeroCompleto}`;
-                              Linking.openURL(url).catch(() => {
-                                Toast.show({
-                                  type: 'error',
-                                  text1: 'Erro ao abrir WhatsApp',
-                                  position: 'top',
-                                  topOffset: 60,
-                                });
-                              });
-                              setContatoModalVisible(false);
-                            },
-                          }))
-                        );
-                        setContatoModalVisible(true);
-                      }
-                    }}
-                    className="bg-emerald-500 p-2.5 rounded-full active:bg-emerald-600"
-                  >
-                    <Ionicons name="logo-whatsapp" size={18} color="white" />
-                  </TouchableOpacity>
-                )}
-                {(instalacao.coordenadas || instalacao.endereco) && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      const temCoordenadas = instalacao.coordenadas && instalacao.coordenadas !== '-38.5748,-3.741162,0';
-                      const temEndereco = instalacao.endereco;
+              {/* Informações Principais em Grid */}
+              <View className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                <View className="flex-row justify-between mb-2">
+                  <View className="flex-1">
+                    <Text className="text-gray-500 text-xs font-medium mb-1">Técnico</Text>
+                    <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
+                      {instalacao.tecnico || 'Não atribuído'}
+                    </Text>
+                  </View>
+                  {instalacao.status === 'aberto' && (
+                    <TouchableOpacity
+                      onPress={() => abrirEdicao('tecnico', instalacao.tecnico || '')}
+                      className="bg-blue-600 w-8 h-8 rounded-lg ml-2 items-center justify-center"
+                    >
+                      <Ionicons name="pencil" size={14} color="white" />
+                    </TouchableOpacity>
+                  )}
+                </View>
 
-                      const navegarPorCoordenadas = () => {
-                        try {
-                          const parts = instalacao.coordenadas!.split(',');
-                          if (parts.length < 2) {
-                            Toast.show({
-                              type: 'error',
-                              text1: 'Coordenadas inválidas',
-                              position: 'top',
-                              topOffset: 60,
-                            });
-                            return;
-                          }
+                <View className="h-px bg-gray-200 my-2" />
 
-                          const firstValue = parseFloat(parts[0]?.trim() || '');
-                          const secondValue = parseFloat(parts[1]?.trim() || '');
-                          
-                          if (isNaN(firstValue) || isNaN(secondValue)) {
-                            Toast.show({
-                              type: 'error',
-                              text1: 'Coordenadas inválidas',
-                              position: 'top',
-                              topOffset: 60,
-                            });
-                            return;
-                          }
-                          
-                          const lat = Math.abs(firstValue) < Math.abs(secondValue) ? firstValue : secondValue;
-                          const lng = Math.abs(firstValue) < Math.abs(secondValue) ? secondValue : firstValue;
-                          
-                          const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-                          Linking.openURL(url).catch(() => {
-                            Toast.show({
-                              type: 'error',
-                              text1: 'Erro ao abrir mapa',
-                              position: 'top',
-                              topOffset: 60,
-                            });
-                          });
-                        } catch (error) {
-                          Toast.show({
-                            type: 'error',
-                            text1: 'Erro ao abrir mapa',
-                            position: 'top',
-                            topOffset: 60,
-                          });
-                        }
-                      };
-
-                      const navegarPorEndereco = () => {
-                        const enderecoCompleto = [
-                          instalacao.endereco,
-                          instalacao.numero,
-                          instalacao.bairro,
-                          instalacao.cidade,
-                          instalacao.estado,
-                        ]
-                          .filter(Boolean)
-                          .join(', ');
-                        
-                        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoCompleto)}`;
-                        Linking.openURL(url).catch(() => {
-                          Toast.show({
-                            type: 'error',
-                            text1: 'Erro ao abrir mapa',
-                            position: 'top',
-                            topOffset: 60,
-                          });
-                        });
-                      };
-
-                      if (temCoordenadas && temEndereco) {
-                        // Mostra modal para escolher entre GPS e endereço
-                        setContatoModalTitle('Navegar para');
-                        setContatoOptions([
-                          {
-                            label: 'Por Coordenadas GPS',
-                            value: instalacao.coordenadas || '',
-                            icon: 'navigate',
-                            action: () => {
-                              navegarPorCoordenadas();
-                              setContatoModalVisible(false);
-                            },
-                          },
-                          {
-                            label: 'Por Endereço',
-                            value: [instalacao.endereco, instalacao.numero, instalacao.bairro].filter(Boolean).join(', '),
-                            icon: 'location',
-                            action: () => {
-                              navegarPorEndereco();
-                              setContatoModalVisible(false);
-                            },
-                          },
-                        ]);
-                        setContatoModalVisible(true);
-                      } else if (temCoordenadas) {
-                        navegarPorCoordenadas();
-                      } else if (temEndereco) {
-                        navegarPorEndereco();
-                      }
-                    }}
-                    className="bg-blue-500 p-2.5 rounded-full active:bg-blue-600"
-                  >
-                    <Ionicons name="location" size={18} color="white" />
-                  </TouchableOpacity>
-                )}
+                <View className="flex-row justify-between">
+                  <View className="flex-1">
+                    <Text className="text-gray-500 text-xs font-medium mb-1">Visita Agendada</Text>
+                    <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
+                      {instalacao.visita ? formatarDataCompleta(instalacao.visita) : 'Não agendada'}
+                    </Text>
+                  </View>
+                  {instalacao.status === 'aberto' && (
+                    <TouchableOpacity
+                      onPress={() => abrirEdicao('visita', instalacao.visita || '')}
+                      className="bg-blue-600 w-8 h-8 rounded-lg ml-2 items-center justify-center"
+                    >
+                      <Ionicons name="calendar-outline" size={14} color="white" />
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </View>
 
-            {/* Dados da Instalação do Cliente */}
-            <View className="bg-white rounded-lg p-4 mb-4 shadow-sm">
-              <View className="flex-row items-center justify-between mb-4 pb-3 border-b border-gray-100">
-                <Text className="text-base text-gray-900 font-bold">Dados da Instalação</Text>
-              </View>
-
-              <View className="gap-3">
-                {/* Cliente - Clicável */}
+            {/* AÇÕES RÁPIDAS - Cards Horizontais */}
+            <View className="flex-row mb-4 gap-2">
+              {/* Ligar */}
+              {(instalacao.celular || instalacao.telefone) && (
                 <TouchableOpacity
-                  onPress={() => router.push(`/detalhes/instalacao/cliente-info?id=${instalacao.uuid_solic}`)}
-                  className="flex-row justify-between items-center py-2 border-b border-gray-100 active:bg-gray-50"
+                  onPress={() => {
+                    const telefones = [
+                      instalacao.celular && { label: 'Celular', numero: instalacao.celular },
+                      instalacao.telefone && { label: 'Telefone', numero: instalacao.telefone },
+                      instalacao.celular2 && { label: 'Celular 2', numero: instalacao.celular2 },
+                    ].filter(Boolean) as Array<{ label: string; numero: string }>;
+
+                    if (telefones.length === 1) {
+                      const numeroLimpo = telefones[0].numero.replace(/\D/g, '');
+                      const url = `tel:${numeroLimpo}`;
+                      Linking.openURL(url).catch(() => {
+                        Toast.show({
+                          type: 'error',
+                          text1: 'Erro ao ligar',
+                          position: 'top',
+                          topOffset: 60,
+                        });
+                      });
+                    } else {
+                      setContatoModalTitle('Selecionar Telefone');
+                      setContatoOptions(
+                        telefones.map(t => ({
+                          label: t.label,
+                          value: t.numero,
+                          icon: 'call',
+                          action: () => {
+                            const numeroLimpo = t.numero.replace(/\D/g, '');
+                            const url = `tel:${numeroLimpo}`;
+                            Linking.openURL(url).catch(() => {
+                              Toast.show({
+                                type: 'error',
+                                text1: 'Erro ao ligar',
+                                position: 'top',
+                                topOffset: 60,
+                              });
+                            });
+                            setContatoModalVisible(false);
+                          },
+                        }))
+                      );
+                      setContatoModalVisible(true);
+                    }
+                  }}
+                  className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-green-100 active:scale-95"
+                  style={{ transform: [{ scale: 1 }] }}
                 >
-                  <Text className="text-gray-600 text-sm">Cliente</Text>
-                  <View className="flex-row items-center gap-2 flex-1 justify-end ml-4">
-                    <Text className="text-gray-900 text-sm font-medium text-right flex-1">
-                      {instalacao.nome}
-                    </Text>
-                    <Ionicons name="chevron-forward" size={16} color="#6b7280" />
+                  <View className="items-center">
+                    <View className="bg-green-500 w-10 h-10 rounded-full items-center justify-center mb-2">
+                      <Ionicons name="call" size={18} color="white" />
+                    </View>
+                    <Text className="text-green-700 font-bold text-xs">Ligar</Text>
                   </View>
                 </TouchableOpacity>
+              )}
 
+              {/* WhatsApp */}
+              {(instalacao.celular || instalacao.telefone || instalacao.celular2) && (
+                <TouchableOpacity
+                  onPress={() => {
+                    const celulares = [
+                      instalacao.celular && { label: 'Celular', numero: instalacao.celular },
+                      instalacao.telefone && { label: 'Telefone', numero: instalacao.telefone },
+                      instalacao.celular2 && { label: 'Celular 2', numero: instalacao.celular2 },
+                    ].filter(Boolean) as Array<{ label: string; numero: string }>;
+
+                    if (celulares.length === 1) {
+                      const numeroLimpo = celulares[0].numero.replace(/\D/g, '');
+                      const numeroCompleto = numeroLimpo.startsWith('55') ? numeroLimpo : `55${numeroLimpo}`;
+                      const url = `https://wa.me/${numeroCompleto}`;
+                      Linking.openURL(url).catch(() => {
+                        Toast.show({
+                          type: 'error',
+                          text1: 'Erro ao abrir WhatsApp',
+                          position: 'top',
+                          topOffset: 60,
+                        });
+                      });
+                    } else {
+                      setContatoModalTitle('Selecionar Número para WhatsApp');
+                      setContatoOptions(
+                        celulares.map(c => ({
+                          label: c.label,
+                          value: c.numero,
+                          icon: 'logo-whatsapp',
+                          action: () => {
+                            const numeroLimpo = c.numero.replace(/\D/g, '');
+                            const numeroCompleto = numeroLimpo.startsWith('55') ? numeroLimpo : `55${numeroLimpo}`;
+                            const url = `https://wa.me/${numeroCompleto}`;
+                            Linking.openURL(url).catch(() => {
+                              Toast.show({
+                                type: 'error',
+                                text1: 'Erro ao abrir WhatsApp',
+                                position: 'top',
+                                topOffset: 60,
+                              });
+                            });
+                            setContatoModalVisible(false);
+                          },
+                        }))
+                      );
+                      setContatoModalVisible(true);
+                    }
+                  }}
+                  className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-emerald-100 active:scale-95"
+                  style={{ transform: [{ scale: 1 }] }}
+                >
+                  <View className="items-center">
+                    <View className="bg-emerald-500 w-10 h-10 rounded-full items-center justify-center mb-2">
+                      <Ionicons name="logo-whatsapp" size={18} color="white" />
+                    </View>
+                    <Text className="text-emerald-700 font-bold text-xs">WhatsApp</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+
+              {/* Navegar */}
+              {(instalacao.coordenadas || instalacao.endereco) && (
+                <TouchableOpacity
+                  onPress={() => {
+                    const temCoordenadas = instalacao.coordenadas && instalacao.coordenadas !== '-38.5748,-3.741162,0';
+                    const temEndereco = instalacao.endereco;
+
+                    const navegarPorCoordenadas = () => {
+                      try {
+                        const parts = instalacao.coordenadas!.split(',');
+                        if (parts.length < 2) {
+                          Toast.show({
+                            type: 'error',
+                            text1: 'Coordenadas inválidas',
+                            position: 'top',
+                            topOffset: 60,
+                          });
+                          return;
+                        }
+
+                        const firstValue = parseFloat(parts[0]?.trim() || '');
+                        const secondValue = parseFloat(parts[1]?.trim() || '');
+
+                        if (isNaN(firstValue) || isNaN(secondValue)) {
+                          Toast.show({
+                            type: 'error',
+                            text1: 'Coordenadas inválidas',
+                            position: 'top',
+                            topOffset: 60,
+                          });
+                          return;
+                        }
+
+                        const lat = Math.abs(firstValue) < Math.abs(secondValue) ? firstValue : secondValue;
+                        const lng = Math.abs(firstValue) < Math.abs(secondValue) ? secondValue : firstValue;
+
+                        const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+                        Linking.openURL(url).catch(() => {
+                          Toast.show({
+                            type: 'error',
+                            text1: 'Erro ao abrir mapa',
+                            position: 'top',
+                            topOffset: 60,
+                          });
+                        });
+                      } catch (error) {
+                        Toast.show({
+                          type: 'error',
+                          text1: 'Erro ao abrir mapa',
+                          position: 'top',
+                          topOffset: 60,
+                        });
+                      }
+                    };
+
+                    const navegarPorEndereco = () => {
+                      const enderecoCompleto = [
+                        instalacao.endereco,
+                        instalacao.numero,
+                        instalacao.bairro,
+                        instalacao.cidade,
+                        instalacao.estado,
+                      ]
+                        .filter(Boolean)
+                        .join(', ');
+
+                      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoCompleto)}`;
+                      Linking.openURL(url).catch(() => {
+                        Toast.show({
+                          type: 'error',
+                          text1: 'Erro ao abrir mapa',
+                          position: 'top',
+                          topOffset: 60,
+                        });
+                      });
+                    };
+
+                    if (temCoordenadas && temEndereco) {
+                      setContatoModalTitle('Navegar para');
+                      setContatoOptions([
+                        {
+                          label: 'Por Coordenadas GPS',
+                          value: instalacao.coordenadas || '',
+                          icon: 'navigate',
+                          action: () => {
+                            navegarPorCoordenadas();
+                            setContatoModalVisible(false);
+                          },
+                        },
+                        {
+                          label: 'Por Endereço',
+                          value: [instalacao.endereco, instalacao.numero, instalacao.bairro].filter(Boolean).join(', '),
+                          icon: 'location',
+                          action: () => {
+                            navegarPorEndereco();
+                            setContatoModalVisible(false);
+                          },
+                        },
+                      ]);
+                      setContatoModalVisible(true);
+                    } else if (temCoordenadas) {
+                      navegarPorCoordenadas();
+                    } else if (temEndereco) {
+                      navegarPorEndereco();
+                    }
+                  }}
+                  className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-blue-100 active:scale-95"
+                  style={{ transform: [{ scale: 1 }] }}
+                >
+                  <View className="items-center">
+                    <View className="bg-blue-500 w-10 h-10 rounded-full items-center justify-center mb-2">
+                      <Ionicons name="navigate" size={18} color="white" />
+                    </View>
+                    <Text className="text-blue-700 font-bold text-xs">Navegar</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* SEÇÃO TÉCNICA PRIORITÁRIA */}
+            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md border border-blue-50">
+              <View className="flex-row items-center mb-4">
+                <View className="bg-blue-100 w-10 h-10 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="settings-outline" size={20} color="#3b82f6" />
+                </View>
+                <Text className="text-base text-gray-900 font-bold flex-1">Configuração Técnica</Text>
+              </View>
+
+              {/* Plano - Destaque */}
+              <TouchableOpacity
+                onPress={() => instalacao.status === 'aberto' && setPlanoModalVisible(true)}
+                disabled={instalacao.status !== 'aberto'}
+                className="bg-blue-50 rounded-xl p-4 mb-4 border-2 border-blue-200"
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1">
+                    <Text className="text-xs text-blue-600 font-bold uppercase tracking-wide mb-1">Plano Contratado</Text>
+                    <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
+                      {instalacao.plano || 'Não informado'}
+                    </Text>
+                  </View>
+                  {instalacao.status === 'aberto' && (
+                    <View className="bg-blue-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
+                      <Ionicons name="pencil" size={14} color="white" />
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+
+              {/* Grid de Informações Técnicas */}
+              <View className="gap-3">
+                <View className="bg-gray-50 rounded-xl p-3">
+                  <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Credenciais de Acesso</Text>
+
+                  <EditableInfoRow
+                    label="Login"
+                    value={instalacao.login || 'Não configurado'}
+                    onEdit={() => abrirEdicao('login', instalacao.login || '')}
+                    editable={instalacao.status === 'aberto'}
+                  />
+
+                  {instalacao.senha && (
+                    <View className="pt-2">
+                      <InfoRow label="Senha" value="••••••••" />
+                    </View>
+                  )}
+                </View>
+
+                <View className="bg-gray-50 rounded-xl p-3">
+                  <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Rede e Conectividade</Text>
+
+                  <EditableInfoRow
+                    label="IP"
+                    value={instalacao.ip || 'Não configurado'}
+                    onEdit={() => abrirEdicao('ip', instalacao.ip || '')}
+                    editable={instalacao.status === 'aberto'}
+                  />
+
+                  <View className="pt-2">
+                    <EditableInfoRow
+                      label="MAC Address"
+                      value={instalacao.mac || 'Não configurado'}
+                      onEdit={() => abrirEdicao('mac', instalacao.mac || '')}
+                      editable={instalacao.status === 'aberto'}
+                    />
+                  </View>
+
+                  {instalacao.ramal && (
+                    <View className="pt-2">
+                      <InfoRow label="Ramal" value={instalacao.ramal} />
+                    </View>
+                  )}
+
+                  {instalacao.pool6 && (
+                    <View className="pt-2">
+                      <InfoRow label="IPv6 Pool" value={instalacao.pool6} />
+                    </View>
+                  )}
+                </View>
+
+                <View className="bg-gray-50 rounded-xl p-3">
+                  <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Equipamento</Text>
+
+                  <EditableInfoRow
+                    label="Comodato"
+                    value={instalacao.comodato === 'sim' ? '✓ Sim' : '✗ Não'}
+                    onEdit={() => abrirEdicao('comodato', instalacao.comodato || '')}
+                    editable={instalacao.status === 'aberto'}
+                  />
+
+                  <View className="pt-2">
+                    <EditableInfoRow
+                      label="Modelo"
+                      value={instalacao.equipamento || 'Não especificado'}
+                      onEdit={() => abrirEdicao('equipamento', instalacao.equipamento || '')}
+                      editable={instalacao.status === 'aberto'}
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* INFORMAÇÕES ADMINISTRATIVAS */}
+            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
+              <View className="flex-row items-center mb-4">
+                <View className="bg-purple-100 w-10 h-10 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="document-text-outline" size={20} color="#9333ea" />
+                </View>
+                <Text className="text-base text-gray-900 font-bold flex-1">Informações Administrativas</Text>
+              </View>
+
+              <View className="gap-2">
                 {instalacao.termo && (
                   <InfoRow label="Termo" value={`#${instalacao.termo}`} />
                 )}
@@ -558,23 +740,9 @@ export default function InstalacaoDetalhesScreen() {
                   <InfoRow label="Atendente" value={instalacao.login_atend} />
                 )}
 
-                <EditableInfoRow
-                  label="Instalador Técnico"
-                  value={instalacao.tecnico || 'Não atribuído'}
-                  onEdit={() => abrirEdicao('tecnico', instalacao.tecnico || '')}
-                  editable={instalacao.status === 'aberto'}
-                />
-
                 {instalacao.disp && (
                   <InfoRow label="Disponibilidade" value={instalacao.disp === 'sim' ? 'Sim' : 'Não'} />
                 )}
-
-                <EditableInfoRow
-                  label="Visita Agendada"
-                  value={instalacao.visita ? formatarDataCompleta(instalacao.visita) : 'Não agendada'}
-                  onEdit={() => abrirEdicao('visita', instalacao.visita || '')}
-                  editable={instalacao.status === 'aberto'}
-                />
 
                 {instalacao.visitado && (
                   <InfoRow label="Visitado" value={instalacao.visitado === 'sim' ? 'Sim' : 'Não'} />
@@ -586,112 +754,21 @@ export default function InstalacaoDetalhesScreen() {
               </View>
             </View>
 
-            {/* Informações Técnicas */}
-            <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-              <Text className="text-xs text-gray-500 uppercase font-semibold mb-3">Informações Técnicas</Text>
-
-              <View className="gap-3">
-                {/* Conexão */}
-                <EditableInfoRow
-                  label="Login"
-                  value={instalacao.login || 'Não informado'}
-                  onEdit={() => abrirEdicao('login', instalacao.login || '')}
-                  editable={instalacao.status === 'aberto'}
-                />
-
-                {instalacao.senha && (
-                  <InfoRow label="Senha" value="••••••••" />
-                )}
-
-                <EditableInfoRow
-                  label="Plano"
-                  value={instalacao.plano || 'Não informado'}
-                  onEdit={() => setPlanoModalVisible(true)}
-                  editable={instalacao.status === 'aberto'}
-                />
-
-                {/* Ramal */}
-                {instalacao.ramal && (
-                  <InfoRow label="Ramal Concentrador" value={instalacao.ramal} />
-                )}
-
-                {/* IPs */}
-                <EditableInfoRow
-                  label="Endereço IP"
-                  value={instalacao.ip || 'Não informado'}
-                  onEdit={() => abrirEdicao('ip', instalacao.ip || '')}
-                  editable={instalacao.status === 'aberto'}
-                />
-
-                {instalacao.pool6 && (
-                  <InfoRow label="POOL PD IPv6" value={instalacao.pool6} />
-                )}
-
-                {/* MAC */}
-                <EditableInfoRow
-                  label="MAC"
-                  value={instalacao.mac || 'Não informado'}
-                  onEdit={() => abrirEdicao('mac', instalacao.mac || '')}
-                  editable={instalacao.status === 'aberto'}
-                />
-
-                {/* Equipamentos */}
-                <EditableInfoRow
-                  label="Equipamento em Comodato"
-                  value={instalacao.comodato === 'sim' ? 'Sim' : 'Não'}
-                  onEdit={() => abrirEdicao('comodato', instalacao.comodato || '')}
-                  editable={instalacao.status === 'aberto'}
-                />
-
-                <EditableInfoRow
-                  label="Equipamento"
-                  value={instalacao.equipamento || 'Não informado'}
-                  onEdit={() => abrirEdicao('equipamento', instalacao.equipamento || '')}
-                  editable={instalacao.status === 'aberto'}
-                />
-              </View>
-            </View>
-
-            {/* Dados de Finalização */}
-            {instalacao.status === 'concluido' && (
-              <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-                <Text className="text-xs text-gray-500 uppercase font-semibold mb-3">Dados de Finalização</Text>
-
-                <View className="gap-3">
-                  {instalacao.instalado && (
-                    <InfoRow label="Instalado" value={instalacao.instalado === 'sim' ? 'Sim' : 'Não'} />
-                  )}
-
-                  {instalacao.datainst && (
-                    <InfoRow label="Data de Instalação" value={formatarDataCompleta(instalacao.datainst)} />
-                  )}
-
-                  {instalacao.valor && (
-                    <InfoRow label="Valor" value={`R$ ${instalacao.valor}`} />
-                  )}
-
-                  {instalacao.visitado && (
-                    <InfoRow label="Visitado" value={instalacao.visitado === 'sim' ? 'Sim' : 'Não'} />
-                  )}
-
-                  {instalacao.data_feito && (
-                    <InfoRow label="Data de Conclusão" value={formatarDataCompleta(instalacao.data_feito)} />
-                  )}
-
-                  {instalacao.nome_feito && (
-                    <InfoRow label="Concluído por" value={instalacao.nome_feito} />
-                  )}
+            {/* VALORES E TAXAS */}
+            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
+              <View className="flex-row items-center mb-4">
+                <View className="bg-green-100 w-10 h-10 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="cash-outline" size={20} color="#10b981" />
                 </View>
+                <Text className="text-base text-gray-900 font-bold flex-1">Valores e Taxas</Text>
               </View>
-            )}
 
-            {/* Extras nas Mensalidades */}
-            <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-              <Text className="text-xs text-gray-500 uppercase font-semibold mb-3">Extras nas Mensalidades</Text>
-
-              <View className="gap-3">
+              <View className="gap-2">
                 {instalacao.adesao && (
-                  <InfoRow label="Taxa de Adesão" value={`R$ ${instalacao.adesao}`} />
+                  <View className="bg-green-50 rounded-xl p-3 mb-2">
+                    <Text className="text-xs text-green-600 font-semibold mb-1">Taxa de Adesão</Text>
+                    <Text className="text-base font-bold text-green-700">R$ {instalacao.adesao}</Text>
+                  </View>
                 )}
 
                 <EditableInfoRow
@@ -703,42 +780,89 @@ export default function InstalacaoDetalhesScreen() {
               </View>
             </View>
 
-            {/* Observações - Sempre visível quando aberto, ou quando concluído e tem conteúdo */}
+            {/* DADOS DE FINALIZAÇÃO (somente se concluído) */}
+            {instalacao.status === 'concluido' && (
+              <View className="bg-gray-50 rounded-2xl p-5 mb-4 border-2 border-gray-200">
+                <View className="flex-row items-center mb-4">
+                  <View className="bg-gray-700 w-10 h-10 rounded-full items-center justify-center mr-3">
+                    <Ionicons name="checkmark-done-outline" size={20} color="white" />
+                  </View>
+                  <Text className="text-base text-gray-900 font-bold flex-1">Finalização</Text>
+                </View>
+
+                <View className="gap-2">
+                  {instalacao.instalado && (
+                    <InfoRow label="Instalado" value={instalacao.instalado === 'sim' ? '✓ Sim' : '✗ Não'} />
+                  )}
+
+                  {instalacao.datainst && (
+                    <InfoRow label="Data de Instalação" value={formatarDataCompleta(instalacao.datainst)} />
+                  )}
+
+                  {instalacao.valor && (
+                    <InfoRow label="Valor Cobrado" value={`R$ ${instalacao.valor}`} />
+                  )}
+
+                  {instalacao.data_feito && (
+                    <InfoRow label="Concluído em" value={formatarDataCompleta(instalacao.data_feito)} />
+                  )}
+
+                  {instalacao.nome_feito && (
+                    <InfoRow label="Concluído por" value={instalacao.nome_feito} />
+                  )}
+                </View>
+              </View>
+            )}
+
+            {/* OBSERVAÇÕES */}
             {(instalacao.status === 'aberto' || instalacao.obs) && (
               <TouchableOpacity
                 onPress={() => abrirEdicao('obs', instalacao.obs || '')}
                 disabled={instalacao.status !== 'aberto'}
-                className="bg-white rounded-lg p-4 mb-3 shadow-sm"
+                className="bg-white rounded-2xl p-5 mb-4 shadow-md"
               >
                 <View className="flex-row items-start justify-between">
-                  <View className="flex-1">
-                    <Text className="text-xs text-gray-500 uppercase font-semibold mb-2">
-                      Observações
-                    </Text>
-                    <Text className={`leading-5 ${instalacao.obs ? 'text-gray-800' : 'text-gray-400 italic'}`}>
-                      {instalacao.obs || 'Nenhuma observação - Toque para adicionar'}
-                    </Text>
+                  <View className="flex-row items-start flex-1">
+                    <View className={`${instalacao.obs ? 'bg-amber-100' : 'bg-gray-100'} w-10 h-10 rounded-full items-center justify-center mr-3 mt-0.5`}>
+                      <Ionicons
+                        name={instalacao.obs ? "chatbox-ellipses-outline" : "add-circle-outline"}
+                        size={20}
+                        color={instalacao.obs ? "#f59e0b" : "#9ca3af"}
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
+                        Observações
+                      </Text>
+                      <Text className={`text-sm leading-5 ${instalacao.obs ? 'text-gray-800' : 'text-gray-400 italic'}`}>
+                        {instalacao.obs || 'Toque para adicionar observações sobre esta instalação'}
+                      </Text>
+                    </View>
                   </View>
                   {instalacao.status === 'aberto' && (
-                    <Ionicons
-                      name={instalacao.obs ? "create-outline" : "add-circle-outline"}
-                      size={18}
-                      color={instalacao.obs ? "#6b7280" : "#10b981"}
-                      className="ml-2"
-                    />
+                    <View className="ml-2 mt-1">
+                      <Ionicons
+                        name="create-outline"
+                        size={20}
+                        color="#6b7280"
+                      />
+                    </View>
                   )}
                 </View>
               </TouchableOpacity>
             )}
 
-            {/* Botão de Ação */}
+            {/* BOTÃO DE CONCLUSÃO */}
             {instalacao.status === 'aberto' && (
               <TouchableOpacity
                 onPress={() => setFinalizacaoModalVisible(true)}
                 disabled={fechaInstalacaoMutation.isPending}
-                className="bg-green-600 py-3.5 rounded-lg shadow-sm active:opacity-90"
+                className="bg-green-600 py-4 rounded-2xl shadow-lg mb-6"
               >
-                <Text className="text-white font-semibold text-center">Concluir Instalação</Text>
+                <View className="flex-row items-center justify-center">
+                  <Ionicons name="checkmark-circle" size={20} color="white" />
+                  <Text className="text-white font-bold text-base ml-2">Concluir Instalação</Text>
+                </View>
               </TouchableOpacity>
             )}
           </View>
@@ -754,7 +878,7 @@ export default function InstalacaoDetalhesScreen() {
           <View className="flex-1 bg-black/50 justify-end">
             <View className="bg-white rounded-t-3xl p-6">
               <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-xl font-bold text-gray-800">
+                <Text className="text-base font-bold text-gray-800">
                   Editar {getFieldLabel()}
                 </Text>
                 <TouchableOpacity onPress={() => setEditModalVisible(false)}>
@@ -809,7 +933,7 @@ export default function InstalacaoDetalhesScreen() {
             <View className="flex-1 bg-black/50 justify-end">
               <View className="bg-white rounded-t-3xl p-6">
                 <View className="flex-row items-center justify-between mb-4">
-                  <Text className="text-xl font-bold text-gray-800">
+                  <Text className="text-base font-bold text-gray-800">
                     Editar Data da Visita
                   </Text>
                   <TouchableOpacity onPress={() => setShowDatePicker(false)}>
@@ -869,7 +993,7 @@ export default function InstalacaoDetalhesScreen() {
           <View className="flex-1 bg-black/50 justify-end">
             <View className="bg-white rounded-t-3xl p-6" style={{ maxHeight: '80%' }}>
               <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-xl font-bold text-gray-800">Selecionar Plano</Text>
+                <Text className="text-base font-bold text-gray-800">Selecionar Plano</Text>
                 <TouchableOpacity onPress={() => setPlanoModalVisible(false)}>
                   <Ionicons name="close" size={24} color="#6b7280" />
                 </TouchableOpacity>
@@ -975,7 +1099,7 @@ export default function InstalacaoDetalhesScreen() {
           <View className="flex-1 bg-black/50 justify-end">
             <View className="bg-white rounded-t-3xl p-6" style={{ maxHeight: '80%' }}>
               <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-xl font-bold text-gray-800">Selecionar Técnico</Text>
+                <Text className="text-base font-bold text-gray-800">Selecionar Técnico</Text>
                 <TouchableOpacity onPress={() => setFuncionarioModalVisible(false)}>
                   <Ionicons name="close" size={24} color="#6b7280" />
                 </TouchableOpacity>
@@ -1082,7 +1206,7 @@ export default function InstalacaoDetalhesScreen() {
           <View className="flex-1 bg-black/50 justify-end">
             <View className="bg-white rounded-t-3xl p-6">
               <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-xl font-bold text-gray-800">Comodato</Text>
+                <Text className="text-base font-bold text-gray-800">Comodato</Text>
                 <TouchableOpacity onPress={() => setComodatoModalVisible(false)}>
                   <Ionicons name="close" size={24} color="#6b7280" />
                 </TouchableOpacity>
@@ -1201,7 +1325,7 @@ export default function InstalacaoDetalhesScreen() {
           <View className="flex-1 bg-black/50 justify-end">
             <View className="bg-white rounded-t-3xl p-6">
               <View className="flex-row items-center justify-between mb-6">
-                <Text className="text-xl font-bold text-gray-900">Finalizar Instalação</Text>
+                <Text className="text-base font-bold text-gray-900">Finalizar Instalação</Text>
                 <TouchableOpacity onPress={() => setFinalizacaoModalVisible(false)}>
                   <Ionicons name="close" size={24} color="#6b7280" />
                 </TouchableOpacity>
@@ -1217,10 +1341,10 @@ export default function InstalacaoDetalhesScreen() {
                       className={`flex-1 p-4 rounded-lg border-2 ${visitadoSim ? 'bg-blue-50 border-blue-500' : 'bg-gray-50 border-gray-200'}`}
                     >
                       <View className="items-center">
-                        <Ionicons 
-                          name="checkmark-circle" 
-                          size={32} 
-                          color={visitadoSim ? "#3b82f6" : "#9ca3af"} 
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={32}
+                          color={visitadoSim ? "#3b82f6" : "#9ca3af"}
                         />
                         <Text className={`mt-2 font-semibold ${visitadoSim ? 'text-blue-700' : 'text-gray-600'}`}>
                           Sim
@@ -1233,10 +1357,10 @@ export default function InstalacaoDetalhesScreen() {
                       className={`flex-1 p-4 rounded-lg border-2 ${!visitadoSim ? 'bg-gray-50 border-gray-500' : 'bg-gray-50 border-gray-200'}`}
                     >
                       <View className="items-center">
-                        <Ionicons 
-                          name="close-circle" 
-                          size={32} 
-                          color={!visitadoSim ? "#6b7280" : "#9ca3af"} 
+                        <Ionicons
+                          name="close-circle"
+                          size={32}
+                          color={!visitadoSim ? "#6b7280" : "#9ca3af"}
                         />
                         <Text className={`mt-2 font-semibold ${!visitadoSim ? 'text-gray-700' : 'text-gray-600'}`}>
                           Não
@@ -1256,10 +1380,10 @@ export default function InstalacaoDetalhesScreen() {
                         className={`flex-1 p-4 rounded-lg border-2 ${instaladoSim ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-200'}`}
                       >
                         <View className="items-center">
-                          <Ionicons 
-                            name="checkmark-circle" 
-                            size={32} 
-                            color={instaladoSim ? "#10b981" : "#9ca3af"} 
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={32}
+                            color={instaladoSim ? "#10b981" : "#9ca3af"}
                           />
                           <Text className={`mt-2 font-semibold ${instaladoSim ? 'text-green-700' : 'text-gray-600'}`}>
                             Sim
@@ -1272,10 +1396,10 @@ export default function InstalacaoDetalhesScreen() {
                         className={`flex-1 p-4 rounded-lg border-2 ${!instaladoSim ? 'bg-red-50 border-red-500' : 'bg-gray-50 border-gray-200'}`}
                       >
                         <View className="items-center">
-                          <Ionicons 
-                            name="close-circle" 
-                            size={32} 
-                            color={!instaladoSim ? "#ef4444" : "#9ca3af"} 
+                          <Ionicons
+                            name="close-circle"
+                            size={32}
+                            color={!instaladoSim ? "#ef4444" : "#9ca3af"}
                           />
                           <Text className={`mt-2 font-semibold ${!instaladoSim ? 'text-red-700' : 'text-gray-600'}`}>
                             Não
@@ -1349,11 +1473,11 @@ export default function InstalacaoDetalhesScreen() {
                       dados.instalado = 'nao';
                       dados.datainst = undefined;
                       dados.valor = undefined;
-                    } 
+                    }
                     // Se visitou, verifica se instalou
                     else {
                       dados.instalado = instaladoSim ? 'sim' : 'nao';
-                      
+
                       // Se não instalou, não tem data nem valor
                       if (!instaladoSim) {
                         dados.datainst = undefined;
@@ -1441,20 +1565,20 @@ export default function InstalacaoDetalhesScreen() {
           animationType="fade"
           onRequestClose={() => setContatoModalVisible(false)}
         >
-          <Pressable 
+          <Pressable
             className="flex-1 bg-black/50 justify-end"
             onPress={() => setContatoModalVisible(false)}
           >
-            <Pressable 
+            <Pressable
               className="bg-white rounded-t-3xl p-6 pb-8"
               onPress={(e) => e.stopPropagation()}
             >
               <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-6" />
-              
-              <Text className="text-xl font-bold text-gray-900 mb-4">
+
+              <Text className="text-base font-bold text-gray-900 mb-4">
                 {contatoModalTitle}
               </Text>
-              
+
               <View className="gap-3">
                 {contatoOptions.map((option, index) => (
                   <TouchableOpacity
@@ -1463,13 +1587,12 @@ export default function InstalacaoDetalhesScreen() {
                     className="flex-row items-center justify-between bg-gray-50 p-4 rounded-xl active:bg-gray-100"
                   >
                     <View className="flex-row items-center gap-3 flex-1">
-                      <View className={`w-10 h-10 rounded-full items-center justify-center ${
-                        option.icon === 'call' ? 'bg-green-100' : 'bg-emerald-100'
-                      }`}>
-                        <Ionicons 
-                          name={option.icon as any} 
-                          size={20} 
-                          color={option.icon === 'call' ? '#10b981' : '#059669'} 
+                      <View className={`w-10 h-10 rounded-full items-center justify-center ${option.icon === 'call' ? 'bg-green-100' : 'bg-emerald-100'
+                        }`}>
+                        <Ionicons
+                          name={option.icon as any}
+                          size={20}
+                          color={option.icon === 'call' ? '#10b981' : '#059669'}
                         />
                       </View>
                       <View className="flex-1">
@@ -1481,7 +1604,7 @@ export default function InstalacaoDetalhesScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
-              
+
               <TouchableOpacity
                 onPress={() => setContatoModalVisible(false)}
                 className="mt-6 bg-gray-100 p-4 rounded-xl active:bg-gray-200"
