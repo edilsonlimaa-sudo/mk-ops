@@ -1,10 +1,11 @@
+import { EditModal } from '@/components/instalacao/EditModal';
 import { EditableInfoRow, InfoRow } from '@/components/instalacao/InfoRows';
 import { useEditaInstalacao, useInstalacaoDetail } from '@/hooks/instalacao';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
@@ -208,7 +209,7 @@ export default function ClienteInstalacaoScreen() {
                 {/* Contato */}
                 <View className="bg-gray-50 rounded-xl p-3">
                   <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Contato</Text>
-                  
+
                   <EditableInfoRow
                     label="E-mail"
                     value={instalacao.email || 'Não informado'}
@@ -267,7 +268,7 @@ export default function ClienteInstalacaoScreen() {
               <View className="gap-3">
                 <View className="bg-gray-50 rounded-xl p-3">
                   <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Localização</Text>
-                  
+
                   <EditableInfoRow
                     label="CEP"
                     value={instalacao.cep || 'Não informado'}
@@ -333,7 +334,7 @@ export default function ClienteInstalacaoScreen() {
                 {(instalacao.coordenadas || instalacao.dot_ref) && (
                   <View className="bg-gray-50 rounded-xl p-3">
                     <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Referências</Text>
-                    
+
                     {instalacao.coordenadas && (
                       <EditableInfoRow
                         label="Coordenadas GPS"
@@ -438,58 +439,21 @@ export default function ClienteInstalacaoScreen() {
               </View>
             </View>
           </View>
-      </ScrollView>
+        </ScrollView>
 
-      {/* Modal de Edição de Texto */}
-      <Modal
+        {/* Modal de Edição de Texto */}
+        <EditModal
           visible={editModalVisible}
-          animationType="slide"
-          transparent
-          onRequestClose={() => setEditModalVisible(false)}
-        >
-          <View className="flex-1 bg-black/50 justify-end">
-            <View className="bg-white rounded-t-3xl p-6">
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-base font-bold text-gray-800">
-                  Editar {getFieldLabel()}
-                </Text>
-                <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                  <Ionicons name="close" size={24} color="#6b7280" />
-                </TouchableOpacity>
-              </View>
-
-              <TextInput
-                value={editValue}
-                onChangeText={setEditValue}
-                placeholder={`Digite ${getFieldLabel().toLowerCase()}`}
-                keyboardType={editField === 'email' ? 'email-address' : editField === 'telefone' || editField === 'celular' ? 'phone-pad' : 'default'}
-                className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-base text-gray-800 mb-4"
-                autoFocus
-              />
-
-              <View className="flex-row gap-3">
-                <TouchableOpacity
-                  onPress={() => setEditModalVisible(false)}
-                  className="flex-1 bg-gray-100 py-3 rounded-lg"
-                >
-                  <Text className="text-gray-700 font-semibold text-center">Cancelar</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={salvarEdicao}
-                  disabled={editaInstalacaoMutation.isPending}
-                  className="flex-1 bg-blue-600 py-3 rounded-lg"
-                >
-                  {editaInstalacaoMutation.isPending ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <Text className="text-white font-semibold text-center">Salvar</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
+          onClose={() => setEditModalVisible(false)}
+          title={`Editar ${getFieldLabel()}`}
+          value={editValue}
+          onChange={setEditValue}
+          onSave={salvarEdicao}
+          placeholder={`Digite ${getFieldLabel().toLowerCase()}`}
+          keyboardType={editField === 'email' ? 'email-address' : editField === 'telefone' || editField === 'celular' ? 'phone-pad' : 'default'}
+          isPending={editaInstalacaoMutation.isPending}
+          saveButtonColor="bg-purple-600"
+        />
       </SafeAreaView>
     </>
   );

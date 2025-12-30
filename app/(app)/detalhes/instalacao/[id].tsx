@@ -1,3 +1,4 @@
+import { EditModal } from '@/components/instalacao/EditModal';
 import { EditableInfoRow, InfoRow } from '@/components/instalacao/InfoRows';
 import { useFuncionarios } from '@/hooks/funcionario';
 import { useEditaInstalacao, useFechaInstalacao, useInstalacaoDetail } from '@/hooks/instalacao';
@@ -878,58 +879,19 @@ export default function InstalacaoDetalhesScreen() {
         </ScrollView>
 
         {/* Modal de Edição de Texto */}
-        <Modal
+        <EditModal
           visible={editModalVisible}
-          animationType="fade"
-          transparent
-          onRequestClose={() => setEditModalVisible(false)}
-        >
-          <View className="flex-1 bg-black/50 justify-end">
-            <View className="bg-white rounded-t-3xl p-6">
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-base font-bold text-gray-800">
-                  Editar {getFieldLabel()}
-                </Text>
-                <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                  <Ionicons name="close" size={24} color="#6b7280" />
-                </TouchableOpacity>
-              </View>
-
-              <TextInput
-                value={editValue}
-                onChangeText={setEditValue}
-                placeholder={`Digite ${getFieldLabel().toLowerCase()}`}
-                multiline={editField === 'obs'}
-                numberOfLines={editField === 'obs' ? 4 : 1}
-                keyboardType={editField === 'email' ? 'email-address' : editField === 'telefone' || editField === 'celular' ? 'phone-pad' : 'default'}
-                className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-base text-gray-800 mb-4"
-                style={editField === 'obs' ? { height: 100, textAlignVertical: 'top' } : {}}
-                autoFocus
-              />
-
-              <View className="flex-row gap-3">
-                <TouchableOpacity
-                  onPress={() => setEditModalVisible(false)}
-                  className="flex-1 bg-gray-100 py-3 rounded-lg"
-                >
-                  <Text className="text-gray-700 font-semibold text-center">Cancelar</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={salvarEdicao}
-                  disabled={editaInstalacaoMutation.isPending}
-                  className="flex-1 bg-purple-600 py-3 rounded-lg"
-                >
-                  {editaInstalacaoMutation.isPending ? (
-                    <ActivityIndicator size="small" color="white" />
-                  ) : (
-                    <Text className="text-white font-semibold text-center">Salvar</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
+          onClose={() => setEditModalVisible(false)}
+          title={`Editar ${getFieldLabel()}`}
+          value={editValue}
+          onChange={setEditValue}
+          onSave={salvarEdicao}
+          placeholder={`Digite ${getFieldLabel().toLowerCase()}`}
+          multiline={editField === 'obs'}
+          keyboardType={editField === 'email' ? 'email-address' : editField === 'telefone' || editField === 'celular' ? 'phone-pad' : 'default'}
+          isPending={editaInstalacaoMutation.isPending}
+          saveButtonColor="bg-purple-600"
+        />
 
         {/* DateTimePicker para iOS */}
         {showDatePicker && Platform.OS === 'ios' && (
