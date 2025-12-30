@@ -1,15 +1,17 @@
 import { fetchAllFuncionarios } from '@/services/api/funcionario/funcionario.service';
-import type { Funcionario } from '@/types/funcionario';
 import { useQuery } from '@tanstack/react-query';
+import { funcionarioKeys } from './keys';
 
+/**
+ * Hook para buscar lista de funcionários
+ * Cache de 1 hora (funcionários não mudam frequentemente)
+ */
 export const useFuncionarios = () => {
-  return useQuery<Funcionario[]>({
-    queryKey: ['funcionarios', 'listagem'],
-    queryFn: async () => {
-      const response = await fetchAllFuncionarios();
-      return response.funcionarios;
-    },
+  return useQuery({
+    queryKey: funcionarioKeys.list(),
+    queryFn: fetchAllFuncionarios,
     staleTime: 1000 * 60 * 60, // 1 hora
-    gcTime: 1000 * 60 * 60 * 2, // 2 horas (era cacheTime)
+    gcTime: 1000 * 60 * 60 * 2, // 2 horas
+    select: (data) => data.funcionarios, // Extrai apenas o array de funcionarios
   });
 };
