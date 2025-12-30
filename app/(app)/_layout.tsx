@@ -59,6 +59,15 @@ export default function AppLayout() {
           presentation: 'card',
         }} 
       />
+      <Stack.Screen 
+        name="detalhes/instalacao/cliente-info" 
+        options={{ 
+          headerShown: true,
+          headerBackTitle: 'Voltar',
+          headerTitle: 'Dados do Cliente',
+          presentation: 'card',
+        }} 
+      />
     </Stack>
   );
 }
