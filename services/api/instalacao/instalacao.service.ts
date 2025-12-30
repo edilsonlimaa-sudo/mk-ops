@@ -13,12 +13,12 @@ const fetchInstalacaoPage = async (
   status: InstalacaoStatus = 'aberto',
   limit?: number
 ): Promise<InstalacaoListResponse> => {
-  const url = limit 
+  const url = limit
     ? `/api/instalacao/listar/status=${status}&pagina=${page}&limite=${limit}`
     : `/api/instalacao/listar/status=${status}&pagina=${page}`;
-  
+
   const response = await apiClient.get(url);
-  
+
   // Handle "Registros nao encontrados" response (200 status, no data)
   if (response.data?.mensagem?.includes('Registros nao encontrados')) {
     return {
@@ -29,7 +29,7 @@ const fetchInstalacaoPage = async (
       instalacoes: [],
     };
   }
-  
+
   return response.data;
 };
 
@@ -41,7 +41,7 @@ const fetchInstalacaoPage = async (
 export const fetchAllInstalacoes = async (status: InstalacaoStatus = 'aberto'): Promise<Instalacao[]> => {
   console.log(`🔍 [InstalacaoService] Iniciando busca de instalações (status: ${status})...`);
   console.log('🌐 [InstalacaoService] BaseURL atual:', apiClient.defaults.baseURL);
-  
+
   try {
     const firstPage = await fetchInstalacaoPage(1, status);
     const { total_paginas, instalacoes } = firstPage;
@@ -84,7 +84,7 @@ export const fetchAllInstalacoes = async (status: InstalacaoStatus = 'aberto'): 
 export const fetchRecentInstalacoesConcluidadas = async (limit: number = 50): Promise<Instalacao[]> => {
   console.log(`🔍 [InstalacaoService] Iniciando busca de instalações concluídas recentes...`);
   console.log(`⚙️ [InstalacaoService] Limite por página: ${limit}`);
-  
+
   try {
     // Step 1: Fetch first page to get metadata
     console.log('📄 [InstalacaoService] Buscando página 1 para obter metadados...');
@@ -103,7 +103,7 @@ export const fetchRecentInstalacoesConcluidadas = async (limit: number = 50): Pr
     console.log(`🚀 [InstalacaoService] Buscando última página (${total_paginas})...`);
     const lastPage = await fetchInstalacaoPage(total_paginas, 'concluido', limit);
     console.log(`✅ [InstalacaoService] Retornando ${lastPage.instalacoes.length} instalações da última página`);
-    
+
     return lastPage.instalacoes;
   } catch (error) {
     console.error('❌ [InstalacaoService] Erro ao buscar instalações concluídas:', error);
@@ -119,24 +119,24 @@ export const fetchRecentInstalacoesConcluidadas = async (limit: number = 50): Pr
  */
 export const fetchInstalacaoById = async (uuid: string): Promise<Instalacao> => {
   console.log(`🔍 [InstalacaoService] Fetching instalacao by uuid_solic: ${uuid}`);
-  
+
   try {
     const response = await apiClient.get(`/api/instalacao/show/${uuid}`);
-    
+
     // Handle API inconsistency: 200 status with empty array means "not found"
     if (Array.isArray(response.data) && response.data.length === 0) {
       console.error(`❌ [InstalacaoService] Instalação não encontrada (API retornou array vazio)`);
       throw new Error('Instalação não encontrada');
     }
-    
+
     const instalacao = response.data;
-    
+
     // Validate that we got a valid instalacao object
     if (!instalacao || typeof instalacao !== 'object' || !instalacao.uuid_solic) {
       console.error(`❌ [InstalacaoService] Resposta inválida da API:`, instalacao);
       throw new Error('Dados da instalação inválidos');
     }
-    
+
     console.log(`✅ [InstalacaoService] Instalação #${instalacao.id} carregada com sucesso`);
     return instalacao;
   } catch (error) {
@@ -151,12 +151,58 @@ export const fetchInstalacaoById = async (uuid: string): Promise<Instalacao> => 
  */
 export const fecharInstalacao = async (uuid: string): Promise<void> => {
   console.log(`🔒 [InstalacaoService] Fechando instalação ${uuid}...`);
-  
+
   try {
     const response = await apiClient.get(`/api/instalacao/fechar/${uuid}`);
     console.log(`✅ [InstalacaoService] Instalação ${uuid} fechada com sucesso`, response.data);
   } catch (error) {
     console.error(`❌ [InstalacaoService] Erro ao fechar instalação ${uuid}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Edita uma instalação existente
+ * A API permite editar qualquer campo que exista na tabela sis_solic
+ * 
+ * API Error Handling:
+ * - HTTP 200 + { status: 'erro', mensagem: 'Registro nao encontrado' } - UUID not found
+ * - HTTP 200 + { status: 'erro', mensagem: 'Nenhum campo valido para alteracao' } - No valid fields
+ * - HTTP 500 - Missing uuid, database constraint violations, or unhandled PHP exceptions
+ * 
+ * @param uuid - UUID da instalação (campo 'uuid_solic') - REQUIRED
+ * @param dados - Objeto com os campos a serem atualizados - REQUIRED (must not be empty)
+ * @throws Error if uuid is empty, dados is empty, installation not found, or no valid fields provided
+ */
+export const editarInstalacao = async (
+  uuid: string,
+  dados: Partial<Instalacao>
+): Promise<void> => {
+  // Client-side validation to prevent API errors
+  if (!uuid || uuid.trim() === '') {
+    throw new Error('UUID da instalação é obrigatório');
+  }
+
+  if (!dados || Object.keys(dados).length === 0) {
+    throw new Error('Dados para atualização são obrigatórios');
+  }
+
+  console.log(`✏️ [InstalacaoService] Editando instalação ${uuid}...`, dados);
+
+  try {
+    const payload = { uuid, ...dados };
+
+    const response = await apiClient.put('/api/instalacao/editar', payload);
+
+    // MK-Auth returns HTTP 200 with { status: 'erro' } for business logic errors
+    if (response.data?.status === 'erro') {
+      console.error(`❌ [InstalacaoService] API retornou erro:`, response.data.mensagem);
+      throw new Error(response.data.mensagem || 'Erro ao editar instalação');
+    }
+
+    console.log(`✅ [InstalacaoService] Instalação ${uuid} editada com sucesso`, response.data);
+  } catch (error) {
+    console.error(`❌ [InstalacaoService] Erro ao editar instalação ${uuid}:`, error);
     throw error;
   }
 };
