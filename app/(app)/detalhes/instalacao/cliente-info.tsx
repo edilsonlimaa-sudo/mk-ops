@@ -1,10 +1,10 @@
+import { EditableInfoRow, InfoRow } from '@/components/instalacao/InfoRows';
 import { useEditaInstalacao, useInstalacaoDetail } from '@/hooks/instalacao';
 import { Ionicons } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
@@ -492,89 +492,5 @@ export default function ClienteInstalacaoScreen() {
         </Modal>
       </SafeAreaView>
     </>
-  );
-}
-
-// Componente helper para exibir informações com long press para copiar
-function InfoRow({ label, value }: { label: string; value: string }) {
-  const copiarValor = async () => {
-    await Clipboard.setStringAsync(value);
-    Toast.show({
-      type: 'success',
-      text1: `${label} copiado! 📋`,
-      position: 'top',
-      visibilityTime: 2000,
-      topOffset: 60,
-    });
-  };
-
-  return (
-    <Pressable
-      onLongPress={copiarValor}
-      delayLongPress={500}
-      className="flex-row justify-between py-2 border-b border-gray-100"
-      style={({ pressed }) => [
-        {
-          backgroundColor: pressed ? '#f3f4f6' : 'transparent',
-        }
-      ]}
-    >
-      <Text className="text-gray-600 text-sm">{label}</Text>
-      <Text className="text-gray-900 text-sm font-medium flex-1 text-right ml-4">
-        {value}
-      </Text>
-    </Pressable>
-  );
-}
-
-// Componente para campos editáveis
-function EditableInfoRow({
-  label,
-  value,
-  onEdit,
-  editable = true,
-}: {
-  label: string;
-  value: string;
-  onEdit: () => void;
-  editable?: boolean;
-}) {
-  const copiarValor = async () => {
-    await Clipboard.setStringAsync(value);
-    Toast.show({
-      type: 'success',
-      text1: `${label} copiado! 📋`,
-      position: 'top',
-      visibilityTime: 2000,
-      topOffset: 60,
-    });
-  };
-
-  if (!editable) {
-    return <InfoRow label={label} value={value} />;
-  }
-
-  return (
-    <Pressable
-      onLongPress={copiarValor}
-      delayLongPress={500}
-      className="flex-row justify-between items-center py-2 border-b border-gray-100"
-      style={({ pressed }) => [
-        {
-          backgroundColor: pressed ? '#f3f4f6' : 'transparent',
-        }
-      ]}
-    >
-      <Text className="text-gray-600 text-sm">{label}</Text>
-      <TouchableOpacity
-        onPress={onEdit}
-        className="flex-row items-center gap-2 flex-1 justify-end ml-4"
-      >
-        <Text className="text-gray-900 text-sm font-medium text-right flex-1">
-          {value}
-        </Text>
-        <Ionicons name="create-outline" size={16} color="#6b7280" />
-      </TouchableOpacity>
-    </Pressable>
   );
 }

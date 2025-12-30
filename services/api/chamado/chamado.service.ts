@@ -40,7 +40,6 @@ const fetchChamadoPage = async (
  */
 export const fetchAllChamados = async (status: ChamadoStatus = 'aberto'): Promise<Chamado[]> => {
   console.log(`🔍 [ChamadoService] Iniciando busca de chamados (status: ${status})...`);
-  console.log('🌐 [ChamadoService] BaseURL atual:', apiClient.defaults.baseURL);
   
   try {
     const firstPage = await fetchChamadoPage(1, status);

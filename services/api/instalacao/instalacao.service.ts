@@ -40,7 +40,6 @@ const fetchInstalacaoPage = async (
  */
 export const fetchAllInstalacoes = async (status: InstalacaoStatus = 'aberto'): Promise<Instalacao[]> => {
   console.log(`🔍 [InstalacaoService] Iniciando busca de instalações (status: ${status})...`);
-  console.log('🌐 [InstalacaoService] BaseURL atual:', apiClient.defaults.baseURL);
 
   try {
     const firstPage = await fetchInstalacaoPage(1, status);
