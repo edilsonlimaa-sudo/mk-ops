@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Linking, Modal, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -298,10 +299,18 @@ export default function InstalacaoDetalhesScreen() {
 
   return (
     <>
+      <StatusBar style="light" />
       <Stack.Screen
         options={{
           title: `Instalação #${instalacao.id}`,
           headerBackTitle: 'Voltar',
+          headerStyle: {
+            backgroundColor: '#9333ea',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }}
       />
       <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
@@ -347,7 +356,7 @@ export default function InstalacaoDetalhesScreen() {
                   {instalacao.status === 'aberto' && (
                     <TouchableOpacity
                       onPress={() => abrirEdicao('tecnico', instalacao.tecnico || '')}
-                      className="bg-blue-600 w-8 h-8 rounded-lg ml-2 items-center justify-center"
+                      className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center"
                     >
                       <Ionicons name="pencil" size={14} color="white" />
                     </TouchableOpacity>
@@ -356,7 +365,7 @@ export default function InstalacaoDetalhesScreen() {
 
                 <View className="h-px bg-gray-200 my-2" />
 
-                <View className="flex-row justify-between">
+                <View className="flex-row justify-between mb-2">
                   <View className="flex-1">
                     <Text className="text-gray-500 text-xs font-medium mb-1">Visita Agendada</Text>
                     <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
@@ -366,7 +375,7 @@ export default function InstalacaoDetalhesScreen() {
                   {instalacao.status === 'aberto' && (
                     <TouchableOpacity
                       onPress={() => abrirEdicao('visita', instalacao.visita || '')}
-                      className="bg-blue-600 w-8 h-8 rounded-lg ml-2 items-center justify-center"
+                      className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center"
                     >
                       <Ionicons name="calendar-outline" size={14} color="white" />
                     </TouchableOpacity>
@@ -601,24 +610,24 @@ export default function InstalacaoDetalhesScreen() {
                       navegarPorEndereco();
                     }
                   }}
-                  className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-blue-100 active:scale-95"
+                  className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-purple-100 active:scale-95"
                   style={{ transform: [{ scale: 1 }] }}
                 >
                   <View className="items-center">
-                    <View className="bg-blue-500 w-10 h-10 rounded-full items-center justify-center mb-2">
+                    <View className="bg-purple-500 w-10 h-10 rounded-full items-center justify-center mb-2">
                       <Ionicons name="navigate" size={18} color="white" />
                     </View>
-                    <Text className="text-blue-700 font-bold text-xs">Navegar</Text>
+                    <Text className="text-purple-700 font-bold text-xs">Navegar</Text>
                   </View>
                 </TouchableOpacity>
               )}
             </View>
 
             {/* SEÇÃO TÉCNICA PRIORITÁRIA */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md border border-blue-50">
+            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md border border-purple-50">
               <View className="flex-row items-center mb-4">
-                <View className="bg-blue-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                  <Ionicons name="settings-outline" size={20} color="#3b82f6" />
+                <View className="bg-purple-100 w-10 h-10 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="settings-outline" size={20} color="#9333ea" />
                 </View>
                 <Text className="text-base text-gray-900 font-bold flex-1">Configuração Técnica</Text>
               </View>
@@ -627,17 +636,17 @@ export default function InstalacaoDetalhesScreen() {
               <TouchableOpacity
                 onPress={() => instalacao.status === 'aberto' && setPlanoModalVisible(true)}
                 disabled={instalacao.status !== 'aberto'}
-                className="bg-blue-50 rounded-xl p-4 mb-4 border-2 border-blue-200"
+                className="bg-purple-50 rounded-xl p-4 mb-4 border-2 border-purple-200"
               >
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1">
-                    <Text className="text-xs text-blue-600 font-bold uppercase tracking-wide mb-1">Plano Contratado</Text>
+                    <Text className="text-xs text-purple-600 font-bold uppercase tracking-wide mb-1">Plano Contratado</Text>
                     <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
                       {instalacao.plano || 'Não informado'}
                     </Text>
                   </View>
                   {instalacao.status === 'aberto' && (
-                    <View className="bg-blue-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
+                    <View className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
                       <Ionicons name="pencil" size={14} color="white" />
                     </View>
                   )}
@@ -909,7 +918,7 @@ export default function InstalacaoDetalhesScreen() {
                 <TouchableOpacity
                   onPress={salvarEdicao}
                   disabled={editaInstalacaoMutation.isPending}
-                  className="flex-1 bg-blue-600 py-3 rounded-lg"
+                  className="flex-1 bg-purple-600 py-3 rounded-lg"
                 >
                   {editaInstalacaoMutation.isPending ? (
                     <ActivityIndicator size="small" color="white" />
