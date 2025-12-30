@@ -83,3 +83,13 @@ export interface InstalacaoListResponse {
  * Status filter options for instalacoes
  */
 export type InstalacaoStatus = 'aberto' | 'concluido' | 'todos';
+
+/**
+ * Response from PUT /api/instalacao/editar
+ * MK-Auth returns HTTP 200 with status field in body
+ */
+export interface InstalacaoEditResponse {
+  status: 'sucesso' | 'erro';
+  mensagem: string;
+  dados?: Partial<Instalacao>;
+}
