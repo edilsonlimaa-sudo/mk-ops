@@ -13,6 +13,7 @@ export default function ConfiguracoesScreen() {
   const [showSobre, setShowSobre] = useState(false);
   const [showAjuda, setShowAjuda] = useState(false);
   const [showPerfil, setShowPerfil] = useState(false);
+  const [showLimitacoes, setShowLimitacoes] = useState(false);
 
   const appVersion = Constants.expoConfig?.version || '1.0.0';
   const buildNumber = Constants.expoConfig?.ios?.buildNumber || Constants.expoConfig?.android?.versionCode || '1';
@@ -111,7 +112,7 @@ export default function ConfiguracoesScreen() {
             {/* Ajuda */}
             <TouchableOpacity
               onPress={() => setShowAjuda(true)}
-              className="flex-row items-center p-4 active:bg-gray-50"
+              className="flex-row items-center p-4 border-b border-gray-100 active:bg-gray-50"
             >
               <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center mr-3">
                 <Ionicons name="help-circle" size={22} color="#10b981" />
@@ -119,6 +120,21 @@ export default function ConfiguracoesScreen() {
               <View className="flex-1">
                 <Text className="text-base font-semibold text-gray-800">Ajuda</Text>
                 <Text className="text-sm text-gray-500">Dúvidas e suporte</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+            </TouchableOpacity>
+
+            {/* Limitações da API */}
+            <TouchableOpacity
+              onPress={() => setShowLimitacoes(true)}
+              className="flex-row items-center p-4 active:bg-gray-50"
+            >
+              <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center mr-3">
+                <Ionicons name="warning" size={22} color="#f59e0b" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-base font-semibold text-gray-800">Limitações da API</Text>
+                <Text className="text-sm text-gray-500">O que pode ou não ser editado</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
             </TouchableOpacity>
@@ -755,6 +771,272 @@ export default function ConfiguracoesScreen() {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* Modal Limitações da API */}
+      <Modal
+        visible={showLimitacoes}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowLimitacoes(false)}
+      >
+        <View className="flex-1 bg-white">
+          {/* Header do Modal */}
+          <View className="bg-amber-500 pt-14 pb-6 px-6">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-2xl font-bold text-white">Limitações da API</Text>
+              <TouchableOpacity
+                onPress={() => setShowLimitacoes(false)}
+                className="w-8 h-8 items-center justify-center"
+              >
+                <Ionicons name="close" size={28} color="white" />
+              </TouchableOpacity>
+            </View>
+            <Text className="text-white text-base opacity-90">
+              Entenda o que pode ou não ser editado no aplicativo
+            </Text>
+          </View>
+
+          <ScrollView className="flex-1 px-6 pt-6">
+            {/* Introdução */}
+            <View className="bg-amber-50 rounded-2xl p-5 mb-6 border border-amber-200">
+              <View className="flex-row items-start">
+                <Ionicons name="information-circle" size={24} color="#f59e0b" />
+                <View className="flex-1 ml-3">
+                  <Text className="text-base font-bold text-gray-800 mb-2">Por que essas limitações?</Text>
+                  <Text className="text-sm text-gray-700 leading-6">
+                    O aplicativo se conecta diretamente à API do MK-Auth instalada no seu servidor. 
+                    As funcionalidades disponíveis dependem do que a API permite. Algumas operações 
+                    estão restritas pela própria API do sistema.
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Chamados */}
+            <View className="mb-6">
+              <View className="flex-row items-center mb-4">
+                <Ionicons name="construct" size={24} color="#ef4444" />
+                <Text className="text-lg font-bold text-gray-800 ml-2">Chamados</Text>
+              </View>
+
+              {/* O que pode editar */}
+              <View className="bg-green-50 rounded-xl p-4 mb-3 border border-green-200">
+                <View className="flex-row items-center mb-3">
+                  <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+                  <Text className="text-base font-bold text-gray-800 ml-2">Pode Editar:</Text>
+                </View>
+                <View className="space-y-2">
+                  <LimitationItem
+                    type="allowed"
+                    field="Assunto"
+                    description="Alterar o título/descrição do chamado"
+                  />
+                  <LimitationItem
+                    type="allowed"
+                    field="Prioridade"
+                    description="Mudar o nível de prioridade (baixa, média, alta, urgente)"
+                  />
+                  <LimitationItem
+                    type="allowed"
+                    field="Status"
+                    description="Fechar ou reabrir chamado (operações separadas)"
+                  />
+                </View>
+              </View>
+
+              {/* O que NÃO pode editar */}
+              <View className="bg-red-50 rounded-xl p-4 border border-red-200">
+                <View className="flex-row items-center mb-3">
+                  <Ionicons name="close-circle" size={20} color="#ef4444" />
+                  <Text className="text-base font-bold text-gray-800 ml-2">NÃO Pode Editar:</Text>
+                </View>
+                <View className="space-y-2">
+                  <LimitationItem
+                    type="blocked"
+                    field="Data da Visita"
+                    description="A API não permite alterar a data agendada"
+                    reason="Campo não incluído no endpoint PUT /chamado/editar"
+                  />
+                  <LimitationItem
+                    type="blocked"
+                    field="Técnico Designado"
+                    description="Não é possível atribuir ou mudar o técnico"
+                    reason="Campo 'atendente' fixo como 'API' no código da API"
+                  />
+                  <LimitationItem
+                    type="blocked"
+                    field="Cliente"
+                    description="Não pode alterar o login/cliente vinculado"
+                    reason="Requer criação de novo chamado"
+                  />
+                  <LimitationItem
+                    type="blocked"
+                    field="Data de Abertura"
+                    description="Data de criação é imutável"
+                    reason="Campo automático do sistema"
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Instalações */}
+            <View className="mb-6">
+              <View className="flex-row items-center mb-4">
+                <Ionicons name="home" size={24} color="#10b981" />
+                <Text className="text-lg font-bold text-gray-800 ml-2">Instalações</Text>
+              </View>
+
+              {/* O que pode editar */}
+              <View className="bg-green-50 rounded-xl p-4 mb-3 border border-green-200">
+                <View className="flex-row items-center mb-3">
+                  <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+                  <Text className="text-base font-bold text-gray-800 ml-2">Pode Editar:</Text>
+                </View>
+                <View className="space-y-2">
+                  <LimitationItem
+                    type="allowed"
+                    field="Data da Visita"
+                    description="Alterar data e hora agendadas para a visita técnica"
+                  />
+                  <LimitationItem
+                    type="allowed"
+                    field="Técnico Responsável"
+                    description="Atribuir ou mudar o técnico designado"
+                  />
+                  <LimitationItem
+                    type="allowed"
+                    field="Plano"
+                    description="Alterar o plano contratado pelo cliente"
+                  />
+                  <LimitationItem
+                    type="allowed"
+                    field="Observações"
+                    description="Adicionar ou editar notas sobre a instalação"
+                  />
+                  <LimitationItem
+                    type="allowed"
+                    field="Contatos"
+                    description="Editar e-mail, telefone e celular do cliente"
+                  />
+                  <LimitationItem
+                    type="allowed"
+                    field="Fechar Instalação"
+                    description="Marcar instalação como concluída"
+                  />
+                </View>
+              </View>
+
+              {/* Nota sobre edição */}
+              <View className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                <View className="flex-row items-start">
+                  <Ionicons name="information-circle" size={20} color="#3b82f6" className="mr-2 mt-0.5" />
+                  <View className="flex-1">
+                    <Text className="text-sm font-semibold text-gray-800 mb-2">
+                      API Flexível
+                    </Text>
+                    <Text className="text-xs text-gray-600 leading-5">
+                      A API de instalações permite editar praticamente qualquer campo. 
+                      No app, disponibilizamos edição dos campos mais usados no dia a dia. 
+                      Para alterações complexas (endereço, dados cadastrais), use o painel web.
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Clientes */}
+            <View className="mb-6">
+              <View className="flex-row items-center mb-4">
+                <Ionicons name="people" size={24} color="#8b5cf6" />
+                <Text className="text-lg font-bold text-gray-800 ml-2">Clientes</Text>
+              </View>
+
+              <View className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                <View className="flex-row items-center mb-3">
+                  <Ionicons name="eye" size={20} color="#8b5cf6" />
+                  <Text className="text-base font-bold text-gray-800 ml-2">Modo Somente Leitura:</Text>
+                </View>
+                <Text className="text-sm text-gray-700 leading-6 mb-3">
+                  Todos os dados de clientes são <Text className="font-bold">somente para consulta</Text>. 
+                  O app não permite criar, editar ou excluir clientes.
+                </Text>
+                <View className="bg-white rounded-lg p-3 border border-purple-200">
+                  <Text className="text-xs text-gray-600">
+                    💡 <Text className="font-semibold">Dica:</Text> Use o app para consultar rapidamente 
+                    informações durante atendimentos. Para alterações cadastrais, acesse o painel web.
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Usuários/Funcionários */}
+            <View className="mb-6">
+              <View className="flex-row items-center mb-4">
+                <Ionicons name="person" size={24} color="#10b981" />
+                <Text className="text-lg font-bold text-gray-800 ml-2">Usuários/Funcionários</Text>
+              </View>
+
+              <View className="bg-green-50 rounded-xl p-4 border border-green-200">
+                <View className="flex-row items-center mb-3">
+                  <Ionicons name="eye" size={20} color="#10b981" />
+                  <Text className="text-base font-bold text-gray-800 ml-2">Visualização Limitada:</Text>
+                </View>
+                <Text className="text-sm text-gray-700 leading-6">
+                  Você pode consultar informações básicas de usuários/funcionários, mas 
+                  não pode criar, editar permissões ou gerenciar contas. Isso deve ser feito 
+                  pelo administrador no painel do MK-Auth.
+                </Text>
+              </View>
+            </View>
+
+            {/* O Que Fazer */}
+            <View className="mb-6">
+              <View className="flex-row items-center mb-4">
+                <Ionicons name="bulb" size={24} color="#f59e0b" />
+                <Text className="text-lg font-bold text-gray-800 ml-2">Como Contornar?</Text>
+              </View>
+
+              <View className="space-y-3">
+                <WorkaroundItem
+                  icon="globe"
+                  title="Use o Painel Web"
+                  description="Para operações não suportadas no app, acesse o MK-Auth pelo navegador. Lá você tem acesso completo a todas as funcionalidades."
+                />
+                <WorkaroundItem
+                  icon="call"
+                  title="Solicite ao Administrador"
+                  description="Se precisar de alterações que não pode fazer, entre em contato com o administrador do sistema ou supervisor."
+                />
+                <WorkaroundItem
+                  icon="code-slash"
+                  title="Personalize a API"
+                  description="Se você tem acesso ao servidor, pode modificar os arquivos .api em /opt/mk-auth/api/ para adicionar funcionalidades. Consulte um desenvolvedor."
+                />
+              </View>
+            </View>
+
+            {/* Nota Final */}
+            <View className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
+              <View className="flex-row items-start">
+                <Ionicons name="shield-checkmark" size={20} color="#6b7280" className="mr-2 mt-0.5" />
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold text-gray-800 mb-2">
+                    Essas limitações são por design
+                  </Text>
+                  <Text className="text-xs text-gray-600 leading-5">
+                    O aplicativo foi desenvolvido para operações de campo dos técnicos. Operações 
+                    administrativas e alterações sensíveis permanecem restritas ao painel web por 
+                    questões de segurança e controle.
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Espaçamento final */}
+            <View className="h-8" />
+          </ScrollView>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -1009,6 +1291,64 @@ function TipItem({ icon, tip }: { icon: string; tip: string }) {
     <View className="flex-row items-start">
       <Ionicons name={icon as any} size={20} color="#10b981" className="mr-3 mt-0.5" />
       <Text className="flex-1 text-sm text-gray-700 leading-6">{tip}</Text>
+    </View>
+  );
+}
+
+// Componente para Limitation Item
+function LimitationItem({ 
+  type,
+  field, 
+  description,
+  reason
+}: { 
+  type: 'allowed' | 'blocked';
+  field: string; 
+  description: string;
+  reason?: string;
+}) {
+  const iconName = type === 'allowed' ? 'checkmark-circle' : 'close-circle';
+  const iconColor = type === 'allowed' ? '#10b981' : '#ef4444';
+  
+  return (
+    <View className="mb-3 last:mb-0">
+      <View className="flex-row items-start">
+        <Ionicons name={iconName} size={16} color={iconColor} className="mr-2 mt-0.5" />
+        <View className="flex-1">
+          <Text className="text-sm font-semibold text-gray-800">{field}</Text>
+          <Text className="text-xs text-gray-600 leading-5 mt-0.5">{description}</Text>
+          {reason && (
+            <Text className="text-xs text-gray-500 italic mt-1">
+              ⚠️ {reason}
+            </Text>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// Componente para Workaround Item
+function WorkaroundItem({ 
+  icon, 
+  title, 
+  description 
+}: { 
+  icon: string; 
+  title: string; 
+  description: string;
+}) {
+  return (
+    <View className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+      <View className="flex-row items-start">
+        <View className="w-8 h-8 bg-amber-100 rounded-full items-center justify-center mr-3 mt-0.5">
+          <Ionicons name={icon as any} size={18} color="#f59e0b" />
+        </View>
+        <View className="flex-1">
+          <Text className="text-base font-semibold text-gray-800 mb-1">{title}</Text>
+          <Text className="text-sm text-gray-600 leading-5">{description}</Text>
+        </View>
+      </View>
     </View>
   );
 }
