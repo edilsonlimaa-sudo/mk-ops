@@ -926,6 +926,22 @@ export default function ConfiguracoesScreen() {
                 </View>
               </View>
 
+              {/* O que NÃO pode editar */}
+              <View className="bg-red-50 rounded-xl p-4 mb-3 border border-red-200">
+                <View className="flex-row items-center mb-3">
+                  <Ionicons name="close-circle" size={20} color="#ef4444" />
+                  <Text className="text-base font-bold text-gray-800 ml-2">NÃO Pode Editar:</Text>
+                </View>
+                <View className="space-y-2">
+                  <LimitationItem
+                    type="blocked"
+                    field="Reabrir Instalação"
+                    description="A API não disponibiliza endpoint para reabrir instalações concluídas"
+                    reason="Nenhum endpoint disponível para reabertura"
+                  />
+                </View>
+              </View>
+
               {/* Nota sobre edição */}
               <View className="bg-blue-50 rounded-xl p-4 border border-blue-200">
                 <View className="flex-row items-start">
