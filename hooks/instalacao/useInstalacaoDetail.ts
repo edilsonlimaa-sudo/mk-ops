@@ -51,8 +51,6 @@ export const useInstalacaoDetail = (uuid: string) => {
       console.log(`⚠️ [useInstalacaoDetail] Cache miss for uuid ${uuid}, will fetch from API`);
       return undefined;
     },
-    // Force revalidation even with initialData (to fetch any additional fields from detail endpoint)
-    initialDataUpdatedAt: 0,
     retry: 1,
   });
 };

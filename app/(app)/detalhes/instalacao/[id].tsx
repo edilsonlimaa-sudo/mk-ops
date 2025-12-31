@@ -1731,7 +1731,6 @@ export default function InstalacaoDetalhesScreen() {
                           fechaInstalacaoMutation.mutate(instalacao!.uuid_solic, {
                             onSuccess: () => {
                               setFinalizacaoModalVisible(false);
-                              router.back();
                               setTimeout(() => {
                                 Toast.show({
                                   type: 'success',
