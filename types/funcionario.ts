@@ -1,4 +1,5 @@
 export interface Funcionario {
+  id: string; // ID do funcionário
   uuid_func: string;
   uuid: string; // alias para uuid_func
   nome: string;

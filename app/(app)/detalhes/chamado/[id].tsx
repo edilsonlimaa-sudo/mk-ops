@@ -1,8 +1,11 @@
 import { ClientSearchModal } from '@/components/ClientSearchModal';
+import { InfoRow } from '@/components/instalacao/InfoRows';
 import { useChamadoDetail, useFechaChamado, useReabrirChamado } from '@/hooks/chamado';
+import { useFuncionarios } from '@/hooks/funcionario';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -10,7 +13,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -29,6 +31,7 @@ export default function ChamadoDetalhesScreen() {
   const fechaChamadoMutation = useFechaChamado();
   const reabrirChamadoMutation = useReabrirChamado();
   const motivoInputRef = useRef<TextInput>(null);
+  const { data: funcionarios } = useFuncionarios();
 
   const copiarParaClipboard = async (texto: string, label: string) => {
     await Clipboard.setStringAsync(texto);
@@ -60,6 +63,13 @@ export default function ChamadoDetalhesScreen() {
   }
 
   const { data: chamado, isLoading, isFetching, error } = useChamadoDetail(id);
+
+  // Função para buscar nome do técnico pelo ID
+  const getNomeTecnico = (tecnicoId: string | null) => {
+    if (!tecnicoId || !funcionarios) return null;
+    const tecnico = funcionarios.find(f => f.id === tecnicoId);
+    return tecnico ? tecnico.nome : null;
+  };
 
   if (isLoading) {
     return (
@@ -113,94 +123,120 @@ export default function ChamadoDetalhesScreen() {
 
   return (
     <>
+      <StatusBar style="light" />
       <Stack.Screen
         options={{
           title: `Chamado #${chamado.chamado}`,
           headerBackTitle: 'Voltar',
+          headerStyle: {
+            backgroundColor: '#0284c7',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }}
       />
       <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
-        <ScrollView className="flex-1">
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="p-4">
-            {/* Card Principal */}
-            <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-              {/* Header */}
-              <View className="mb-4 pb-3 border-b border-gray-100">
-                <Text className="text-gray-400 text-xs">#{chamado.chamado}</Text>
+            {/* HERO SECTION - Informações Críticas */}
+            <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
+              {/* Header com Status Badge e ID */}
+              <View className="flex-row justify-between items-start mb-4">
+                <View className={`${chamado.status === 'aberto' ? 'bg-amber-400' : 'bg-gray-400'} px-3 py-1.5 rounded-full`}>
+                  <Text className={`${chamado.status === 'aberto' ? 'text-amber-900' : 'text-gray-900'} font-bold text-xs uppercase tracking-wide`}>
+                    {chamado.status === 'aberto' ? 'Aberto' : 'Fechado'}
+                  </Text>
+                </View>
+                <Text className="text-gray-500 text-xs font-medium">#{chamado.chamado}</Text>
               </View>
 
-              {/* Cliente */}
+              {/* Cliente - Destaque Principal */}
               <TouchableOpacity
                 onPress={() => setSearchModalVisible(true)}
-                className="active:opacity-70 mb-4"
+                className="mb-4 active:opacity-80"
               >
+                <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1">CLIENTE</Text>
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1">
-                    <Text className="text-gray-500 text-xs mb-1">CLIENTE</Text>
-                    <Text className="text-gray-900 text-xl font-bold mb-1">{chamado.nome || 'Cliente não informado'}</Text>
+                    <Text className="text-gray-900 text-base font-bold mb-1" numberOfLines={2}>{chamado.nome || 'Cliente não informado'}</Text>
                     {chamado.login && (
                       <Text className="text-gray-500 text-sm">{chamado.login}</Text>
                     )}
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+                  <View className="bg-gray-100 p-2 rounded-full ml-2">
+                    <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+                  </View>
                 </View>
               </TouchableOpacity>
 
               {/* Problema */}
               <View className="mb-4">
-                <Text className="text-gray-500 text-xs mb-1">PROBLEMA</Text>
-                <Text className="text-gray-900 text-base font-medium">
+                <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1">PROBLEMA</Text>
+                <Text className="text-gray-900 text-sm font-medium">
                   {chamado.assunto || 'Não informado'}
                 </Text>
               </View>
 
-              {/* Visita Agendada - Destaque mais sutil */}
-              {chamado.visita && (
-                <View className="mb-4 pb-4 border-b border-gray-100">
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      <Text className="text-orange-600 text-xs font-semibold mb-1">VISITA AGENDADA</Text>
-                      <Text className="text-gray-900 font-bold">
-                        {formatarDataCompleta(chamado.visita)}
-                      </Text>
+              {/* Informações Principais - Técnico e Visita */}
+              <View className="bg-gray-50 rounded-xl p-3 border border-gray-200 mb-4">
+                {/* Técnico */}
+                <View className="mb-2">
+                  <Text className="text-gray-500 text-xs font-medium mb-1">Técnico</Text>
+                  <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
+                    {chamado.tecnico 
+                      ? (getNomeTecnico(chamado.tecnico) || `ID #${chamado.tecnico}`)
+                      : 'Não atribuído'
+                    }
+                  </Text>
+                </View>
+
+                {chamado.visita && (
+                  <>
+                    <View className="h-px bg-gray-200 my-2" />
+                    
+                    {/* Visita Agendada */}
+                    <View className="mb-2">
+                      <Text className="text-gray-500 text-xs font-medium mb-1">Visita Agendada</Text>
+                      <View className="flex-row items-center">
+                        <Ionicons name="calendar" size={16} color="#f97316" />
+                        <Text className="text-gray-900 text-sm font-semibold ml-2">
+                          {formatarDataCompleta(chamado.visita)}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                </View>
-              )}
+                  </>
+                )}
+              </View>
+            </View>
 
-              {/* Informações em InfoRow */}
-              <View className="gap-3">
-                {/* Status com badge */}
-                <View className="flex-row justify-between py-2 border-b border-gray-100">
-                  <Text className="text-gray-600 text-sm">Status</Text>
-                  <View className={`${statusColor} px-3 py-1 rounded-full`}>
-                    <Text className={`${statusColor.split(' ')[1]} font-semibold text-xs`}>
-                      {chamado.status}
-                    </Text>
-                  </View>
+            {/* INFORMAÇÕES ADMINISTRATIVAS */}
+            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
+              <View className="flex-row items-center mb-4">
+                <View className="bg-sky-100 w-10 h-10 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="document-text-outline" size={20} color="#0284c7" />
                 </View>
+                <Text className="text-sm text-gray-900 font-bold flex-1">Informações do Chamado</Text>
+              </View>
 
-                {/* Prioridade com badge */}
-                <View className="flex-row justify-between py-2 border-b border-gray-100">
-                  <Text className="text-gray-600 text-sm">Prioridade</Text>
-                  <View className={`${prioridadeColor} px-3 py-1 rounded-full`}>
-                    <Text className={`${prioridadeColor.split(' ')[1]} font-semibold text-xs`}>
-                      {chamado.prioridade}
-                    </Text>
-                  </View>
-                </View>
-
+              <View className="gap-2">
                 <InfoRow 
                   label="Aberto em" 
                   value={formatarDataCompleta(chamado.abertura)} 
                 />
-                
+
+                <InfoRow 
+                  label="Prioridade" 
+                  value={chamado.prioridade} 
+                />
+
                 {chamado.atendente && (
                   <InfoRow label="Atendente" value={chamado.atendente} />
                 )}
 
-                {chamado.tecnico && (
-                  <InfoRow label="Técnico" value={`ID #${chamado.tecnico}`} />
+                {chamado.login_atend && (
+                  <InfoRow label="Login Atendente" value={chamado.login_atend} />
                 )}
 
                 {chamado.email && (
@@ -210,12 +246,21 @@ export default function ChamadoDetalhesScreen() {
                 {chamado.ramal && (
                   <InfoRow label="Ramal" value={chamado.ramal} />
                 )}
+
+                {chamado.reply && (
+                  <InfoRow label="Reply" value={chamado.reply} />
+                )}
               </View>
             </View>
 
             {/* Histórico de Atualizações */}
-            <View className="bg-white rounded-lg p-4 shadow-sm">
-              <Text className="text-xs text-gray-500 uppercase font-semibold mb-4">Histórico de Atualizações</Text>
+            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
+              <View className="flex-row items-center mb-4">
+                <View className="bg-purple-100 w-10 h-10 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="time-outline" size={20} color="#9333ea" />
+                </View>
+                <Text className="text-sm text-gray-900 font-bold flex-1">Histórico de Atualizações</Text>
+              </View>
 
               {!chamado.relatos && isFetching ? (
                 // Loading skeleton enquanto relatos carregam
@@ -248,39 +293,7 @@ export default function ChamadoDetalhesScreen() {
                         <View className="flex-1">
                           <Text className="text-blue-900 font-bold text-sm">Chamado Aberto</Text>
                           <Text className="text-blue-600 text-xs mt-0.5">
-                            {(() => {
-                              try {
-                                const data = new Date(chamado.abertura.replace(' ', 'T'));
-                                const hoje = new Date();
-                                const ontem = new Date(hoje);
-                                ontem.setDate(ontem.getDate() - 1);
-
-                                const dataFormatada = data.toLocaleDateString('pt-BR', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                });
-                                const horaFormatada = data.toLocaleTimeString('pt-BR', {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                });
-
-                                const dataData = new Date(data);
-                                dataData.setHours(0, 0, 0, 0);
-                                const hojeData = new Date(hoje);
-                                hojeData.setHours(0, 0, 0, 0);
-                                const ontemData = new Date(ontem);
-                                ontemData.setHours(0, 0, 0, 0);
-
-                                if (dataData.getTime() === hojeData.getTime()) {
-                                  return `Hoje às ${horaFormatada}`;
-                                } else if (dataData.getTime() === ontemData.getTime()) {
-                                  return `Ontem às ${horaFormatada}`;
-                                }
-                                return `${dataFormatada} às ${horaFormatada}`;
-                              } catch {
-                                return chamado.abertura;
-                              }
-                            })()}
+                            {formatarDataRelativa(chamado.abertura)}
                           </Text>
                         </View>
                       </View>
@@ -298,41 +311,6 @@ export default function ChamadoDetalhesScreen() {
                   </View>
 
                   {chamado.relatos.map((relato, index) => {
-                    // Formatar data/hora
-                    const formatarData = (dataStr: string) => {
-                      try {
-                        const data = new Date(dataStr.replace(' ', 'T'));
-                        const hoje = new Date();
-                        const ontem = new Date(hoje);
-                        ontem.setDate(ontem.getDate() - 1);
-
-                        const dataFormatada = data.toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                        });
-                        const horaFormatada = data.toLocaleTimeString('pt-BR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        });
-
-                        const dataData = new Date(data);
-                        dataData.setHours(0, 0, 0, 0);
-                        const hojeData = new Date(hoje);
-                        hojeData.setHours(0, 0, 0, 0);
-                        const ontemData = new Date(ontem);
-                        ontemData.setHours(0, 0, 0, 0);
-
-                        if (dataData.getTime() === hojeData.getTime()) {
-                          return `Hoje às ${horaFormatada}`;
-                        } else if (dataData.getTime() === ontemData.getTime()) {
-                          return `Ontem às ${horaFormatada}`;
-                        }
-                        return `${dataFormatada} às ${horaFormatada}`;
-                      } catch {
-                        return dataStr;
-                      }
-                    };
-
                     const isUltimo = index === chamado.relatos!.length - 1;
 
                     return (
@@ -351,7 +329,7 @@ export default function ChamadoDetalhesScreen() {
                             <View className="flex-1">
                               <Text className="text-gray-900 font-bold text-sm">{relato.atendente}</Text>
                               <Text className="text-gray-500 text-xs mt-0.5">
-                                {formatarData(relato.msg_data)}
+                                {formatarDataRelativa(relato.msg_data)}
                               </Text>
                             </View>
                           </View>
@@ -375,39 +353,7 @@ export default function ChamadoDetalhesScreen() {
                           <View className="flex-1">
                             <Text className="text-green-900 font-bold text-sm">Chamado Fechado</Text>
                             <Text className="text-green-600 text-xs mt-0.5">
-                              {(() => {
-                                try {
-                                  const data = new Date(chamado.fechamento.replace(' ', 'T'));
-                                  const hoje = new Date();
-                                  const ontem = new Date(hoje);
-                                  ontem.setDate(ontem.getDate() - 1);
-
-                                  const dataFormatada = data.toLocaleDateString('pt-BR', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                  });
-                                  const horaFormatada = data.toLocaleTimeString('pt-BR', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  });
-
-                                  const dataData = new Date(data);
-                                  dataData.setHours(0, 0, 0, 0);
-                                  const hojeData = new Date(hoje);
-                                  hojeData.setHours(0, 0, 0, 0);
-                                  const ontemData = new Date(ontem);
-                                  ontemData.setHours(0, 0, 0, 0);
-
-                                  if (dataData.getTime() === hojeData.getTime()) {
-                                    return `Hoje às ${horaFormatada}`;
-                                  } else if (dataData.getTime() === ontemData.getTime()) {
-                                    return `Ontem às ${horaFormatada}`;
-                                  }
-                                  return `${dataFormatada} às ${horaFormatada}`;
-                                } catch {
-                                  return chamado.fechamento;
-                                }
-                              })()}
+                              {formatarDataRelativa(chamado.fechamento)}
                             </Text>
                           </View>
                         </View>
@@ -423,16 +369,19 @@ export default function ChamadoDetalhesScreen() {
               )}
             </View>
 
-            {/* Botão de Ação */}
+            {/* Botão de Ação Principal */}
             {chamado.status === 'aberto' && (
               <TouchableOpacity
                 onPress={() => setFecharModalVisible(true)}
                 disabled={fechaChamadoMutation.isPending}
-                className="bg-green-600 py-3.5 rounded-lg shadow-sm active:opacity-90 mt-3"
+                className="bg-green-600 py-4 rounded-2xl shadow-lg mb-6"
               >
-                <Text className="text-white font-semibold text-center">
-                  {fechaChamadoMutation.isPending ? 'Fechando...' : 'Fechar Chamado'}
-                </Text>
+                <View className="flex-row items-center justify-center">
+                  <Ionicons name="checkmark-circle" size={20} color="white" />
+                  <Text className="text-white font-bold text-sm ml-2">
+                    {fechaChamadoMutation.isPending ? 'Fechando...' : 'Fechar Chamado'}
+                  </Text>
+                </View>
               </TouchableOpacity>
             )}
 
@@ -472,11 +421,14 @@ export default function ChamadoDetalhesScreen() {
                   );
                 }}
                 disabled={reabrirChamadoMutation.isPending}
-                className="bg-blue-600 py-3.5 rounded-lg shadow-sm active:opacity-90 mt-3"
+                className="bg-blue-600 py-4 rounded-2xl shadow-lg mb-6"
               >
-                <Text className="text-white font-semibold text-center">
-                  {reabrirChamadoMutation.isPending ? 'Reabrindo...' : 'Reabrir Chamado'}
-                </Text>
+                <View className="flex-row items-center justify-center">
+                  <Ionicons name="refresh-circle" size={20} color="white" />
+                  <Text className="text-white font-bold text-sm ml-2">
+                    {reabrirChamadoMutation.isPending ? 'Reabrindo...' : 'Reabrir Chamado'}
+                  </Text>
+                </View>
               </TouchableOpacity>
             )}
           </View>
@@ -588,34 +540,37 @@ export default function ChamadoDetalhesScreen() {
   );
 }
 
-// Componente helper para exibir informações com long press para copiar
-function InfoRow({ label, value }: { label: string; value: string }) {
-  const copiarValor = async () => {
-    await Clipboard.setStringAsync(value);
-    Toast.show({
-      type: 'success',
-      text1: `${label} copiado! 📋`,
-      position: 'top',
-      visibilityTime: 2000,
-      topOffset: 60,
-    });
-  };
+// Componente helper para formatar data relativa
+function formatarDataRelativa(dataStr: string) {
+  try {
+    const data = new Date(dataStr.replace(' ', 'T'));
+    const hoje = new Date();
+    const ontem = new Date(hoje);
+    ontem.setDate(ontem.getDate() - 1);
 
-  return (
-    <Pressable 
-      onLongPress={copiarValor}
-      delayLongPress={500}
-      className="flex-row justify-between py-2 border-b border-gray-100"
-      style={({ pressed }) => [
-        {
-          backgroundColor: pressed ? '#f3f4f6' : 'transparent',
-        }
-      ]}
-    >
-      <Text className="text-gray-600 text-sm">{label}</Text>
-      <Text className="text-gray-900 text-sm font-medium flex-1 text-right ml-4">
-        {value}
-      </Text>
-    </Pressable>
-  );
+    const dataFormatada = data.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+    });
+    const horaFormatada = data.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const dataData = new Date(data);
+    dataData.setHours(0, 0, 0, 0);
+    const hojeData = new Date(hoje);
+    hojeData.setHours(0, 0, 0, 0);
+    const ontemData = new Date(ontem);
+    ontemData.setHours(0, 0, 0, 0);
+
+    if (dataData.getTime() === hojeData.getTime()) {
+      return `Hoje às ${horaFormatada}`;
+    } else if (dataData.getTime() === ontemData.getTime()) {
+      return `Ontem às ${horaFormatada}`;
+    }
+    return `${dataFormatada} às ${horaFormatada}`;
+  } catch {
+    return dataStr;
+  }
 }
