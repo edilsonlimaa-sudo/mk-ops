@@ -13,7 +13,7 @@ export const useFechaInstalacao = () => {
   const queryClient = useQueryClient();
 
   // 🎭 Mock mode - desabilite para usar a API real
-  const MOCK_MODE = true;
+  const MOCK_MODE = false;
 
   return useMutation({
     mutationFn: async (uuid: string) => {
