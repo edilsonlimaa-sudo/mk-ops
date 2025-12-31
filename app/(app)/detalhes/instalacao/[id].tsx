@@ -1,15 +1,21 @@
 import { EditModal } from '@/components/instalacao/EditModal';
 import { EditableInfoRow, InfoRow } from '@/components/instalacao/InfoRows';
-import { SelectionModal } from '@/components/instalacao/SelectionModal';
+import {
+  ComodatoModal,
+  DatePickerModal,
+  FuncionarioSelectionModal,
+  PlanoSelectionModal,
+  QuickActionModal
+} from '@/components/instalacao/modals';
 import { useFuncionarios } from '@/hooks/funcionario';
 import { useEditaInstalacao, useFechaInstalacao, useInstalacaoDetail } from '@/hooks/instalacao';
 import { usePlanos } from '@/hooks/plano';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Modal, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Linking, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
@@ -43,10 +49,10 @@ export default function InstalacaoDetalhesScreen() {
   const [dataInstalacao, setDataInstalacao] = useState(new Date());
   const [valorInstalacao, setValorInstalacao] = useState('');
 
-  // Estados para modal de seleção de contato
-  const [contatoModalVisible, setContatoModalVisible] = useState(false);
-  const [contatoOptions, setContatoOptions] = useState<Array<{ label: string; value: string; icon: string; action: () => void }>>([]);
-  const [contatoModalTitle, setContatoModalTitle] = useState('');
+  // Estados para modal de ações rápidas
+  const [quickActionModalVisible, setQuickActionModalVisible] = useState(false);
+  const [quickActionOptions, setQuickActionOptions] = useState<Array<{ label: string; value: string; icon: string; action: () => void }>>([]);
+  const [quickActionModalTitle, setQuickActionModalTitle] = useState('');
   const [visitadoSim, setVisitadoSim] = useState(false);
   const [senhaVisivel, setSenhaVisivel] = useState(false);
 
@@ -491,8 +497,8 @@ export default function InstalacaoDetalhesScreen() {
                         });
                       });
                     } else {
-                      setContatoModalTitle('Selecionar Telefone');
-                      setContatoOptions(
+                      setQuickActionModalTitle('Selecionar Telefone');
+                      setQuickActionOptions(
                         telefones.map(t => ({
                           label: t.label,
                           value: t.numero,
@@ -508,11 +514,11 @@ export default function InstalacaoDetalhesScreen() {
                                 topOffset: 60,
                               });
                             });
-                            setContatoModalVisible(false);
+                            setQuickActionModalVisible(false);
                           },
                         }))
                       );
-                      setContatoModalVisible(true);
+                      setQuickActionModalVisible(true);
                     }
                   }}
                   className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-green-100 active:scale-95"
@@ -550,8 +556,8 @@ export default function InstalacaoDetalhesScreen() {
                         });
                       });
                     } else {
-                      setContatoModalTitle('Selecionar Número para WhatsApp');
-                      setContatoOptions(
+                      setQuickActionModalTitle('Selecionar Número para WhatsApp');
+                      setQuickActionOptions(
                         celulares.map(c => ({
                           label: c.label,
                           value: c.numero,
@@ -568,11 +574,11 @@ export default function InstalacaoDetalhesScreen() {
                                 topOffset: 60,
                               });
                             });
-                            setContatoModalVisible(false);
+                            setQuickActionModalVisible(false);
                           },
                         }))
                       );
-                      setContatoModalVisible(true);
+                      setQuickActionModalVisible(true);
                     }
                   }}
                   className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-emerald-100 active:scale-95"
@@ -665,15 +671,15 @@ export default function InstalacaoDetalhesScreen() {
                     };
 
                     if (temCoordenadas && temEndereco) {
-                      setContatoModalTitle('Navegar para');
-                      setContatoOptions([
+                      setQuickActionModalTitle('Navegar para');
+                      setQuickActionOptions([
                         {
                           label: 'Por Coordenadas GPS',
                           value: instalacao.coordenadas || '',
                           icon: 'navigate',
                           action: () => {
                             navegarPorCoordenadas();
-                            setContatoModalVisible(false);
+                            setQuickActionModalVisible(false);
                           },
                         },
                         {
@@ -682,11 +688,11 @@ export default function InstalacaoDetalhesScreen() {
                           icon: 'location',
                           action: () => {
                             navegarPorEndereco();
-                            setContatoModalVisible(false);
+                            setQuickActionModalVisible(false);
                           },
                         },
                       ]);
-                      setContatoModalVisible(true);
+                      setQuickActionModalVisible(true);
                     } else if (temCoordenadas) {
                       navegarPorCoordenadas();
                     } else if (temEndereco) {
@@ -962,371 +968,133 @@ export default function InstalacaoDetalhesScreen() {
         />
 
         {/* DateTimePicker para iOS */}
-        {showDatePicker && Platform.OS === 'ios' && (
-          <Modal
-            visible={showDatePicker}
-            animationType="fade"
-            transparent
-            onRequestClose={() => setShowDatePicker(false)}
-          >
-            <View className="flex-1 bg-black/50 justify-end">
-              <View className="bg-white rounded-t-3xl p-6">
-                <View className="flex-row items-center justify-between mb-4">
-                  <Text className="text-base font-bold text-gray-800">
-                    Editar Data da Visita
-                  </Text>
-                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                    <Ionicons name="close" size={24} color="#6b7280" />
-                  </TouchableOpacity>
-                </View>
-
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="datetime"
-                  display="spinner"
-                  onChange={(event, date) => {
-                    if (date) {
-                      setSelectedDate(date);
-                    }
-                  }}
-                  locale="pt-BR"
-                  minimumDate={new Date()}
-                />
-
-                <View className="flex-row gap-3 mt-4">
-                  <TouchableOpacity
-                    onPress={() => setShowDatePicker(false)}
-                    className="flex-1 bg-gray-100 py-3 rounded-lg"
-                  >
-                    <Text className="text-gray-700 font-semibold text-center">Cancelar</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => {
-                      setShowDatePicker(false);
-                      setEditField('visita');
-                      salvarEdicao();
-                    }}
-                    disabled={editaInstalacaoMutation.isPending}
-                    className="flex-1 bg-blue-600 py-3 rounded-lg"
-                  >
-                    {editaInstalacaoMutation.isPending ? (
-                      <ActivityIndicator size="small" color="white" />
-                    ) : (
-                      <Text className="text-white font-semibold text-center">Salvar</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
-        )}
+        <DatePickerModal
+          visible={showDatePicker && Platform.OS === 'ios'}
+          value={selectedDate}
+          onChange={setSelectedDate}
+          onSave={() => {
+            setShowDatePicker(false);
+            setEditField('visita');
+            salvarEdicao();
+          }}
+          onClose={() => setShowDatePicker(false)}
+          isPending={editaInstalacaoMutation.isPending}
+        />
 
         {/* Modal de Seleção de Plano */}
-        <SelectionModal
+        <PlanoSelectionModal
           visible={planoModalVisible}
-          onClose={() => setPlanoModalVisible(false)}
-          title="Selecionar Plano"
-          data={planos}
+          planos={planos}
           isLoading={isLoadingPlanos}
-          keyExtractor={(item) => item.uuid_plano}
-          emptyMessage="Nenhum plano disponível"
-          renderItem={({ item }) => {
-            const isUpdating = updatingItemId === item.uuid_plano;
-            const isAnyUpdating = updatingItemId !== null;
-            
-            return (
-            <TouchableOpacity
-              onPress={() => {
-                if (!instalacao || isAnyUpdating) return;
-
-                setUpdatingItemId(item.uuid_plano);
-                const dados = { plano: item.nome };
-                editaInstalacaoMutation.mutate(
-                  { uuid: instalacao.uuid_solic, dados },
-                  {
-                    onSuccess: () => {
-                      setUpdatingItemId(null);
-                      setPlanoModalVisible(false);
-                      Toast.show({
-                        type: 'success',
-                        text1: 'Plano atualizado! ✅',
-                        position: 'top',
-                        topOffset: 60,
-                      });
-                    },
-                    onError: (error) => {
-                      setUpdatingItemId(null);
-                      Toast.show({
-                        type: 'error',
-                        text1: 'Erro ao atualizar',
-                        text2: error instanceof Error ? error.message : 'Tente novamente',
-                        position: 'top',
-                        topOffset: 60,
-                      });
-                    },
-                  }
-                );
-              }}
-              disabled={isAnyUpdating}
-              className="bg-gray-50 rounded-xl p-4 mb-3 border border-gray-200 active:bg-gray-100"
-              style={{ opacity: isAnyUpdating && !isUpdating ? 0.5 : 1 }}
-            >
-              <View className="flex-row items-center justify-between">
-                <View className="flex-1">
-                  <Text className="text-base font-bold text-gray-800 mb-1">
-                    {item.nome}
-                  </Text>
-                  {item.descricao && (
-                    <Text className="text-sm text-gray-600 mb-2">
-                      {item.descricao}
-                    </Text>
-                  )}
-                  <View className="flex-row items-center gap-4">
-                    <View className="flex-row items-center">
-                      <Ionicons name="arrow-down-circle" size={16} color="#9333ea" />
-                      <Text className="text-xs text-gray-600 ml-1">
-                        {item.veldown} Mbps
-                      </Text>
-                    </View>
-                    <View className="flex-row items-center">
-                      <Ionicons name="arrow-up-circle" size={16} color="#a855f7" />
-                      <Text className="text-xs text-gray-600 ml-1">
-                        {item.velup} Mbps
-                      </Text>
-                    </View>
-                    <Text className="text-sm font-bold text-purple-600">
-                      R$ {item.valor}
-                    </Text>
-                  </View>
-                </View>
-                {isUpdating ? (
-                  <ActivityIndicator size="small" color="#9333ea" />
-                ) : (
-                  <Ionicons
-                    name={instalacao?.plano === item.nome ? "checkmark-circle" : "chevron-forward"}
-                    size={24}
-                    color={instalacao?.plano === item.nome ? "#9333ea" : "#9ca3af"}
-                  />
-                )}
-              </View>
-            </TouchableOpacity>
+          currentPlano={instalacao?.plano || null}
+          updatingItemId={updatingItemId}
+          onSelect={(plano) => {
+            if (!instalacao) return;
+            setUpdatingItemId(plano.uuid_plano);
+            const dados = { plano: plano.nome };
+            editaInstalacaoMutation.mutate(
+              { uuid: instalacao.uuid_solic, dados },
+              {
+                onSuccess: () => {
+                  setUpdatingItemId(null);
+                  setPlanoModalVisible(false);
+                  Toast.show({
+                    type: 'success',
+                    text1: 'Plano atualizado! ✅',
+                    position: 'top',
+                    topOffset: 60,
+                  });
+                },
+                onError: (error) => {
+                  setUpdatingItemId(null);
+                  Toast.show({
+                    type: 'error',
+                    text1: 'Erro ao atualizar',
+                    text2: error instanceof Error ? error.message : 'Tente novamente',
+                    position: 'top',
+                    topOffset: 60,
+                  });
+                },
+              }
             );
           }}
+          onClose={() => setPlanoModalVisible(false)}
         />
 
         {/* Modal de Seleção de Funcionário (Técnico) */}
-        <SelectionModal
+        <FuncionarioSelectionModal
           visible={funcionarioModalVisible}
-          onClose={() => setFuncionarioModalVisible(false)}
-          title="Selecionar Técnico"
-          data={funcionarios}
+          funcionarios={funcionarios}
           isLoading={isLoadingFuncionarios}
-          keyExtractor={(item) => item.uuid_func}
-          emptyMessage="Nenhum funcionário disponível"
-          renderItem={({ item }) => {
-            const isUpdating = updatingItemId === item.uuid_func;
-            const isAnyUpdating = updatingItemId !== null;
-            
-            return (
-            <TouchableOpacity
-              onPress={() => {
-                if (!instalacao || isAnyUpdating) return;
-
-                setUpdatingItemId(item.uuid_func);
-                const dados = { tecnico: item.nome };
-                editaInstalacaoMutation.mutate(
-                  { uuid: instalacao.uuid_solic, dados },
-                  {
-                    onSuccess: () => {
-                      setUpdatingItemId(null);
-                      setFuncionarioModalVisible(false);
-                      Toast.show({
-                        type: 'success',
-                        text1: 'Técnico atualizado! ✅',
-                        position: 'top',
-                        topOffset: 60,
-                      });
-                    },
-                    onError: (error) => {
-                      setUpdatingItemId(null);
-                      Toast.show({
-                        type: 'error',
-                        text1: 'Erro ao atualizar',
-                        text2: error instanceof Error ? error.message : 'Tente novamente',
-                        position: 'top',
-                        topOffset: 60,
-                      });
-                    },
-                  }
-                );
-              }}
-              disabled={isAnyUpdating}
-              className="bg-gray-50 rounded-xl p-4 mb-3 border border-gray-200 active:bg-gray-100"
-              style={{ opacity: isAnyUpdating && !isUpdating ? 0.5 : 1 }}
-            >
-              <View className="flex-row items-center justify-between">
-                <View className="flex-1">
-                  <Text className="text-base font-bold text-gray-800 mb-1">
-                    {item.nome}
-                  </Text>
-                  {item.cargo && (
-                    <Text className="text-sm text-gray-600 mb-1">
-                      {item.cargo}
-                    </Text>
-                  )}
-                  <View className="flex-row items-center gap-4 flex-wrap">
-                    {item.email && (
-                      <View className="flex-row items-center">
-                        <Ionicons name="mail-outline" size={14} color="#6b7280" />
-                        <Text className="text-xs text-gray-600 ml-1">
-                          {item.email}
-                        </Text>
-                      </View>
-                    )}
-                    {item.celular && (
-                      <View className="flex-row items-center">
-                        <Ionicons name="call-outline" size={14} color="#6b7280" />
-                        <Text className="text-xs text-gray-600 ml-1">
-                          {item.celular}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-                {isUpdating ? (
-                  <ActivityIndicator size="small" color="#9333ea" />
-                ) : (
-                  <Ionicons
-                    name={instalacao?.tecnico === item.nome ? "checkmark-circle" : "chevron-forward"}
-                    size={24}
-                    color={instalacao?.tecnico === item.nome ? "#10b981" : "#9ca3af"}
-                  />
-                )}
-              </View>
-            </TouchableOpacity>
+          currentTecnico={instalacao?.tecnico || null}
+          updatingItemId={updatingItemId}
+          onSelect={(funcionario) => {
+            if (!instalacao) return;
+            setUpdatingItemId(funcionario.uuid_func);
+            const dados = { tecnico: funcionario.nome };
+            editaInstalacaoMutation.mutate(
+              { uuid: instalacao.uuid_solic, dados },
+              {
+                onSuccess: () => {
+                  setUpdatingItemId(null);
+                  setFuncionarioModalVisible(false);
+                  Toast.show({
+                    type: 'success',
+                    text1: 'Técnico atualizado! ✅',
+                    position: 'top',
+                    topOffset: 60,
+                  });
+                },
+                onError: (error) => {
+                  setUpdatingItemId(null);
+                  Toast.show({
+                    type: 'error',
+                    text1: 'Erro ao atualizar',
+                    text2: error instanceof Error ? error.message : 'Tente novamente',
+                    position: 'top',
+                    topOffset: 60,
+                  });
+                },
+              }
             );
           }}
+          onClose={() => setFuncionarioModalVisible(false)}
         />
 
         {/* Modal de Seleção de Comodato */}
-        <Modal
+        <ComodatoModal
           visible={comodatoModalVisible}
-          animationType="fade"
-          transparent
-          onRequestClose={() => setComodatoModalVisible(false)}
-        >
-          <View className="flex-1 bg-black/50 justify-end">
-            <View className="bg-white rounded-t-3xl p-6">
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-base font-bold text-gray-800">Comodato</Text>
-                <TouchableOpacity onPress={() => setComodatoModalVisible(false)}>
-                  <Ionicons name="close" size={24} color="#6b7280" />
-                </TouchableOpacity>
-              </View>
-
-              <View className="gap-3">
-                <TouchableOpacity
-                  onPress={() => {
-                    if (!instalacao) return;
-
-                    const dados = { comodato: 'sim' };
-                    editaInstalacaoMutation.mutate(
-                      { uuid: instalacao.uuid_solic, dados },
-                      {
-                        onSuccess: () => {
-                          setComodatoModalVisible(false);
-                          Toast.show({
-                            type: 'success',
-                            text1: 'Comodato atualizado! ✅',
-                            position: 'top',
-                            topOffset: 60,
-                          });
-                        },
-                        onError: (error) => {
-                          Toast.show({
-                            type: 'error',
-                            text1: 'Erro ao atualizar',
-                            text2: error instanceof Error ? error.message : 'Tente novamente',
-                            position: 'top',
-                            topOffset: 60,
-                          });
-                        },
-                      }
-                    );
-                  }}
-                  className="bg-gray-50 rounded-xl p-4 border border-gray-200 active:bg-gray-100"
-                >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-3">
-                      <View className="bg-green-100 w-10 h-10 rounded-full items-center justify-center">
-                        <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-                      </View>
-                      <View>
-                        <Text className="text-base font-bold text-gray-800">Sim</Text>
-                        <Text className="text-xs text-gray-600">Cliente possui equipamento em comodato</Text>
-                      </View>
-                    </View>
-                    <Ionicons
-                      name={instalacao?.comodato === 'sim' ? "checkmark-circle" : "chevron-forward"}
-                      size={24}
-                      color={instalacao?.comodato === 'sim' ? "#10b981" : "#9ca3af"}
-                    />
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    if (!instalacao) return;
-
-                    const dados = { comodato: 'nao' };
-                    editaInstalacaoMutation.mutate(
-                      { uuid: instalacao.uuid_solic, dados },
-                      {
-                        onSuccess: () => {
-                          setComodatoModalVisible(false);
-                          Toast.show({
-                            type: 'success',
-                            text1: 'Comodato atualizado! ✅',
-                            position: 'top',
-                            topOffset: 60,
-                          });
-                        },
-                        onError: (error) => {
-                          Toast.show({
-                            type: 'error',
-                            text1: 'Erro ao atualizar',
-                            text2: error instanceof Error ? error.message : 'Tente novamente',
-                            position: 'top',
-                            topOffset: 60,
-                          });
-                        },
-                      }
-                    );
-                  }}
-                  className="bg-gray-50 rounded-xl p-4 border border-gray-200 active:bg-gray-100"
-                >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-3">
-                      <View className="bg-gray-100 w-10 h-10 rounded-full items-center justify-center">
-                        <Ionicons name="close-circle" size={20} color="#6b7280" />
-                      </View>
-                      <View>
-                        <Text className="text-base font-bold text-gray-800">Não</Text>
-                        <Text className="text-xs text-gray-600">Cliente não possui equipamento em comodato</Text>
-                      </View>
-                    </View>
-                    <Ionicons
-                      name={instalacao?.comodato === 'nao' || !instalacao?.comodato ? "checkmark-circle" : "chevron-forward"}
-                      size={24}
-                      color={instalacao?.comodato === 'nao' || !instalacao?.comodato ? "#10b981" : "#9ca3af"}
-                    />
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
+          currentValue={instalacao?.comodato || null}
+          onSelect={(value) => {
+            if (!instalacao) return;
+            const dados = { comodato: value };
+            editaInstalacaoMutation.mutate(
+              { uuid: instalacao.uuid_solic, dados },
+              {
+                onSuccess: () => {
+                  setComodatoModalVisible(false);
+                  Toast.show({
+                    type: 'success',
+                    text1: 'Comodato atualizado! ✅',
+                    position: 'top',
+                    topOffset: 60,
+                  });
+                },
+                onError: (error) => {
+                  Toast.show({
+                    type: 'error',
+                    text1: 'Erro ao atualizar',
+                    text2: error instanceof Error ? error.message : 'Tente novamente',
+                    position: 'top',
+                    topOffset: 60,
+                  });
+                },
+              }
+            );
+          }}
+          onClose={() => setComodatoModalVisible(false)}
+          isPending={editaInstalacaoMutation.isPending}
+        />
 
         {/* Modal de Finalização */}
         <Modal
@@ -1853,61 +1621,13 @@ export default function InstalacaoDetalhesScreen() {
             </SafeAreaView>
         </Modal>
 
-        {/* Modal de Seleção de Contato */}
-        <Modal
-          visible={contatoModalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setContatoModalVisible(false)}
-        >
-          <Pressable
-            className="flex-1 bg-black/50 justify-end"
-            onPress={() => setContatoModalVisible(false)}
-          >
-            <Pressable
-              className="bg-white rounded-t-3xl p-6 pb-8"
-              onPress={(e) => e.stopPropagation()}
-            >
-              <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-6" />
-
-              <Text className="text-base font-bold text-gray-900 mb-4">
-                {contatoModalTitle}
-              </Text>
-
-              <View className="gap-3">
-                {contatoOptions.map((option, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={option.action}
-                    className="flex-row items-center justify-between bg-gray-50 p-4 rounded-xl active:bg-gray-100"
-                  >
-                    <View className="flex-row items-center gap-3 flex-1">
-                      <View className="w-10 h-10 rounded-full items-center justify-center bg-purple-100">
-                        <Ionicons
-                          name={option.icon as any}
-                          size={20}
-                          color="#9333ea"
-                        />
-                      </View>
-                      <View className="flex-1">
-                        <Text className="text-gray-600 text-xs">{option.label}</Text>
-                        <Text className="text-gray-900 font-semibold">{option.value}</Text>
-                      </View>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <TouchableOpacity
-                onPress={() => setContatoModalVisible(false)}
-                className="mt-6 bg-gray-100 p-4 rounded-xl active:bg-gray-200"
-              >
-                <Text className="text-center font-semibold text-gray-700">Cancelar</Text>
-              </TouchableOpacity>
-            </Pressable>
-          </Pressable>
-        </Modal>
+        {/* Modal de Ações Rápidas */}
+        <QuickActionModal
+          visible={quickActionModalVisible}
+          title={quickActionModalTitle}
+          options={quickActionOptions}
+          onClose={() => setQuickActionModalVisible(false)}
+        />
       </SafeAreaView>
     </>
   );
