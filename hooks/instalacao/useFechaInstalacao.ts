@@ -13,7 +13,7 @@ export const useFechaInstalacao = () => {
   const queryClient = useQueryClient();
 
   // 🎭 Mock mode - desabilite para usar a API real
-  const MOCK_MODE = false;
+  const MOCK_MODE = true;
 
   return useMutation({
     mutationFn: async (uuid: string) => {
@@ -48,8 +48,15 @@ export const useFechaInstalacao = () => {
             // 2. ADICIONA no HISTÓRICO cache
             console.log(`📚 Adicionando instalação ${uuid} no histórico`);
             const historicoData = queryClient.getQueryData<ServicoAgenda[]>(historicoKeys.all) || [];
+            
+            // 🔧 FIX: Usar dados do detail cache (que tem updates mais recentes)
+            const detailKey = instalacaoKeys.detail(uuid);
+            const detailData = queryClient.getQueryData(detailKey);
+            
             const instalacaoFechada = {
               ...instalacaoParaFechar,
+              // Merge com dados atualizados do detail se disponível
+              ...(detailData ? detailData : {}),
               status: 'concluido',
               // Merge com dados retornados pela API se disponíveis
               ...(result && typeof result === 'object' ? result : {}),
@@ -58,9 +65,7 @@ export const useFechaInstalacao = () => {
             const historicoAtualizado = [instalacaoFechada, ...historicoData];
             queryClient.setQueryData<ServicoAgenda[]>(historicoKeys.all, historicoAtualizado);
 
-            // 3. ATUALIZA cache de DETALHES se existir
-            const detailKey = instalacaoKeys.detail(uuid);
-            const detailData = queryClient.getQueryData(detailKey);
+            // 3. ATUALIZA cache de DETALHES se existir  
             if (detailData) {
               console.log(`🔍 Atualizando cache de detalhes para instalação ${uuid}`);
               queryClient.setQueryData(detailKey, {

@@ -1532,13 +1532,26 @@ export default function InstalacaoDetalhesScreen() {
                     onPress={() => {
                       if (instaladoSim === true) {
                         if (Platform.OS === 'android') {
+                          // Primeiro abre o picker de data
                           DateTimePickerAndroid.open({
                             value: dataInstalacao,
                             onChange: (event, selectedDate) => {
-                              if (selectedDate) setDataInstalacao(selectedDate);
+                              if (selectedDate && event.type === 'set') {
+                                // Depois de selecionar a data, abre o picker de hora
+                                DateTimePickerAndroid.open({
+                                  value: selectedDate,
+                                  onChange: (timeEvent, selectedTime) => {
+                                    if (selectedTime && timeEvent.type === 'set') {
+                                      setDataInstalacao(selectedTime);
+                                    }
+                                  },
+                                  mode: 'time',
+                                  is24Hour: true,
+                                });
+                              }
                             },
                             mode: 'date',
-                            is24Hour: true,
+                            minimumDate: new Date(),
                           });
                         } else {
                           setShowDatePicker(true);
@@ -1566,14 +1579,16 @@ export default function InstalacaoDetalhesScreen() {
                         <View>
                           <Text className={`text-xs mb-1 ${
                             instaladoSim === true ? 'text-purple-600' : 'text-gray-400'
-                          }`}>Data selecionada</Text>
+                          }`}>Data e hora selecionadas</Text>
                           <Text className={`font-bold text-base ${
                             instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
                           }`}>
-                            {dataInstalacao.toLocaleDateString('pt-BR', { 
+                            {dataInstalacao.toLocaleString('pt-BR', { 
                               day: '2-digit', 
                               month: 'long', 
-                              year: 'numeric' 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
                             })}
                           </Text>
                         </View>
@@ -1717,7 +1732,13 @@ export default function InstalacaoDetalhesScreen() {
                       }
                       // Se instalou, inclui data e valor
                       else {
-                        dados.datainst = dataInstalacao.toISOString().split('T')[0];
+                        // 🔧 FIX: Inclui hora na data de instalação (padrão: YYYY-MM-DD HH:MM:SS)
+                        const year = dataInstalacao.getFullYear();
+                        const month = String(dataInstalacao.getMonth() + 1).padStart(2, '0');
+                        const day = String(dataInstalacao.getDate()).padStart(2, '0');
+                        const hours = String(dataInstalacao.getHours()).padStart(2, '0');
+                        const minutes = String(dataInstalacao.getMinutes()).padStart(2, '0');
+                        dados.datainst = `${year}-${month}-${day} ${hours}:${minutes}:00`;
                         dados.valor = valorInstalacao || undefined;
                       }
                     }
