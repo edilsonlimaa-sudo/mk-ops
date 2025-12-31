@@ -2,7 +2,7 @@ import type { Instalacao } from '@/types/instalacao';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import type { UseMutationResult } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Modal,
@@ -38,6 +38,16 @@ export function FinalizacaoModal({
   const [instaladoSim, setInstaladoSim] = useState<boolean | null>(null);
   const [dataInstalacao, setDataInstalacao] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Resetar estados quando o modal fechar
+  useEffect(() => {
+    if (!visible) {
+      setVisitadoSim(false);
+      setInstaladoSim(null);
+      setDataInstalacao(new Date());
+      setShowDatePicker(false);
+    }
+  }, [visible]);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
