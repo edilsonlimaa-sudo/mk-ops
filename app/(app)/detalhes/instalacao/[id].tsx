@@ -29,6 +29,8 @@ export default function InstalacaoDetalhesScreen() {
   const [editField, setEditField] = useState<'visita' | 'tecnico' | 'obs' | 'plano' | 'email' | 'telefone' | 'celular' | 'endereco' | 'numero' | 'complemento' | 'bairro' | 'cidade' | 'estado' | 'cep' | 'valor' | 'vencimento' | 'login' | 'senha' | 'comodato' | 'equipamento' | 'ip' | 'mac' | 'coordenadas' | null>(null);
   const [editValue, setEditValue] = useState('');
   
+  // Ref para ScrollView principal da tela
+  const mainScrollRef = useRef<ScrollView>(null);
   // Ref para ScrollView do modal de finalização
   const finalizacaoScrollRef = useRef<ScrollView>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -347,7 +349,7 @@ export default function InstalacaoDetalhesScreen() {
         }}
       />
       <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <ScrollView ref={mainScrollRef} className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="p-4">
             {/* HERO SECTION - Informações Críticas */}
             <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
@@ -377,46 +379,92 @@ export default function InstalacaoDetalhesScreen() {
                 </View>
               </TouchableOpacity>
 
-              {/* Informações Principais em Grid */}
-              <View className="bg-gray-50 rounded-xl p-3 border border-gray-200">
-                <TouchableOpacity
-                  onPress={() => abrirEdicao('tecnico', instalacao.tecnico || '')}
-                  disabled={instalacao.status !== 'aberto'}
-                  className="flex-row items-center justify-between mb-2 active:bg-white rounded-lg px-2 py-1"
-                >
-                  <View className="flex-1 justify-center">
-                    <Text className="text-gray-500 text-xs font-medium">Técnico</Text>
-                    <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
-                      {instalacao.tecnico || 'Não atribuído'}
-                    </Text>
-                  </View>
-                  {instalacao.status === 'aberto' && (
-                    <View className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
-                      <Ionicons name="pencil" size={14} color="white" />
+              {/* DADOS DE FINALIZAÇÃO (somente se concluído) */}
+              {instalacao.status === 'concluido' && (
+                <View className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 mb-4 border border-green-200">
+                  <View className="flex-row items-center mb-3">
+                    <View className="bg-green-600 w-8 h-8 rounded-full items-center justify-center mr-3">
+                      <Ionicons name="checkmark-done-outline" size={16} color="white" />
                     </View>
-                  )}
-                </TouchableOpacity>
-
-                <View className="h-px bg-gray-200 my-2" />
-
-                <TouchableOpacity
-                  onPress={() => abrirEdicao('visita', instalacao.visita || '')}
-                  disabled={instalacao.status !== 'aberto'}
-                  className="flex-row items-center justify-between mb-2 active:bg-white rounded-lg px-2 py-1"
-                >
-                  <View className="flex-1 justify-center">
-                    <Text className="text-gray-500 text-xs font-medium">Visita Agendada</Text>
-                    <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
-                      {instalacao.visita ? formatarDataCompleta(instalacao.visita) : 'Não agendada'}
-                    </Text>
+                    <Text className="text-green-900 font-bold text-sm flex-1">Finalização</Text>
                   </View>
-                  {instalacao.status === 'aberto' && (
-                    <View className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
-                      <Ionicons name="calendar-outline" size={14} color="white" />
+
+                  <View className="gap-2">
+                    {instalacao.visitado && (
+                      <InfoRow label="Visitado" value={instalacao.visitado === 'sim' ? '✓ Sim' : '✗ Não'} />
+                    )}
+
+                    {instalacao.tecnico && (
+                      <InfoRow label="Técnico Responsável" value={instalacao.tecnico} />
+                    )}
+
+                    {instalacao.instalado && (
+                      <InfoRow label="Instalado" value={instalacao.instalado === 'sim' ? '✓ Sim' : '✗ Não'} />
+                    )}
+
+                    {/* Só mostra data de instalação se foi instalado */}
+                    {instalacao.instalado === 'sim' && instalacao.datainst && (
+                      <InfoRow label="Data de Instalação" value={formatarDataCompleta(instalacao.datainst)} />
+                    )}
+
+                    {instalacao.data_feito && (
+                      <InfoRow label="Data de Fechamento" value={formatarDataCompleta(instalacao.data_feito)} />
+                    )}
+
+                    {/* Só mostra taxa de adesão se foi instalado */}
+                    {instalacao.instalado === 'sim' && instalacao.valor && (
+                      <InfoRow label="Taxa de Adesão" value={`R$ ${instalacao.valor}`} />
+                    )}
+
+                    {instalacao.nome_feito && (
+                      <InfoRow label="Concluído por" value={instalacao.nome_feito} />
+                    )}
+                  </View>
+                </View>
+              )}
+
+              {/* Informações Principais em Grid - apenas se aberto */}
+              {instalacao.status === 'aberto' && (
+                <View className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                  <TouchableOpacity
+                    onPress={() => abrirEdicao('tecnico', instalacao.tecnico || '')}
+                    disabled={instalacao.status !== 'aberto'}
+                    className="flex-row items-center justify-between mb-2 active:bg-white rounded-lg px-2 py-1"
+                  >
+                    <View className="flex-1 justify-center">
+                      <Text className="text-gray-500 text-xs font-medium">Técnico</Text>
+                      <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
+                        {instalacao.tecnico || 'Não atribuído'}
+                      </Text>
                     </View>
-                  )}
-                </TouchableOpacity>
-              </View>
+                    {instalacao.status === 'aberto' && (
+                      <View className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
+                        <Ionicons name="pencil" size={14} color="white" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+
+                  <View className="h-px bg-gray-200 my-2" />
+
+                  <TouchableOpacity
+                    onPress={() => abrirEdicao('visita', instalacao.visita || '')}
+                    disabled={instalacao.status !== 'aberto'}
+                    className="flex-row items-center justify-between mb-2 active:bg-white rounded-lg px-2 py-1"
+                  >
+                    <View className="flex-1 justify-center">
+                      <Text className="text-gray-500 text-xs font-medium">Visita Agendada</Text>
+                      <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
+                        {instalacao.visita ? formatarDataCompleta(instalacao.visita) : 'Não agendada'}
+                      </Text>
+                    </View>
+                    {instalacao.status === 'aberto' && (
+                      <View className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
+                        <Ionicons name="calendar-outline" size={14} color="white" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
 
             {/* AÇÕES RÁPIDAS - Cards Horizontais */}
@@ -842,40 +890,6 @@ export default function InstalacaoDetalhesScreen() {
                 />
               </View>
             </View>
-
-            {/* DADOS DE FINALIZAÇÃO (somente se concluído) */}
-            {instalacao.status === 'concluido' && (
-              <View className="bg-gray-50 rounded-2xl p-5 mb-4 border-2 border-gray-200">
-                <View className="flex-row items-center mb-4">
-                  <View className="bg-gray-700 w-10 h-10 rounded-full items-center justify-center mr-3">
-                    <Ionicons name="checkmark-done-outline" size={20} color="white" />
-                  </View>
-                  <Text className="text-base text-gray-900 font-bold flex-1">Finalização</Text>
-                </View>
-
-                <View className="gap-2">
-                  {instalacao.instalado && (
-                    <InfoRow label="Instalado" value={instalacao.instalado === 'sim' ? '✓ Sim' : '✗ Não'} />
-                  )}
-
-                  {instalacao.datainst && (
-                    <InfoRow label="Data de Instalação" value={formatarDataCompleta(instalacao.datainst)} />
-                  )}
-
-                  {instalacao.valor && (
-                    <InfoRow label="Valor Cobrado" value={`R$ ${instalacao.valor}`} />
-                  )}
-
-                  {instalacao.data_feito && (
-                    <InfoRow label="Concluído em" value={formatarDataCompleta(instalacao.data_feito)} />
-                  )}
-
-                  {instalacao.nome_feito && (
-                    <InfoRow label="Concluído por" value={instalacao.nome_feito} />
-                  )}
-                </View>
-              </View>
-            )}
 
             {/* OBSERVAÇÕES */}
             {(instalacao.status === 'aberto' || instalacao.obs) && (
@@ -1774,6 +1788,10 @@ export default function InstalacaoDetalhesScreen() {
                           fechaInstalacaoMutation.mutate(instalacao!.uuid_solic, {
                             onSuccess: () => {
                               setFinalizacaoModalVisible(false);
+                              // Scroll para o topo para mostrar a seção de finalização
+                              setTimeout(() => {
+                                mainScrollRef.current?.scrollTo({ y: 0, animated: true });
+                              }, 100);
                               setTimeout(() => {
                                 Toast.show({
                                   type: 'success',
