@@ -16,7 +16,7 @@ export default function ClienteInstalacaoScreen() {
 
   // Estados para modais de edição
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editField, setEditField] = useState<'email' | 'telefone' | 'celular' | 'endereco' | 'numero' | 'complemento' | 'bairro' | 'cidade' | 'estado' | 'cep' | 'coordenadas' | 'vencimento' | null>(null);
+  const [editField, setEditField] = useState<'email' | 'telefone' | 'celular' | 'endereco' | 'numero' | 'complemento' | 'bairro' | 'cidade' | 'estado' | 'cep' | 'coordenadas' | 'vencimento' | 'endereco_res' | 'numero_res' | 'complemento_res' | 'bairro_res' | 'cidade_res' | 'estado_res' | 'cep_res' | 'cpf' | 'rg' | null>(null);
   const [editValue, setEditValue] = useState('');
 
   const { data: instalacao, isLoading, error } = useInstalacaoDetail(id || '');
@@ -41,6 +41,15 @@ export default function ClienteInstalacaoScreen() {
       estado: 'Estado',
       cep: 'CEP',
       coordenadas: 'Coordenadas GPS',
+      endereco_res: 'Endereço de Correspondência',
+      numero_res: 'Número (Correspondência)',
+      complemento_res: 'Complemento (Correspondência)',
+      bairro_res: 'Bairro (Correspondência)',
+      cidade_res: 'Cidade (Correspondência)',
+      estado_res: 'Estado (Correspondência)',
+      cep_res: 'CEP (Correspondência)',
+      cpf: 'CPF',
+      rg: 'RG',
     };
     return labels[editField || ''] || '';
   };
@@ -181,11 +190,21 @@ export default function ClienteInstalacaoScreen() {
                   <View className="bg-gray-50 rounded-xl p-3">
                     <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Documentos</Text>
                     {instalacao.cpf && (
-                      <InfoRow label="CPF" value={instalacao.cpf} />
+                      <EditableInfoRow
+                        label="CPF"
+                        value={instalacao.cpf}
+                        onEdit={() => abrirEdicao('cpf', instalacao.cpf || '')}
+                        editable={isEditable}
+                      />
                     )}
                     {instalacao.rg && (
                       <View className="pt-2">
-                        <InfoRow label="RG" value={instalacao.rg} />
+                        <EditableInfoRow
+                          label="RG"
+                          value={instalacao.rg}
+                          onEdit={() => abrirEdicao('rg', instalacao.rg || '')}
+                          editable={isEditable}
+                        />
                       </View>
                     )}
                   </View>
@@ -235,21 +254,9 @@ export default function ClienteInstalacaoScreen() {
                     />
                   </View>
 
-                  {instalacao.opcelular && (
-                    <View className="pt-2">
-                      <InfoRow label="Operadora" value={instalacao.opcelular} />
-                    </View>
-                  )}
-
                   {instalacao.celular2 && (
                     <View className="pt-2">
                       <InfoRow label="Celular 2" value={instalacao.celular2} />
-                    </View>
-                  )}
-
-                  {instalacao.opcelular2 && (
-                    <View className="pt-2">
-                      <InfoRow label="Operadora 2" value={instalacao.opcelular2} />
                     </View>
                   )}
                 </View>
@@ -366,42 +373,77 @@ export default function ClienteInstalacaoScreen() {
 
                 <View className="bg-gray-50 rounded-xl p-3">
                   {instalacao.cep_res && (
-                    <InfoRow label="CEP" value={instalacao.cep_res} />
+                    <EditableInfoRow
+                      label="CEP"
+                      value={instalacao.cep_res}
+                      onEdit={() => abrirEdicao('cep_res', instalacao.cep_res || '')}
+                      editable={isEditable}
+                    />
                   )}
 
                   {instalacao.endereco_res && (
                     <View className={instalacao.cep_res ? "pt-2" : ""}>
-                      <InfoRow label="Endereço" value={instalacao.endereco_res} />
+                      <EditableInfoRow
+                        label="Endereço"
+                        value={instalacao.endereco_res}
+                        onEdit={() => abrirEdicao('endereco_res', instalacao.endereco_res || '')}
+                        editable={isEditable}
+                      />
                     </View>
                   )}
 
                   {instalacao.numero_res && (
                     <View className="pt-2">
-                      <InfoRow label="Número" value={instalacao.numero_res} />
+                      <EditableInfoRow
+                        label="Número"
+                        value={instalacao.numero_res}
+                        onEdit={() => abrirEdicao('numero_res', instalacao.numero_res || '')}
+                        editable={isEditable}
+                      />
                     </View>
                   )}
 
                   {instalacao.bairro_res && (
                     <View className="pt-2">
-                      <InfoRow label="Bairro" value={instalacao.bairro_res} />
+                      <EditableInfoRow
+                        label="Bairro"
+                        value={instalacao.bairro_res}
+                        onEdit={() => abrirEdicao('bairro_res', instalacao.bairro_res || '')}
+                        editable={isEditable}
+                      />
                     </View>
                   )}
 
                   {instalacao.complemento_res && (
                     <View className="pt-2">
-                      <InfoRow label="Complemento" value={instalacao.complemento_res} />
+                      <EditableInfoRow
+                        label="Complemento"
+                        value={instalacao.complemento_res}
+                        onEdit={() => abrirEdicao('complemento_res', instalacao.complemento_res || '')}
+                        editable={isEditable}
+                      />
                     </View>
                   )}
 
                   {instalacao.cidade_res && (
                     <View className="pt-2">
-                      <InfoRow label="Cidade" value={instalacao.cidade_res} />
+                      <EditableInfoRow
+                        label="Cidade"
+                        value={instalacao.cidade_res}
+                        onEdit={() => abrirEdicao('cidade_res', instalacao.cidade_res || '')}
+                        editable={isEditable}
+                      />
                     </View>
                   )}
 
                   {instalacao.estado_res && (
                     <View className="pt-2">
-                      <InfoRow label="Estado" value={instalacao.estado_res} />
+                      <EditableInfoRow
+                        label="Estado"
+                        value={instalacao.estado_res}
+                        onEdit={() => abrirEdicao('estado_res', instalacao.estado_res || '')}
+                        editable={isEditable}
+                      />
                     </View>
                   )}
                 </View>
