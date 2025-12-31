@@ -26,7 +26,7 @@ export default function InstalacaoDetalhesScreen() {
 
   // Estados para modais de edição
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editField, setEditField] = useState<'visita' | 'tecnico' | 'obs' | 'plano' | 'email' | 'telefone' | 'celular' | 'endereco' | 'numero' | 'complemento' | 'bairro' | 'cidade' | 'estado' | 'cep' | 'valor' | 'vencimento' | 'login' | 'comodato' | 'equipamento' | 'ip' | 'mac' | 'coordenadas' | null>(null);
+  const [editField, setEditField] = useState<'visita' | 'tecnico' | 'obs' | 'plano' | 'email' | 'telefone' | 'celular' | 'endereco' | 'numero' | 'complemento' | 'bairro' | 'cidade' | 'estado' | 'cep' | 'valor' | 'vencimento' | 'login' | 'senha' | 'comodato' | 'equipamento' | 'ip' | 'mac' | 'coordenadas' | null>(null);
   const [editValue, setEditValue] = useState('');
   
   // Ref para ScrollView do modal de finalização
@@ -46,6 +46,7 @@ export default function InstalacaoDetalhesScreen() {
   const [contatoOptions, setContatoOptions] = useState<Array<{ label: string; value: string; icon: string; action: () => void }>>([]);
   const [contatoModalTitle, setContatoModalTitle] = useState('');
   const [visitadoSim, setVisitadoSim] = useState(false);
+  const [senhaVisivel, setSenhaVisivel] = useState(false);
 
   // Funções auxiliares para formatação de moeda
   const formatarMoeda = (valor: number): string => {
@@ -275,6 +276,7 @@ export default function InstalacaoDetalhesScreen() {
       valor: 'Taxa de Ativação',
       vencimento: 'Vencimento',
       login: 'Login de Acesso',
+      senha: 'Senha de Acesso',
       comodato: 'Comodato',
       equipamento: 'Equipamento',
       ip: 'IP',
@@ -700,7 +702,26 @@ export default function InstalacaoDetalhesScreen() {
 
                   {instalacao.senha && (
                     <View className="pt-2">
-                      <InfoRow label="Senha" value="••••••••" />
+                      <View className="flex-row items-center justify-between">
+                        <View className="flex-1">
+                          <EditableInfoRow
+                            label="Senha"
+                            value={senhaVisivel ? instalacao.senha : '••••••••'}
+                            onEdit={() => abrirEdicao('senha', instalacao.senha || '')}
+                            editable={instalacao.status === 'aberto'}
+                          />
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => setSenhaVisivel(!senhaVisivel)}
+                          className="ml-3 p-2 bg-gray-100 rounded-lg"
+                        >
+                          <Ionicons 
+                            name={senhaVisivel ? "eye-off" : "eye"} 
+                            size={16} 
+                            color="#6b7280" 
+                          />
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   )}
                 </View>
@@ -921,6 +942,7 @@ export default function InstalacaoDetalhesScreen() {
           placeholder={`Digite ${getFieldLabel().toLowerCase()}`}
           multiline={editField === 'obs'}
           keyboardType={editField === 'email' ? 'email-address' : editField === 'telefone' || editField === 'celular' ? 'phone-pad' : 'default'}
+          secureTextEntry={editField === 'senha'}
           isPending={editaInstalacaoMutation.isPending}
           saveButtonColor="bg-purple-600"
         />

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { ActivityIndicator, Modal, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface EditModalProps {
@@ -11,6 +12,7 @@ interface EditModalProps {
   placeholder: string;
   multiline?: boolean;
   keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'numeric';
+  secureTextEntry?: boolean;
   isPending?: boolean;
   saveButtonColor?: string;
 }
@@ -25,9 +27,12 @@ export function EditModal({
   placeholder,
   multiline = false,
   keyboardType = 'default',
+  secureTextEntry = false,
   isPending = false,
   saveButtonColor = 'bg-blue-600',
 }: EditModalProps) {
+  const [senhaVisivel, setSenhaVisivel] = useState(false);
+  
   return (
     <Modal
       visible={visible}
@@ -46,17 +51,34 @@ export function EditModal({
             </TouchableOpacity>
           </View>
 
-          <TextInput
-            value={value}
-            onChangeText={onChange}
-            placeholder={placeholder}
-            multiline={multiline}
-            numberOfLines={multiline ? 4 : 1}
-            keyboardType={keyboardType}
-            className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-base text-gray-800 mb-4"
-            style={multiline ? { height: 100, textAlignVertical: 'top' } : {}}
-            autoFocus
-          />
+          <View className="relative mb-4">
+            <TextInput
+              value={value}
+              onChangeText={onChange}
+              placeholder={placeholder}
+              multiline={multiline}
+              numberOfLines={multiline ? 4 : 1}
+              keyboardType={keyboardType}
+              secureTextEntry={secureTextEntry && !senhaVisivel}
+              className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-base text-gray-800"
+              style={multiline ? { height: 100, textAlignVertical: 'top' } : { paddingRight: secureTextEntry ? 50 : 12 }}
+              autoFocus
+            />
+            
+            {secureTextEntry && (
+              <TouchableOpacity
+                onPress={() => setSenhaVisivel(!senhaVisivel)}
+                className="absolute right-3 top-3 p-1"
+                style={{ top: multiline ? 12 : 12 }}
+              >
+                <Ionicons 
+                  name={senhaVisivel ? "eye-off" : "eye"} 
+                  size={20} 
+                  color="#6b7280" 
+                />
+              </TouchableOpacity>
+            )}
+          </View>
 
           <View className="flex-row gap-3">
             <TouchableOpacity
