@@ -7,15 +7,17 @@ import {
   PlanoSelectionModal,
   QuickActionModal
 } from '@/components/instalacao/modals';
+import { FinalizacaoModal } from '@/components/instalacao/modals/FinalizacaoModal';
 import { useFuncionarios } from '@/hooks/funcionario';
 import { useEditaInstalacao, useFechaInstalacao, useInstalacaoDetail } from '@/hooks/instalacao';
 import { usePlanos } from '@/hooks/plano';
+import { formatarDataCompleta, formatarNome } from '@/utils/instalacao';
 import { Ionicons } from '@expo/vector-icons';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Linking, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
@@ -37,44 +39,16 @@ export default function InstalacaoDetalhesScreen() {
   
   // Ref para ScrollView principal da tela
   const mainScrollRef = useRef<ScrollView>(null);
-  // Ref para ScrollView do modal de finalização
-  const finalizacaoScrollRef = useRef<ScrollView>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [comodatoModalVisible, setComodatoModalVisible] = useState(false);
   const [finalizacaoModalVisible, setFinalizacaoModalVisible] = useState(false);
 
-  // Estados para finalização
-  const [instaladoSim, setInstaladoSim] = useState<boolean | null>(null);
-  const [dataInstalacao, setDataInstalacao] = useState(new Date());
-  const [valorInstalacao, setValorInstalacao] = useState('');
-
   // Estados para modal de ações rápidas
   const [quickActionModalVisible, setQuickActionModalVisible] = useState(false);
   const [quickActionOptions, setQuickActionOptions] = useState<Array<{ label: string; value: string; icon: string; action: () => void }>>([]);
   const [quickActionModalTitle, setQuickActionModalTitle] = useState('');
-  const [visitadoSim, setVisitadoSim] = useState(false);
   const [senhaVisivel, setSenhaVisivel] = useState(false);
-
-  // Funções auxiliares para formatação de moeda
-  const formatarMoeda = (valor: number): string => {
-    return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-
-  const parseValor = (valor: string): number => {
-    if (!valor) return 0;
-    // Remove tudo exceto números
-    const apenasNumeros = valor.replace(/\D/g, '');
-    if (!apenasNumeros) return 0;
-    // Se o valor original tinha vírgula ou ponto, trata como centavos
-    // Senão, trata como reais inteiros
-    if (valor.includes(',') || valor.includes('.')) {
-      // Converte centavos para reais (ex: "5000" centavos = 50.00 reais)
-      return parseInt(apenasNumeros) / 100;
-    }
-    // Valor digitado sem vírgula/ponto = reais inteiros
-    return parseInt(apenasNumeros);
-  };
 
   if (!id) {
     return (
@@ -85,18 +59,6 @@ export default function InstalacaoDetalhesScreen() {
   }
 
   const { data: instalacao, isLoading, error } = useInstalacaoDetail(id);
-
-  // Pré-preencher valor da instalação quando abrir o modal de finalização
-  useEffect(() => {
-    if (finalizacaoModalVisible) {
-      if (instalacao?.valor) {
-        const valorNumerico = parseValor(instalacao.valor);
-        setValorInstalacao(formatarMoeda(valorNumerico));
-      } else {
-        setValorInstalacao('0,00');
-      }
-    }
-  }, [finalizacaoModalVisible, instalacao?.valor]);
 
   if (isLoading) {
     return (
@@ -292,50 +254,6 @@ export default function InstalacaoDetalhesScreen() {
       coordenadas: 'Coordenadas GPS',
     };
     return labels[editField || 'visita'];
-  };
-
-  // Formatar data para dd/MM/yyyy HH:mm
-  const formatarDataCompleta = (dataStr: string | null) => {
-    if (!dataStr) return 'Não informado';
-    try {
-      const data = new Date(dataStr.replace(' ', 'T'));
-      return data.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dataStr;
-    }
-  };
-
-  const formatarData = (dataStr: string | null) => {
-    if (!dataStr) return 'Não informado';
-    try {
-      const data = new Date(dataStr.replace(' ', 'T'));
-      return data.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      });
-    } catch {
-      return dataStr;
-    }
-  };
-
-  const formatarNome = (nome: string) => {
-    if (!nome) return '';
-
-    // Remove espaços extras e coloca em Title Case
-    return nome
-      .trim()
-      .replace(/\s+/g, ' ')
-      .toLowerCase()
-      .split(' ')
-      .map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1))
-      .join(' ');
   };
 
   return (
@@ -1097,529 +1015,18 @@ export default function InstalacaoDetalhesScreen() {
         />
 
         {/* Modal de Finalização */}
-        <Modal
+        <FinalizacaoModal
           visible={finalizacaoModalVisible}
-          animationType="slide"
-          presentationStyle="pageSheet"
-          onRequestClose={() => setFinalizacaoModalVisible(false)}
-        >
-          <SafeAreaView className="flex-1 bg-purple-50" edges={['top']}>
-            {/* Header Celebrativo */}
-            <View className="bg-purple-600 px-6 pt-6 pb-8">
-              <View className="flex-row items-center justify-between mb-4">
-                <View className="flex-1">
-                  <Text className="text-xl font-bold text-white mb-1">Finalizar Instalação</Text>
-                  <Text className="text-purple-100 text-sm">Complete as informações da instalação</Text>
-                </View>
-                <TouchableOpacity 
-                  onPress={() => setFinalizacaoModalVisible(false)} 
-                  className="bg-white/20 p-2 rounded-full"
-                >
-                  <Ionicons name="close" size={24} color="white" />
-                </TouchableOpacity>
-              </View>
-              
-              {/* Ícone Central Celebrativo */}
-              <View className="items-center">
-                <View className="bg-white/20 w-20 h-20 rounded-full items-center justify-center">
-                  <View className="bg-white w-16 h-16 rounded-full items-center justify-center">
-                    <Ionicons name="rocket" size={28} color="#9333ea" />
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            <ScrollView 
-              ref={finalizacaoScrollRef}
-              className="flex-1" 
-              showsVerticalScrollIndicator={false}
-            >
-              <View className="px-6 py-6">
-                {/* Card 1: Visita */}
-                <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
-                  <View className="flex-row items-center mb-4">
-                    <View className="bg-purple-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                      <Text className="text-purple-600 font-bold text-base">1</Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-base font-bold text-gray-900">Visita ao Cliente</Text>
-                      <Text className="text-xs text-gray-500">O cliente foi visitado?</Text>
-                    </View>
-                  </View>
-                  
-                  <View className="flex-row gap-3">
-                    <TouchableOpacity
-                      onPress={() => {
-                        setVisitadoSim(true);
-                        setInstaladoSim(null);
-                      }}
-                      style={{
-                        backgroundColor: visitadoSim ? '#f0fdf4' : '#f9fafb',
-                        borderColor: visitadoSim ? '#22c55e' : '#e5e7eb',
-                        borderWidth: 2,
-                      }}
-                      className="flex-1 py-3 rounded-xl"
-                    >
-                      <View className="items-center gap-2">
-                        <View 
-                          style={{ backgroundColor: visitadoSim ? '#22c55e' : '#e5e7eb' }}
-                          className="w-10 h-10 rounded-full items-center justify-center"
-                        >
-                          <Ionicons
-                            name="checkmark"
-                            size={20}
-                            color={visitadoSim ? "white" : "#9ca3af"}
-                          />
-                        </View>
-                        <Text style={{ color: visitadoSim ? '#15803d' : '#4b5563' }} className="font-bold">
-                          Sim, visitado
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={() => {
-                        setVisitadoSim(false);
-                        setInstaladoSim(null);
-                      }}
-                      style={{
-                        backgroundColor: visitadoSim === false ? '#f3f4f6' : '#f9fafb',
-                        borderColor: visitadoSim === false ? '#9ca3af' : '#e5e7eb',
-                        borderWidth: 2,
-                      }}
-                      className="flex-1 py-3 rounded-xl"
-                    >
-                      <View className="items-center gap-2">
-                        <View 
-                          style={{ backgroundColor: visitadoSim === false ? '#6b7280' : '#e5e7eb' }}
-                          className="w-10 h-10 rounded-full items-center justify-center"
-                        >
-                          <Ionicons
-                            name="close"
-                            size={20}
-                            color={visitadoSim === false ? "white" : "#9ca3af"}
-                          />
-                        </View>
-                        <Text style={{ color: visitadoSim === false ? '#374151' : '#4b5563' }} className="font-bold">
-                          Não visitado
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Card 2: Instalação */}
-                <View className={`bg-white rounded-2xl p-5 mb-4 shadow-sm border ${
-                  visitadoSim ? 'border-gray-100' : 'border-gray-200 opacity-50'
-                }`}>
-                  <View className="flex-row items-center mb-4">
-                    <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                      visitadoSim ? 'bg-purple-100' : 'bg-gray-100'
-                    }`}>
-                      <Text className={`font-bold text-base ${
-                        visitadoSim ? 'text-purple-600' : 'text-gray-400'
-                      }`}>2</Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text className={`text-base font-bold ${
-                        visitadoSim ? 'text-gray-900' : 'text-gray-400'
-                      }`}>Status da Instalação</Text>
-                      <Text className={`text-xs ${
-                        visitadoSim ? 'text-gray-500' : 'text-gray-400'
-                      }`}>A instalação foi realizada?</Text>
-                    </View>
-                  </View>
-                  
-                  <View className="flex-row gap-3">
-                    <TouchableOpacity
-                      onPress={() => {
-                        if (visitadoSim) {
-                          setInstaladoSim(true);
-                          setDataInstalacao(new Date());
-                          // Scroll para mostrar os cards 3 e 4
-                          setTimeout(() => {
-                            finalizacaoScrollRef.current?.scrollTo({ y: 300, animated: true });
-                          }, 100);
-                        }
-                      }}
-                      disabled={!visitadoSim}
-                      style={{
-                        backgroundColor: !visitadoSim ? '#f9fafb' : instaladoSim === true ? '#faf5ff' : '#f9fafb',
-                        borderColor: !visitadoSim ? '#e5e7eb' : instaladoSim === true ? '#9333ea' : '#e5e7eb',
-                        borderWidth: 2,
-                      }}
-                      className="flex-1 py-3 rounded-xl"
-                    >
-                      <View className="items-center gap-2">
-                        <View 
-                          style={{ 
-                            backgroundColor: !visitadoSim ? '#e5e7eb' : instaladoSim === true ? '#9333ea' : '#e5e7eb'
-                          }}
-                          className="w-10 h-10 rounded-full items-center justify-center"
-                        >
-                          <Ionicons
-                            name="checkmark"
-                            size={20}
-                            color={!visitadoSim ? "#d1d5db" : instaladoSim === true ? "white" : "#9ca3af"}
-                          />
-                        </View>
-                        <Text 
-                          style={{ 
-                            color: !visitadoSim ? '#9ca3af' : instaladoSim === true ? '#6b21a8' : '#4b5563'
-                          }} 
-                          className="font-bold"
-                        >
-                          Sim, instalado
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={() => visitadoSim && setInstaladoSim(false)}
-                      disabled={!visitadoSim}
-                      style={{
-                        backgroundColor: !visitadoSim ? '#f9fafb' : instaladoSim === false ? '#fff7ed' : '#f9fafb',
-                        borderColor: !visitadoSim ? '#e5e7eb' : instaladoSim === false ? '#f97316' : '#e5e7eb',
-                        borderWidth: 2,
-                      }}
-                      className="flex-1 py-3 rounded-xl"
-                    >
-                      <View className="items-center gap-2">
-                        <View 
-                          style={{ 
-                            backgroundColor: !visitadoSim ? '#e5e7eb' : instaladoSim === false ? '#f97316' : '#e5e7eb'
-                          }}
-                          className="w-10 h-10 rounded-full items-center justify-center"
-                        >
-                          <Ionicons
-                            name="close"
-                            size={20}
-                            color={!visitadoSim ? "#d1d5db" : instaladoSim === false ? "white" : "#9ca3af"}
-                          />
-                        </View>
-                        <Text 
-                          style={{ 
-                            color: !visitadoSim ? '#9ca3af' : instaladoSim === false ? '#c2410c' : '#4b5563'
-                          }} 
-                          className="font-bold"
-                        >
-                          Não instalado
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Card 3: Data */}
-                <View className={`bg-white rounded-2xl p-5 mb-4 shadow-sm border ${
-                  instaladoSim === true ? 'border-gray-100' : 'border-gray-200 opacity-50'
-                }`}>
-                  <View className="flex-row items-center mb-4">
-                    <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                      instaladoSim === true ? 'bg-purple-100' : 'bg-gray-100'
-                    }`}>
-                      <Text className={`font-bold text-base ${
-                        instaladoSim === true ? 'text-purple-600' : 'text-gray-400'
-                      }`}>3</Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text className={`text-base font-bold ${
-                        instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
-                      }`}>Data da Instalação</Text>
-                      <Text className={`text-xs ${
-                        instaladoSim === true ? 'text-gray-500' : 'text-gray-400'
-                      }`}>Quando foi realizada?</Text>
-                    </View>
-                  </View>
-                  
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (instaladoSim === true) {
-                        if (Platform.OS === 'android') {
-                          // Primeiro abre o picker de data
-                          DateTimePickerAndroid.open({
-                            value: dataInstalacao,
-                            onChange: (event, selectedDate) => {
-                              if (selectedDate && event.type === 'set') {
-                                // Depois de selecionar a data, abre o picker de hora
-                                DateTimePickerAndroid.open({
-                                  value: selectedDate,
-                                  onChange: (timeEvent, selectedTime) => {
-                                    if (selectedTime && timeEvent.type === 'set') {
-                                      setDataInstalacao(selectedTime);
-                                    }
-                                  },
-                                  mode: 'time',
-                                  is24Hour: true,
-                                });
-                              }
-                            },
-                            mode: 'date',
-                            minimumDate: new Date(),
-                          });
-                        } else {
-                          setShowDatePicker(true);
-                        }
-                      }
-                    }}
-                    disabled={instaladoSim !== true}
-                    className={`rounded-xl p-2 border-2 ${
-                      instaladoSim === true
-                        ? 'bg-purple-50 border-purple-200'
-                        : 'bg-gray-50 border-gray-200'
-                    }`}
-                  >
-                    <View className="flex-row items-center justify-between">
-                      <View className="flex-row items-center gap-2">
-                        <View className={`w-9 h-9 rounded-full items-center justify-center ${
-                          instaladoSim === true ? 'bg-purple-600' : 'bg-gray-200'
-                        }`}>
-                          <Ionicons
-                            name="calendar"
-                            size={18}
-                            color={instaladoSim === true ? "white" : "#d1d5db"}
-                          />
-                        </View>
-                        <View>
-                          <Text className={`text-xs mb-1 ${
-                            instaladoSim === true ? 'text-purple-600' : 'text-gray-400'
-                          }`}>Data e hora selecionadas</Text>
-                          <Text className={`font-bold text-base ${
-                            instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
-                          }`}>
-                            {dataInstalacao.toLocaleString('pt-BR', { 
-                              day: '2-digit', 
-                              month: 'long', 
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </Text>
-                        </View>
-                      </View>
-                      {instaladoSim === true && (
-                        <Ionicons name="chevron-forward" size={24} color="#9333ea" />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Card 4: Valor */}
-                <View className={`bg-white rounded-2xl p-5 mb-4 shadow-sm border ${
-                  instaladoSim === true ? 'border-gray-100' : 'border-gray-200 opacity-50'
-                }`}>
-                  <View className="flex-row items-center mb-4">
-                    <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                      instaladoSim === true ? 'bg-purple-100' : 'bg-gray-100'
-                    }`}>
-                      <Text className={`font-bold text-base ${
-                        instaladoSim === true ? 'text-purple-600' : 'text-gray-400'
-                      }`}>4</Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text className={`text-base font-bold ${
-                        instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
-                      }`}>Valor Cobrado</Text>
-                      <Text className={`text-xs ${
-                        instaladoSim === true ? 'text-gray-500' : 'text-gray-400'
-                      }`}>Opcional - taxa de ativação</Text>
-                    </View>
-                  </View>
-                  
-                  <View className="gap-2">
-                    {/* Input de Valor */}
-                    <View className={`flex-row items-center rounded-xl p-1 border-2 ${
-                      instaladoSim === true
-                        ? 'bg-green-50 border-green-200'
-                        : 'bg-gray-50 border-gray-200'
-                    }`}>
-                      <View className={`w-7 h-7 rounded-full items-center justify-center mr-2 ${
-                        instaladoSim === true ? 'bg-green-600' : 'bg-gray-200'
-                      }`}>
-                        <Ionicons
-                          name="cash"
-                          size={14}
-                          color={instaladoSim === true ? "white" : "#d1d5db"}
-                        />
-                      </View>
-                      <Text className={`text-lg font-bold mr-1 ${
-                        instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
-                      }`}>R$</Text>
-                      <TextInput
-                        value={valorInstalacao}
-                        onChangeText={(text) => {
-                          // Remove tudo exceto números
-                          const apenasNumeros = text.replace(/\D/g, '');
-                          if (!apenasNumeros) {
-                            setValorInstalacao('');
-                            return;
-                          }
-                          // Converte para número (centavos) e formata
-                          const valorEmCentavos = parseInt(apenasNumeros);
-                          const valorEmReais = valorEmCentavos / 100;
-                          setValorInstalacao(formatarMoeda(valorEmReais));
-                        }}
-                        onFocus={() => {
-                          // Scroll para mostrar o campo de valor
-                          setTimeout(() => {
-                            finalizacaoScrollRef.current?.scrollToEnd({ animated: true });
-                          }, 100);
-                        }}
-                        placeholder="0,00"
-                        placeholderTextColor={instaladoSim === true ? "#9ca3af" : "#d1d5db"}
-                        keyboardType="numeric"
-                        editable={instaladoSim === true}
-                        selectTextOnFocus={true}
-                        className={`flex-1 text-lg font-bold ${
-                          instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
-                        }`}
-                      />
-                    </View>
-                    
-                    {/* Botões Stepper */}
-                    {instaladoSim === true && (
-                      <View className="flex-row gap-2">
-                        <TouchableOpacity
-                          onPress={() => {
-                            const currentValue = parseValor(valorInstalacao);
-                            const newValue = Math.max(0, currentValue - 10);
-                            setValorInstalacao(formatarMoeda(newValue));
-                          }}
-                          className="flex-1 bg-gray-100 py-2 rounded-lg flex-row items-center justify-center gap-1"
-                        >
-                          <Ionicons name="remove" size={16} color="#374151" />
-                          <Text className="text-gray-700 font-semibold text-sm">R$ 10</Text>
-                        </TouchableOpacity>
-                        
-                        <TouchableOpacity
-                          onPress={() => {
-                            const currentValue = parseValor(valorInstalacao);
-                            const newValue = currentValue + 10;
-                            setValorInstalacao(formatarMoeda(newValue));
-                          }}
-                          className="flex-1 bg-green-600 py-2 rounded-lg flex-row items-center justify-center gap-1"
-                        >
-                          <Ionicons name="add" size={16} color="white" />
-                          <Text className="text-white font-semibold text-sm">R$ 10</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              </View>
-            </ScrollView>
-
-            {/* Botões fixos no rodapé */}
-            <View className="bg-white border-t border-gray-200 px-6 py-4">
-              {/* Botão Principal - Finalizar */}
-              <TouchableOpacity
-                  onPress={() => {
-                    // Lógica consistente: se não visitou, nada mais aconteceu
-                    let dados: any = {
-                      visitado: visitadoSim ? 'sim' : 'nao',
-                    };
-
-                    // Se não visitou, claramente não instalou e não tem dados
-                    if (!visitadoSim) {
-                      dados.instalado = 'nao';
-                      dados.datainst = undefined;
-                      dados.valor = undefined;
-                    }
-                    // Se visitou, verifica se instalou
-                    else {
-                      dados.instalado = instaladoSim === true ? 'sim' : 'nao';
-
-                      // Se não instalou, não tem data nem valor
-                      if (instaladoSim !== true) {
-                        dados.datainst = undefined;
-                        dados.valor = undefined;
-                      }
-                      // Se instalou, inclui data e valor
-                      else {
-                        // 🔧 FIX: Inclui hora na data de instalação (padrão: YYYY-MM-DD HH:MM:SS)
-                        const year = dataInstalacao.getFullYear();
-                        const month = String(dataInstalacao.getMonth() + 1).padStart(2, '0');
-                        const day = String(dataInstalacao.getDate()).padStart(2, '0');
-                        const hours = String(dataInstalacao.getHours()).padStart(2, '0');
-                        const minutes = String(dataInstalacao.getMinutes()).padStart(2, '0');
-                        dados.datainst = `${year}-${month}-${day} ${hours}:${minutes}:00`;
-                        dados.valor = valorInstalacao || undefined;
-                      }
-                    }
-
-                    // Único dispatch: edita os dados e depois fecha
-                    editaInstalacaoMutation.mutate(
-                      { uuid: instalacao!.uuid_solic, dados },
-                      {
-                        onSuccess: () => {
-                          // Depois fecha a instalação
-                          fechaInstalacaoMutation.mutate(instalacao!.uuid_solic, {
-                            onSuccess: () => {
-                              setFinalizacaoModalVisible(false);
-                              // Scroll para o topo para mostrar a seção de finalização
-                              setTimeout(() => {
-                                mainScrollRef.current?.scrollTo({ y: 0, animated: true });
-                              }, 100);
-                              setTimeout(() => {
-                                Toast.show({
-                                  type: 'success',
-                                  text1: 'Instalação concluída! ✅',
-                                  text2: 'Você pode vê-la na aba Histórico',
-                                  position: 'top',
-                                  visibilityTime: 4000,
-                                  topOffset: 60,
-                                });
-                              }, 300);
-                            },
-                            onError: (error) => {
-                              Toast.show({
-                                type: 'error',
-                                text1: 'Erro ao fechar instalação',
-                                text2: error instanceof Error ? error.message : 'Tente novamente',
-                                position: 'top',
-                                topOffset: 60,
-                              });
-                            },
-                          });
-                        },
-                        onError: (error) => {
-                          Toast.show({
-                            type: 'error',
-                            text1: 'Erro ao salvar dados',
-                            text2: error instanceof Error ? error.message : 'Tente novamente',
-                            position: 'top',
-                            topOffset: 60,
-                          });
-                        },
-                      }
-                    );
-                  }}
-                  disabled={fechaInstalacaoMutation.isPending || editaInstalacaoMutation.isPending}
-                  className="bg-green-600 py-4 rounded-2xl mb-3 shadow-lg"
-                >
-                  {(fechaInstalacaoMutation.isPending || editaInstalacaoMutation.isPending) ? (
-                    <View className="flex-row items-center justify-center gap-2">
-                      <ActivityIndicator size="small" color="white" />
-                      <Text className="text-white font-bold text-base">Finalizando...</Text>
-                    </View>
-                  ) : (
-                    <View className="flex-row items-center justify-center gap-2">
-                      <Ionicons name="checkmark-circle" size={20} color="white" />
-                      <Text className="text-white font-bold text-base">Confirmar e Finalizar</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-
-                {/* Botão Secundário - Cancelar */}
-                <TouchableOpacity
-                  onPress={() => setFinalizacaoModalVisible(false)}
-                  className="bg-gray-100 py-4 rounded-xl"
-                >
-                  <Text className="text-gray-700 font-semibold text-center text-base">Cancelar</Text>
-                </TouchableOpacity>
-              </View>
-            </SafeAreaView>
-        </Modal>
+          onClose={() => setFinalizacaoModalVisible(false)}
+          instalacao={instalacao}
+          onSuccess={() => {
+            setTimeout(() => {
+              mainScrollRef.current?.scrollTo({ y: 0, animated: true });
+            }, 100);
+          }}
+          fechaInstalacaoMutation={fechaInstalacaoMutation}
+          editaInstalacaoMutation={editaInstalacaoMutation}
+        />
 
         {/* Modal de Ações Rápidas */}
         <QuickActionModal
