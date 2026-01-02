@@ -1,4 +1,5 @@
 import { useClientDetail } from '@/hooks/cliente';
+import { Ionicons } from '@expo/vector-icons';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { Stack, useLocalSearchParams, withLayoutContext } from 'expo-router';
 import { ActivityIndicator, Text, View } from 'react-native';
@@ -63,6 +64,13 @@ export default function ClienteDetalhesLayout() {
         options={{ 
           title: cliente.nome,
           headerBackTitle: 'Voltar',
+          headerStyle: {
+            backgroundColor: '#0284c7',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }} 
       />
       <ClienteContext.Provider value={{ cliente }}>
@@ -88,19 +96,35 @@ export default function ClienteDetalhesLayout() {
                 fontWeight: '600',
                 textTransform: 'none',
               },
+              tabBarShowIcon: true,
             }}
           >
             <MaterialTopTabs.Screen
               name="index"
-              options={{ title: 'Geral' }}
+              options={{ 
+                title: 'Geral',
+                tabBarIcon: ({ color }: { color: string }) => (
+                  <Ionicons name="information-circle-outline" size={20} color={color} />
+                ),
+              }}
             />
             <MaterialTopTabs.Screen
               name="tecnico"
-              options={{ title: 'Técnico' }}
+              options={{ 
+                title: 'Técnico',
+                tabBarIcon: ({ color }: { color: string }) => (
+                  <Ionicons name="settings-outline" size={20} color={color} />
+                ),
+              }}
             />
             <MaterialTopTabs.Screen
               name="observacoes"
-              options={{ title: 'Observações' }}
+              options={{ 
+                title: 'Observações',
+                tabBarIcon: ({ color }: { color: string }) => (
+                  <Ionicons name="document-text-outline" size={20} color={color} />
+                ),
+              }}
             />
           </MaterialTopTabs>
         </SafeAreaView>
