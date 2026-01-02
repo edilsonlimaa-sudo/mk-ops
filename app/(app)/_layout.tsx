@@ -34,7 +34,7 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen 
-        name="detalhes/cliente/[id]" 
+        name="detalhes/cliente/[uuid]" 
         options={{ 
           headerShown: true,
           headerBackTitle: 'Voltar',
