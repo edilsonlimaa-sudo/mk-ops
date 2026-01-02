@@ -1,4 +1,4 @@
-import { Client, ClientListResponse } from '@/types/client';
+import { Client, ClientListResponse, UpdateClientPayload } from '@/types/client';
 import apiClient from '../core/apiClient';
 
 /**
@@ -86,6 +86,55 @@ export const fetchClientById = async (uuid: string): Promise<Client> => {
     return response.data;
   } catch (error) {
     console.error(`❌ [ClientService] Erro ao buscar cliente ${uuid}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Updates a client's information
+ * @param payload - Object containing uuid (required) and fields to update
+ * @returns Updated client confirmation
+ * @throws Error if update fails or client not found
+ * 
+ * @example
+ * ```ts
+ * await updateClient({
+ *   uuid: '01HXX...',
+ *   nome: 'Novo Nome',
+ *   email: 'novoemail@example.com',
+ *   observacao: 'Cliente VIP'
+ * });
+ * ```
+ */
+export const updateClient = async (payload: UpdateClientPayload): Promise<{
+  status: string;
+  mensagem: string;
+  dados: UpdateClientPayload;
+}> => {
+  console.log(`📝 [ClientService] Atualizando cliente: ${payload.uuid}`);
+  
+  // Validate required field
+  if (!payload.uuid) {
+    throw new Error('UUID do cliente é obrigatório para atualização');
+  }
+  
+  // Log fields being updated (excluding uuid)
+  const fieldsToUpdate = Object.keys(payload).filter(key => key !== 'uuid');
+  console.log(`🔄 [ClientService] Campos a atualizar: ${fieldsToUpdate.join(', ')}`);
+  
+  try {
+    const response = await apiClient.put('/api/cliente/editar', payload);
+    
+    // Validate response
+    if (response.data?.status === 'erro') {
+      console.warn(`⚠️ [ClientService] Erro na atualização: ${response.data.mensagem}`);
+      throw new Error(response.data.mensagem || 'Erro ao atualizar cliente');
+    }
+    
+    console.log(`✅ [ClientService] Cliente atualizado com sucesso: ${payload.uuid}`);
+    return response.data;
+  } catch (error) {
+    console.error(`❌ [ClientService] Erro ao atualizar cliente ${payload.uuid}:`, error);
     throw error;
   }
 };

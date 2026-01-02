@@ -179,3 +179,12 @@ export interface ClientListResponse {
   total_paginas: number;
   clientes: Client[];
 }
+
+/**
+ * Payload for updating a client
+ * - All Client fields are optional (partial update)
+ * - uuid is required for identification (maps to uuid_cliente in API)
+ */
+export type UpdateClientPayload = Partial<Client> & {
+  uuid: string; // Required: identifies the client (uuid_cliente)
+};
