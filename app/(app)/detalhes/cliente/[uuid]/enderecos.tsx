@@ -1,0 +1,76 @@
+import { Ionicons } from '@expo/vector-icons';
+import { ScrollView, Text, View } from 'react-native';
+import { useClienteContext } from './ClienteContext';
+import { EditableInfoRow } from './SharedComponents';
+
+function EnderecosTab() {
+    const { cliente } = useClienteContext();
+
+    return (
+        <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
+            <View className="p-4">
+                {/* Endereço de Instalação */}
+                <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
+                    <View className="flex-row items-center mb-4">
+                        <View className="bg-green-100 w-10 h-10 rounded-full items-center justify-center mr-3">
+                            <Ionicons name="home-outline" size={20} color="#10b981" />
+                        </View>
+                        <Text className="text-base text-gray-900 font-bold flex-1">Endereço de Instalação</Text>
+                    </View>
+
+                    <View className="bg-gray-50 rounded-xl p-3">
+                        {cliente.endereco && (
+                            <EditableInfoRow
+                                label="Endereço"
+                                value={cliente.endereco}
+                                field="endereco"
+                            />
+                        )}
+                        {cliente.numero && <EditableInfoRow label="Número" value={cliente.numero} field="numero" />}
+                        {cliente.complemento && <EditableInfoRow label="Complemento" value={cliente.complemento} field="complemento" />}
+                        {cliente.bairro && <EditableInfoRow label="Bairro" value={cliente.bairro} field="bairro" />}
+                        {cliente.cidade && <EditableInfoRow label="Cidade" value={cliente.cidade} field="cidade" />}
+                        {cliente.estado && <EditableInfoRow label="Estado" value={cliente.estado} field="estado" />}
+                        {cliente.cep && <EditableInfoRow label="CEP" value={cliente.cep} field="cep" />}
+                        {cliente.coordenadas && cliente.coordenadas !== '-38.5748,-3.741162,0' && (
+                            <EditableInfoRow label="Coordenadas GPS" value={cliente.coordenadas} field="coordenadas" />
+                        )}
+                    </View>
+                </View>
+
+                {/* Endereço de Cobrança */}
+                {(cliente.endereco_res || cliente.nome_res) && (
+                    <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
+                        <View className="flex-row items-center mb-4">
+                            <View className="bg-teal-100 w-10 h-10 rounded-full items-center justify-center mr-3">
+                                <Ionicons name="mail-outline" size={20} color="#14b8a6" />
+                            </View>
+                            <Text className="text-base text-gray-900 font-bold flex-1">Endereço de Cobrança</Text>
+                        </View>
+
+                        <View className="bg-gray-50 rounded-xl p-3">
+                            {cliente.nome_res && <EditableInfoRow label="Nome" value={cliente.nome_res} field="nome_res" editable={false} />}
+                            {cliente.endereco_res && (
+                                <EditableInfoRow
+                                    label="Endereço"
+                                    value={cliente.endereco_res}
+                                    field="endereco_res"
+                                    editable={false}
+                                />
+                            )}
+                            {cliente.numero_res && <EditableInfoRow label="Número" value={cliente.numero_res} field="numero_res" editable={false} />}
+                            {cliente.complemento_res && <EditableInfoRow label="Complemento" value={cliente.complemento_res} field="complemento_res" editable={false} />}
+                            {cliente.bairro_res && <EditableInfoRow label="Bairro" value={cliente.bairro_res} field="bairro_res" editable={false} />}
+                            {cliente.cidade_res && <EditableInfoRow label="Cidade" value={cliente.cidade_res} field="cidade_res" editable={false} />}
+                            {cliente.estado_res && <EditableInfoRow label="Estado" value={cliente.estado_res} field="estado_res" editable={false} />}
+                            {cliente.cep_res && <EditableInfoRow label="CEP" value={cliente.cep_res} field="cep_res" editable={false} />}
+                        </View>
+                    </View>
+                )}
+            </View>
+        </ScrollView>
+    );
+}
+
+EnderecosTab.displayName = 'EnderecosTab';
+export default EnderecosTab;

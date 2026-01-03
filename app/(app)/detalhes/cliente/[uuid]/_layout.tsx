@@ -8,10 +8,10 @@ import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { ClienteContext } from './ClienteContext';
+import EnderecosTab from './enderecos';
 import { ErrorBoundary } from './ErrorBoundary';
 import GeralTab from './index';
 import ObservacoesTab from './observacoes';
-import TecnicoTab from './tecnico';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -163,11 +163,11 @@ export default function ClienteDetalhesLayout() {
                 }}
               />
               <Tab.Screen
-                name="Técnico"
-                component={TecnicoTab}
+                name="Endereços"
+                component={EnderecosTab}
                 options={{ 
                   tabBarIcon: ({ color }: { color: string }) => (
-                    <Ionicons name="settings-outline" size={20} color={color} />
+                    <Ionicons name="location-outline" size={20} color={color} />
                   ),
                 }}
               />

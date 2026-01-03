@@ -265,11 +265,11 @@ function GeralTab() {
                     </View>
 
                     <View className="bg-gray-50 rounded-xl p-3">
-                        <EditableInfoRow label="Nome" value={cliente.nome} field="nome" />
-                        {cliente.cpf_cnpj && <EditableInfoRow label="CPF/CNPJ" value={cliente.cpf_cnpj} field="cpf_cnpj" />}
-                        {cliente.rg && <EditableInfoRow label="RG" value={cliente.rg} field="rg" />}
-                        {cliente.nascimento && <EditableInfoRow label="Nascimento" value={cliente.nascimento} field="nascimento" />}
-                        {cliente.estado_civil && <EditableInfoRow label="Estado Civil" value={cliente.estado_civil} field="estado_civil" />}
+                        <EditableInfoRow label="Nome" value={cliente.nome} field="nome" editable={false} />
+                        {cliente.cpf_cnpj && <EditableInfoRow label="CPF/CNPJ" value={cliente.cpf_cnpj} field="cpf_cnpj" editable={false} />}
+                        {cliente.rg && <EditableInfoRow label="RG" value={cliente.rg} field="rg" editable={false} />}
+                        {cliente.nascimento && <EditableInfoRow label="Nascimento" value={cliente.nascimento} field="nascimento" editable={false} />}
+                        {cliente.estado_civil && <EditableInfoRow label="Estado Civil" value={cliente.estado_civil} field="estado_civil" editable={false} />}
                         {cliente.cadastro && <EditableInfoRow label="Cadastrado em" value={cliente.cadastro} field="cadastro" editable={false} />}
                     </View>
                 </View>
@@ -290,93 +290,19 @@ function GeralTab() {
                     </View>
                 </View>
 
-                {/* Endereço de Instalação */}
-                <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-                    <View className="flex-row items-center mb-4">
-                        <View className="bg-green-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                            <Ionicons name="home-outline" size={20} color="#10b981" />
-                        </View>
-                        <Text className="text-base text-gray-900 font-bold flex-1">Endereço de Instalação</Text>
-                    </View>
-
-                    <View className="bg-gray-50 rounded-xl p-3">
-                        {cliente.endereco && (
-                            <EditableInfoRow
-                                label="Endereço"
-                                value={cliente.endereco}
-                                field="endereco"
-                            />
-                        )}
-                        {cliente.numero && <EditableInfoRow label="Número" value={cliente.numero} field="numero" />}
-                        {cliente.complemento && <EditableInfoRow label="Complemento" value={cliente.complemento} field="complemento" />}
-                        {cliente.bairro && <EditableInfoRow label="Bairro" value={cliente.bairro} field="bairro" />}
-                        {cliente.cidade && <EditableInfoRow label="Cidade" value={cliente.cidade} field="cidade" />}
-                        {cliente.estado && <EditableInfoRow label="Estado" value={cliente.estado} field="estado" />}
-                        {cliente.cep && <EditableInfoRow label="CEP" value={cliente.cep} field="cep" />}
-                        {cliente.coordenadas && cliente.coordenadas !== '-38.5748,-3.741162,0' && (
-                            <EditableInfoRow label="Coordenadas GPS" value={cliente.coordenadas} field="coordenadas" />
-                        )}
-                    </View>
-                </View>
-
-                {/* Endereço de Cobrança */}
-                {(cliente.endereco_res || cliente.nome_res) && (
-                    <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-                        <View className="flex-row items-center mb-4">
-                            <View className="bg-teal-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                                <Ionicons name="mail-outline" size={20} color="#14b8a6" />
-                            </View>
-                            <Text className="text-base text-gray-900 font-bold flex-1">Endereço de Cobrança</Text>
-                        </View>
-
-                        <View className="bg-gray-50 rounded-xl p-3">
-                            {cliente.nome_res && <EditableInfoRow label="Nome" value={cliente.nome_res} field="nome_res" />}
-                            {cliente.endereco_res && (
-                                <EditableInfoRow
-                                    label="Endereço"
-                                    value={cliente.endereco_res}
-                                    field="endereco_res"
-                                />
-                            )}
-                            {cliente.numero_res && <EditableInfoRow label="Número" value={cliente.numero_res} field="numero_res" />}
-                            {cliente.complemento_res && <EditableInfoRow label="Complemento" value={cliente.complemento_res} field="complemento_res" />}
-                            {cliente.bairro_res && <EditableInfoRow label="Bairro" value={cliente.bairro_res} field="bairro_res" />}
-                            {cliente.cidade_res && <EditableInfoRow label="Cidade" value={cliente.cidade_res} field="cidade_res" />}
-                            {cliente.estado_res && <EditableInfoRow label="Estado" value={cliente.estado_res} field="estado_res" />}
-                            {cliente.cep_res && <EditableInfoRow label="CEP" value={cliente.cep_res} field="cep_res" />}
-                        </View>
-                    </View>
-                )}
-
-                {/* Plano e Serviços */}
+                {/* Plano e Status */}
                 <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
                     <View className="flex-row items-center mb-4">
                         <View className="bg-indigo-100 w-10 h-10 rounded-full items-center justify-center mr-3">
                             <Ionicons name="wifi-outline" size={20} color="#6366f1" />
                         </View>
-                        <Text className="text-base text-gray-900 font-bold flex-1">Plano e Serviços</Text>
+                        <Text className="text-base text-gray-900 font-bold flex-1">Plano e Status</Text>
                     </View>
 
                     <View className="bg-gray-50 rounded-xl p-3">
-                        {cliente.plano && <EditableInfoRow label="Plano" value={cliente.plano} field="plano" />}
-                        {cliente.login && <EditableInfoRow label="Login" value={cliente.login} field="login" />}
-                        {cliente.senha && <EditableInfoRow label="Senha" value={cliente.senha} field="senha" />}
-                        {cliente.venc && <EditableInfoRow label="Vencimento" value={cliente.venc} field="venc" />}
-                        {cliente.contrato && <EditableInfoRow label="Contrato" value={cliente.contrato} field="contrato" />}
-                        {cliente.tipo && <EditableInfoRow label="Tipo de Conexão" value={cliente.tipo} field="tipo" />}
-                    </View>
-                </View>
-
-                {/* Status */}
-                <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-                    <View className="flex-row items-center mb-4">
-                        <View className="bg-amber-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                            <Ionicons name="shield-checkmark-outline" size={20} color="#f59e0b" />
-                        </View>
-                        <Text className="text-base text-gray-900 font-bold flex-1">Status</Text>
-                    </View>
-
-                    <View className="bg-gray-50 rounded-xl p-3">
+                        {cliente.plano && <EditableInfoRow label="Plano" value={cliente.plano} field="plano" editable={false} />}
+                        {cliente.venc && <EditableInfoRow label="Vencimento" value={cliente.venc} field="venc" editable={false} />}
+                        {cliente.contrato && <EditableInfoRow label="Contrato" value={cliente.contrato} field="contrato" editable={false} />}
                         <EditableInfoRow
                             label="Cliente Ativado"
                             value={cliente.cli_ativado === 's' ? 'Sim' : 'Não'}
@@ -391,6 +317,53 @@ function GeralTab() {
                         />
                         {cliente.status_corte && (
                             <EditableInfoRow label="Status de Corte" value={cliente.status_corte} field="status_corte" editable={false} />
+                        )}
+                    </View>
+                </View>
+
+                {/* Conexão e Rede */}
+                <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
+                    <View className="flex-row items-center mb-4">
+                        <View className="bg-cyan-100 w-10 h-10 rounded-full items-center justify-center mr-3">
+                            <Ionicons name="wifi-outline" size={20} color="#06b6d4" />
+                        </View>
+                        <Text className="text-base text-gray-900 font-bold flex-1">Conexão e Rede</Text>
+                    </View>
+
+                    <View className="bg-gray-50 rounded-xl p-3">
+                        {cliente.login && <EditableInfoRow label="Login" value={cliente.login} field="login" editable={false} />}
+                        {cliente.senha && <EditableInfoRow label="Senha" value={cliente.senha} field="senha" editable={false} />}
+                        {cliente.tipo && <EditableInfoRow label="Tipo" value={cliente.tipo} field="tipo" editable={false} />}
+                        {cliente.ip && <EditableInfoRow label="IP" value={cliente.ip} field="ip" editable={false} />}
+                        {cliente.mac && <EditableInfoRow label="MAC" value={cliente.mac} field="mac" editable={false} />}
+                        {cliente.pool_name && <EditableInfoRow label="Pool" value={cliente.pool_name} field="pool_name" editable={false} />}
+                        {cliente.simultaneo && <EditableInfoRow label="Simultâneo" value={cliente.simultaneo} field="simultaneo" editable={false} />}
+                    </View>
+                </View>
+
+                {/* Equipamentos */}
+                <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
+                    <View className="flex-row items-center mb-4">
+                        <View className="bg-orange-100 w-10 h-10 rounded-full items-center justify-center mr-3">
+                            <Ionicons name="hardware-chip-outline" size={20} color="#f97316" />
+                        </View>
+                        <Text className="text-base text-gray-900 font-bold flex-1">Equipamentos</Text>
+                    </View>
+
+                    <View className="bg-gray-50 rounded-xl p-3">
+                        {cliente.equipamento && cliente.equipamento !== 'nenhum' && (
+                            <EditableInfoRow label="Equipamento" value={cliente.equipamento} field="equipamento" editable={false} />
+                        )}
+                        {cliente.onu_ont && <EditableInfoRow label="ONU/ONT" value={cliente.onu_ont} field="onu_ont" editable={false} />}
+                        {cliente.armario_olt && <EditableInfoRow label="Armário OLT" value={cliente.armario_olt} field="armario_olt" editable={false} />}
+                        {cliente.porta_olt && <EditableInfoRow label="Porta OLT" value={cliente.porta_olt} field="porta_olt" editable={false} />}
+                        {cliente.porta_splitter && <EditableInfoRow label="Porta Splitter" value={cliente.porta_splitter} field="porta_splitter" editable={false} />}
+                        {cliente.switch && cliente.switch !== 'nenhum' && (
+                            <EditableInfoRow label="Switch" value={cliente.switch} field="switch" editable={false} />
+                        )}
+                        {cliente.caixa_herm && <EditableInfoRow label="CTO/Caixa Hermética" value={cliente.caixa_herm} field="caixa_herm" />}
+                        {cliente.comodato && cliente.comodato !== 'nao' && (
+                            <EditableInfoRow label="Comodato" value={cliente.comodato} field="comodato" editable={false} />
                         )}
                     </View>
                 </View>
