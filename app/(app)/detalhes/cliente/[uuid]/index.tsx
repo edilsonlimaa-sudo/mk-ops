@@ -1,10 +1,10 @@
 import QuickActionModal from '@/components/instalacao/modals/QuickActionModal';
+import { useClienteContext } from '@/lib/cliente/ClienteContext';
+import { EditableInfoRow } from '@/lib/cliente/SharedComponents';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useClienteContext } from './ClienteContext';
-import { EditableInfoRow } from './SharedComponents';
 
 function GeralTab() {
     const { cliente } = useClienteContext();

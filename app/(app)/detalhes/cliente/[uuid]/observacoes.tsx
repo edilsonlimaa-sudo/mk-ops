@@ -1,7 +1,7 @@
+import { useClienteContext } from '@/lib/cliente/ClienteContext';
+import { EditableInfoRow } from '@/lib/cliente/SharedComponents';
 import { Ionicons } from '@expo/vector-icons';
 import { ScrollView, Text, View } from 'react-native';
-import { useClienteContext } from './ClienteContext';
-import { EditableInfoRow } from './SharedComponents';
 
 function ObservacoesTab() {
   const { cliente } = useClienteContext();

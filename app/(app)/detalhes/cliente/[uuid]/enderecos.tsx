@@ -1,11 +1,11 @@
 import { CoordinatesMapModal } from '@/components/CoordinatesMapModal';
 import { useUpdateClient } from '@/hooks/cliente';
+import { useClienteContext } from '@/lib/cliente/ClienteContext';
+import { EditableInfoRow } from '@/lib/cliente/SharedComponents';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useClienteContext } from './ClienteContext';
-import { EditableInfoRow } from './SharedComponents';
 
 function EnderecosTab() {
     const { cliente } = useClienteContext();
