@@ -1,10 +1,45 @@
+import { CoordinatesMapModal } from '@/components/CoordinatesMapModal';
+import { useUpdateClient } from '@/hooks/cliente';
 import { Ionicons } from '@expo/vector-icons';
-import { ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useClienteContext } from './ClienteContext';
 import { EditableInfoRow } from './SharedComponents';
 
 function EnderecosTab() {
     const { cliente } = useClienteContext();
+    const [mapModalVisible, setMapModalVisible] = useState(false);
+    const updateClientMutation = useUpdateClient();
+
+    const handleSaveCoordinates = (coordinates: string) => {
+        const payload = {
+            uuid: cliente.uuid_cliente,
+            coordenadas: coordinates,
+        };
+
+        updateClientMutation.mutate(payload, {
+            onSuccess: () => {
+                Toast.show({
+                    type: 'success',
+                    text1: 'Coordenadas atualizadas! 📍',
+                    position: 'top',
+                    visibilityTime: 2000,
+                    topOffset: 60,
+                });
+                setMapModalVisible(false);
+            },
+            onError: (error) => {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Erro ao salvar coordenadas',
+                    text2: error instanceof Error ? error.message : 'Tente novamente',
+                    position: 'top',
+                    topOffset: 60,
+                });
+            },
+        });
+    };
 
     return (
         <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
@@ -33,7 +68,21 @@ function EnderecosTab() {
                         {cliente.estado && <EditableInfoRow label="Estado" value={cliente.estado} field="estado" />}
                         {cliente.cep && <EditableInfoRow label="CEP" value={cliente.cep} field="cep" />}
                         {cliente.coordenadas && cliente.coordenadas !== '-38.5748,-3.741162,0' && (
-                            <EditableInfoRow label="Coordenadas GPS" value={cliente.coordenadas} field="coordenadas" />
+                            <TouchableOpacity
+                                onPress={() => setMapModalVisible(true)}
+                                className="flex-row justify-between items-center py-3 px-3 -mx-3 rounded-lg bg-blue-50 border border-blue-100 active:bg-blue-100"
+                            >
+                                <View className="flex-row items-center gap-2">
+                                    <Ionicons name="location" size={16} color="#3b82f6" />
+                                    <Text className="text-gray-600 text-sm font-medium">Localização</Text>
+                                </View>
+                                <View className="flex-row items-center gap-2">
+                                    <Text className="text-gray-900 text-sm font-medium">
+                                        {cliente.coordenadas}
+                                    </Text>
+                                    <Ionicons name="map" size={18} color="#3b82f6" />
+                                </View>
+                            </TouchableOpacity>
                         )}
                     </View>
                 </View>
@@ -68,6 +117,14 @@ function EnderecosTab() {
                     </View>
                 )}
             </View>
+
+            <CoordinatesMapModal
+                visible={mapModalVisible}
+                onClose={() => setMapModalVisible(false)}
+                onSave={handleSaveCoordinates}
+                initialCoordinates={cliente.coordenadas}
+                isSaving={updateClientMutation.isPending}
+            />
         </ScrollView>
     );
 }
