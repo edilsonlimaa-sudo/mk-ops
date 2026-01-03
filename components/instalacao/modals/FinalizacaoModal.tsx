@@ -491,35 +491,35 @@ export function FinalizacaoModal({
                 </View>
               )}
             </View>
+
+            {/* Botões dentro do ScrollView */}
+            <View className="bg-white rounded-2xl p-4 border border-gray-100 mt-4">
+              {/* Botão Principal - Finalizar */}
+              <TouchableOpacity
+                onPress={handleFinalizar}
+                disabled={fechaInstalacaoMutation.isPending || editaInstalacaoMutation.isPending}
+                className="bg-green-600 py-4 rounded-2xl mb-3 shadow-lg"
+              >
+                {fechaInstalacaoMutation.isPending || editaInstalacaoMutation.isPending ? (
+                  <View className="flex-row items-center justify-center gap-2">
+                    <ActivityIndicator size="small" color="white" />
+                    <Text className="text-white font-bold text-base">Finalizando...</Text>
+                  </View>
+                ) : (
+                  <View className="flex-row items-center justify-center gap-2">
+                    <Ionicons name="checkmark-circle" size={20} color="white" />
+                    <Text className="text-white font-bold text-base">Confirmar e Finalizar</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {/* Botão Secundário - Cancelar */}
+              <TouchableOpacity onPress={onClose} className="bg-gray-100 py-4 rounded-xl">
+                <Text className="text-gray-700 font-semibold text-center text-base">Cancelar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
-
-        {/* Botões fixos no rodapé */}
-        <View className="bg-white border-t border-gray-200 px-6 py-4">
-          {/* Botão Principal - Finalizar */}
-          <TouchableOpacity
-            onPress={handleFinalizar}
-            disabled={fechaInstalacaoMutation.isPending || editaInstalacaoMutation.isPending}
-            className="bg-green-600 py-4 rounded-2xl mb-3 shadow-lg"
-          >
-            {fechaInstalacaoMutation.isPending || editaInstalacaoMutation.isPending ? (
-              <View className="flex-row items-center justify-center gap-2">
-                <ActivityIndicator size="small" color="white" />
-                <Text className="text-white font-bold text-base">Finalizando...</Text>
-              </View>
-            ) : (
-              <View className="flex-row items-center justify-center gap-2">
-                <Ionicons name="checkmark-circle" size={20} color="white" />
-                <Text className="text-white font-bold text-base">Confirmar e Finalizar</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* Botão Secundário - Cancelar */}
-          <TouchableOpacity onPress={onClose} className="bg-gray-100 py-4 rounded-xl">
-            <Text className="text-gray-700 font-semibold text-center text-base">Cancelar</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </Modal>
   );

@@ -1,3 +1,4 @@
+import { FechaChamadoModal } from '@/components/chamado/FechaChamadoModal';
 import { ClientSearchModal } from '@/components/ClientSearchModal';
 import { InfoRow } from '@/components/instalacao/InfoRows';
 import { useChamadoDetail, useFechaChamado, useReabrirChamado } from '@/hooks/chamado';
@@ -6,16 +7,12 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
@@ -27,11 +24,10 @@ export default function ChamadoDetalhesScreen() {
   const router = useRouter();
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [fecharModalVisible, setFecharModalVisible] = useState(false);
-  const [motivo, setMotivo] = useState('');
   const fechaChamadoMutation = useFechaChamado();
   const reabrirChamadoMutation = useReabrirChamado();
-  const motivoInputRef = useRef<TextInput>(null);
   const { data: funcionarios } = useFuncionarios();
+  const scrollRef = useRef<ScrollView>(null);
 
   const copiarParaClipboard = async (texto: string, label: string) => {
     await Clipboard.setStringAsync(texto);
@@ -43,16 +39,6 @@ export default function ChamadoDetalhesScreen() {
       topOffset: 60,
     });
   };
-
-  // Foca no input quando o modal abre
-  useEffect(() => {
-    if (fecharModalVisible) {
-      // Timeout para garantir que o modal terminou a animação
-      setTimeout(() => {
-        motivoInputRef.current?.focus();
-      }, 100);
-    }
-  }, [fecharModalVisible]);
 
   if (!id) {
     return (
@@ -138,14 +124,14 @@ export default function ChamadoDetalhesScreen() {
         }}
       />
       <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <ScrollView ref={scrollRef} className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="p-4">
             {/* HERO SECTION - Informações Críticas */}
             <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
               {/* Header com Status Badge e ID */}
               <View className="flex-row justify-between items-start mb-4">
-                <View className={`${chamado.status === 'aberto' ? 'bg-amber-400' : 'bg-gray-400'} px-3 py-1.5 rounded-full`}>
-                  <Text className={`${chamado.status === 'aberto' ? 'text-amber-900' : 'text-gray-900'} font-bold text-xs uppercase tracking-wide`}>
+                <View className={`${chamado.status === 'aberto' ? 'bg-amber-400' : 'bg-green-400'} px-3 py-1.5 rounded-full`}>
+                  <Text className={`${chamado.status === 'aberto' ? 'text-amber-900' : 'text-green-900'} font-bold text-xs uppercase tracking-wide`}>
                     {chamado.status === 'aberto' ? 'Aberto' : 'Fechado'}
                   </Text>
                 </View>
@@ -199,12 +185,9 @@ export default function ChamadoDetalhesScreen() {
                     {/* Visita Agendada */}
                     <View className="mb-2">
                       <Text className="text-gray-500 text-xs font-medium mb-1">Visita Agendada</Text>
-                      <View className="flex-row items-center">
-                        <Ionicons name="calendar" size={16} color="#f97316" />
-                        <Text className="text-gray-900 text-sm font-semibold ml-2">
-                          {formatarDataCompleta(chamado.visita)}
-                        </Text>
-                      </View>
+                      <Text className="text-gray-900 text-sm font-semibold">
+                        {formatarDataCompleta(chamado.visita)}
+                      </Text>
                     </View>
                   </>
                 )}
@@ -402,7 +385,9 @@ export default function ChamadoDetalhesScreen() {
                         onPress: () => {
                           reabrirChamadoMutation.mutate(chamado.chamado, {
                             onSuccess: () => {
-                              router.back();
+                              // Scroll para o topo para exibir o badge "Aberto"
+                              scrollRef.current?.scrollTo({ y: 0, animated: true });
+                              
                               setTimeout(() => {
                                 Toast.show({
                                   type: 'success',
@@ -442,99 +427,16 @@ export default function ChamadoDetalhesScreen() {
         />
 
         {/* Modal Fechar Chamado */}
-        <Modal
+        <FechaChamadoModal
           visible={fecharModalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setFecharModalVisible(false)}
-        >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            className="flex-1"
-          >
-            <View className="flex-1 bg-black/50 justify-center items-center p-4">
-              <View className="bg-white rounded-2xl p-6 w-full max-w-md">
-                <Text className="text-xl font-bold text-gray-900 mb-4">Fechar Chamado</Text>
-
-                <TextInput
-                  ref={motivoInputRef}
-                  className="bg-gray-50 border border-gray-300 rounded-lg p-3 mb-4 text-gray-900"
-                  placeholder="Digite o motivo..."
-                  placeholderTextColor="#9ca3af"
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                  value={motivo}
-                  onChangeText={setMotivo}
-                />
-
-                <View className="flex-row gap-3">
-                  <TouchableOpacity
-                    onPress={() => {
-                      setFecharModalVisible(false);
-                      setMotivo('');
-                    }}
-                    disabled={fechaChamadoMutation.isPending}
-                    className={`flex-1 py-3 rounded-lg ${fechaChamadoMutation.isPending ? 'bg-gray-300' : 'bg-gray-200'
-                      }`}
-                  >
-                    <Text className="text-gray-700 font-semibold text-center">Cancelar</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (motivo.trim()) {
-                        fechaChamadoMutation.mutate(
-                          {
-                            numeroChamado: chamado!.chamado,
-                            motivo: motivo.trim(),
-                          },
-                          {
-                            onSuccess: () => {
-                              setFecharModalVisible(false);
-                              setMotivo('');
-
-                              // Aguarda modal fechar antes de navegar
-                              setTimeout(() => {
-                                router.back();
-
-                                // Toast aparece na agenda (não-bloqueante)
-                                setTimeout(() => {
-                                  Toast.show({
-                                    type: 'success',
-                                    text1: 'Chamado fechado com sucesso! ✅',
-                                    text2: 'Você pode vê-lo na aba Histórico',
-                                    position: 'top',
-                                    visibilityTime: 4000,
-                                    topOffset: 60,
-                                  });
-                                }, 100);
-                              }, 200);
-                            },
-                          }
-                        );
-                      } else {
-                        Alert.alert('Atenção', 'Por favor, informe um motivo para o fechamento.');
-                      }
-                    }}
-                    disabled={fechaChamadoMutation.isPending}
-                    className={`flex-1 py-3 rounded-lg ${fechaChamadoMutation.isPending ? 'bg-green-400' : 'bg-green-600'
-                      }`}
-                  >
-                    {fechaChamadoMutation.isPending ? (
-                      <View className="flex-row items-center justify-center gap-2">
-                        <ActivityIndicator size="small" color="white" />
-                        <Text className="text-white font-bold text-center">Fechando...</Text>
-                      </View>
-                    ) : (
-                      <Text className="text-white font-bold text-center">Fechar Chamado</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </KeyboardAvoidingView>
-        </Modal>
+          onClose={() => setFecharModalVisible(false)}
+          numeroChamado={chamado!.chamado}
+          fechaChamadoMutation={fechaChamadoMutation}
+          onSuccess={() => {
+            // Scroll para o topo para exibir o badge "Fechado"
+            scrollRef.current?.scrollTo({ y: 0, animated: true });
+          }}
+        />
       </SafeAreaView>
     </>
   );
