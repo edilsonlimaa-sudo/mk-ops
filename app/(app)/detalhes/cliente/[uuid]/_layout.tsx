@@ -1,17 +1,70 @@
-import { useClientDetail } from '@/hooks/cliente';
+import { EditModal } from '@/components/instalacao/EditModal';
+import { useClientDetail, useUpdateClient } from '@/hooks/cliente';
 import { Ionicons } from '@expo/vector-icons';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { Stack, useLocalSearchParams, withLayoutContext } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { ClienteContext } from './ClienteContext';
+import { ErrorBoundary } from './ErrorBoundary';
+import GeralTab from './index';
+import ObservacoesTab from './observacoes';
+import TecnicoTab from './tecnico';
 
-const { Navigator } = createMaterialTopTabNavigator();
-export const MaterialTopTabs = withLayoutContext(Navigator);
+const Tab = createMaterialTopTabNavigator();
 
 export default function ClienteDetalhesLayout() {
   const { uuid } = useLocalSearchParams<{ uuid: string }>();
   const { data: cliente, isLoading, error } = useClientDetail(uuid);
+  const updateClientMutation = useUpdateClient();
+
+  // Estados para edição
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editField, setEditField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [editLabel, setEditLabel] = useState('');
+  const [editMultiline, setEditMultiline] = useState(false);
+
+  const openEditModal = (field: string, value: string, label: string, multiline = false) => {
+    setEditField(field);
+    setEditValue(value);
+    setEditLabel(label);
+    setEditMultiline(multiline);
+    setEditModalVisible(true);
+  };
+
+  const salvarEdicao = () => {
+    if (!editField || !cliente) return;
+
+    const payload = {
+      uuid: cliente.uuid_cliente,
+      [editField]: editValue,
+    };
+
+    updateClientMutation.mutate(payload, {
+      onSuccess: () => {
+        setEditModalVisible(false);
+        Toast.show({
+          type: 'success',
+          text1: 'Alteração salva! ✅',
+          position: 'top',
+          visibilityTime: 2000,
+          topOffset: 60,
+        });
+      },
+      onError: (error) => {
+        Toast.show({
+          type: 'error',
+          text1: 'Erro ao salvar',
+          text2: error instanceof Error ? error.message : 'Tente novamente',
+          position: 'top',
+          topOffset: 60,
+        });
+      },
+    });
+  };
 
   if (isLoading) {
     return (
@@ -73,60 +126,75 @@ export default function ClienteDetalhesLayout() {
           },
         }} 
       />
-      <ClienteContext.Provider value={{ cliente }}>
+      <ClienteContext.Provider value={{ cliente, openEditModal }}>
         <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
-          <MaterialTopTabs
-            screenOptions={{
-              tabBarScrollEnabled: false,
-              tabBarActiveTintColor: '#3b82f6',
-              tabBarInactiveTintColor: '#6b7280',
-              tabBarIndicatorStyle: {
-                backgroundColor: '#3b82f6',
-                height: 3,
-              },
-              tabBarStyle: {
-                backgroundColor: '#ffffff',
-                elevation: 0,
-                shadowOpacity: 0,
-                borderBottomWidth: 1,
-                borderBottomColor: '#e5e7eb',
-              },
-              tabBarLabelStyle: {
-                fontSize: 13,
-                fontWeight: '600',
-                textTransform: 'none',
-              },
-              tabBarShowIcon: true,
-            }}
-          >
-            <MaterialTopTabs.Screen
-              name="index"
-              options={{ 
-                title: 'Geral',
-                tabBarIcon: ({ color }: { color: string }) => (
-                  <Ionicons name="information-circle-outline" size={20} color={color} />
-                ),
+          <ErrorBoundary>
+            <Tab.Navigator
+              screenOptions={{
+                tabBarScrollEnabled: false,
+                tabBarActiveTintColor: '#3b82f6',
+                tabBarInactiveTintColor: '#6b7280',
+                tabBarIndicatorStyle: {
+                  backgroundColor: '#3b82f6',
+                  height: 3,
+                },
+                tabBarStyle: {
+                  backgroundColor: '#ffffff',
+                  elevation: 0,
+                  shadowOpacity: 0,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#e5e7eb',
+                },
+                tabBarLabelStyle: {
+                  fontSize: 13,
+                  fontWeight: '600',
+                  textTransform: 'none',
+                },
+                tabBarShowIcon: true,
               }}
-            />
-            <MaterialTopTabs.Screen
-              name="tecnico"
-              options={{ 
-                title: 'Técnico',
-                tabBarIcon: ({ color }: { color: string }) => (
-                  <Ionicons name="settings-outline" size={20} color={color} />
-                ),
-              }}
-            />
-            <MaterialTopTabs.Screen
-              name="observacoes"
-              options={{ 
-                title: 'Observações',
-                tabBarIcon: ({ color }: { color: string }) => (
-                  <Ionicons name="document-text-outline" size={20} color={color} />
-                ),
-              }}
-            />
-          </MaterialTopTabs>
+            >
+              <Tab.Screen
+                name="Geral"
+                component={GeralTab}
+                options={{ 
+                  tabBarIcon: ({ color }: { color: string }) => (
+                    <Ionicons name="information-circle-outline" size={20} color={color} />
+                  ),
+                }}
+              />
+              <Tab.Screen
+                name="Técnico"
+                component={TecnicoTab}
+                options={{ 
+                  tabBarIcon: ({ color }: { color: string }) => (
+                    <Ionicons name="settings-outline" size={20} color={color} />
+                  ),
+                }}
+              />
+              <Tab.Screen
+                name="Observações"
+                component={ObservacoesTab}
+                options={{ 
+                  tabBarIcon: ({ color }: { color: string }) => (
+                    <Ionicons name="document-text-outline" size={20} color={color} />
+                  ),
+                }}
+              />
+            </Tab.Navigator>
+          </ErrorBoundary>
+
+          {/* Modal de Edição Global */}
+          <EditModal
+            visible={editModalVisible}
+            onClose={() => setEditModalVisible(false)}
+            onSave={salvarEdicao}
+            title={`Editar ${editLabel}`}
+            value={editValue}
+            onChange={setEditValue}
+            placeholder={`Digite o ${editLabel.toLowerCase()}`}
+            isPending={updateClientMutation.isPending}
+            multiline={editMultiline}
+          />
         </SafeAreaView>
       </ClienteContext.Provider>
     </>

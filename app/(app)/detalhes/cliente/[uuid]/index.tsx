@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useClienteContext } from './ClienteContext';
+import { EditableInfoRow } from './SharedComponents';
 
-export default function GeralTab() {
+function GeralTab() {
     const { cliente } = useClienteContext();
     const [quickActionModalVisible, setQuickActionModalVisible] = useState(false);
     const [quickActionOptions, setQuickActionOptions] = useState<Array<{ label: string; value: string; icon: string; action: () => void }>>([]);
@@ -264,12 +265,12 @@ export default function GeralTab() {
                     </View>
 
                     <View className="bg-gray-50 rounded-xl p-3">
-                        <InfoRow label="Nome" value={cliente.nome} />
-                        {cliente.cpf_cnpj && <InfoRow label="CPF/CNPJ" value={cliente.cpf_cnpj} />}
-                        {cliente.rg && <InfoRow label="RG" value={cliente.rg} />}
-                        {cliente.nascimento && <InfoRow label="Nascimento" value={cliente.nascimento} />}
-                        {cliente.estado_civil && <InfoRow label="Estado Civil" value={cliente.estado_civil} />}
-                        {cliente.cadastro && <InfoRow label="Cadastrado em" value={cliente.cadastro} />}
+                        <EditableInfoRow label="Nome" value={cliente.nome} field="nome" />
+                        {cliente.cpf_cnpj && <EditableInfoRow label="CPF/CNPJ" value={cliente.cpf_cnpj} field="cpf_cnpj" />}
+                        {cliente.rg && <EditableInfoRow label="RG" value={cliente.rg} field="rg" />}
+                        {cliente.nascimento && <EditableInfoRow label="Nascimento" value={cliente.nascimento} field="nascimento" />}
+                        {cliente.estado_civil && <EditableInfoRow label="Estado Civil" value={cliente.estado_civil} field="estado_civil" />}
+                        {cliente.cadastro && <EditableInfoRow label="Cadastrado em" value={cliente.cadastro} field="cadastro" editable={false} />}
                     </View>
                 </View>
 
@@ -283,9 +284,9 @@ export default function GeralTab() {
                     </View>
 
                     <View className="bg-gray-50 rounded-xl p-3">
-                        {cliente.celular && <InfoRow label="Celular" value={cliente.celular} />}
-                        {cliente.fone && <InfoRow label="Telefone" value={cliente.fone} />}
-                        {cliente.email && <InfoRow label="Email" value={cliente.email} />}
+                        {cliente.celular && <EditableInfoRow label="Celular" value={cliente.celular} field="celular" />}
+                        {cliente.fone && <EditableInfoRow label="Telefone" value={cliente.fone} field="fone" />}
+                        {cliente.email && <EditableInfoRow label="Email" value={cliente.email} field="email" />}
                     </View>
                 </View>
 
@@ -300,19 +301,20 @@ export default function GeralTab() {
 
                     <View className="bg-gray-50 rounded-xl p-3">
                         {cliente.endereco && (
-                            <InfoRow
+                            <EditableInfoRow
                                 label="Endereço"
-                                value={`${cliente.endereco}${cliente.numero ? `, ${cliente.numero}` : ''}`}
+                                value={cliente.endereco}
+                                field="endereco"
                             />
                         )}
-                        {cliente.complemento && <InfoRow label="Complemento" value={cliente.complemento} />}
-                        {cliente.bairro && <InfoRow label="Bairro" value={cliente.bairro} />}
-                        {cliente.cidade && cliente.estado && (
-                            <InfoRow label="Cidade/Estado" value={`${cliente.cidade} - ${cliente.estado}`} />
-                        )}
-                        {cliente.cep && <InfoRow label="CEP" value={cliente.cep} />}
+                        {cliente.numero && <EditableInfoRow label="Número" value={cliente.numero} field="numero" />}
+                        {cliente.complemento && <EditableInfoRow label="Complemento" value={cliente.complemento} field="complemento" />}
+                        {cliente.bairro && <EditableInfoRow label="Bairro" value={cliente.bairro} field="bairro" />}
+                        {cliente.cidade && <EditableInfoRow label="Cidade" value={cliente.cidade} field="cidade" />}
+                        {cliente.estado && <EditableInfoRow label="Estado" value={cliente.estado} field="estado" />}
+                        {cliente.cep && <EditableInfoRow label="CEP" value={cliente.cep} field="cep" />}
                         {cliente.coordenadas && cliente.coordenadas !== '-38.5748,-3.741162,0' && (
-                            <InfoRow label="Coordenadas GPS" value={cliente.coordenadas} />
+                            <EditableInfoRow label="Coordenadas GPS" value={cliente.coordenadas} field="coordenadas" />
                         )}
                     </View>
                 </View>
@@ -328,19 +330,20 @@ export default function GeralTab() {
                         </View>
 
                         <View className="bg-gray-50 rounded-xl p-3">
-                            {cliente.nome_res && <InfoRow label="Nome" value={cliente.nome_res} />}
+                            {cliente.nome_res && <EditableInfoRow label="Nome" value={cliente.nome_res} field="nome_res" />}
                             {cliente.endereco_res && (
-                                <InfoRow
+                                <EditableInfoRow
                                     label="Endereço"
-                                    value={`${cliente.endereco_res}${cliente.numero_res ? `, ${cliente.numero_res}` : ''}`}
+                                    value={cliente.endereco_res}
+                                    field="endereco_res"
                                 />
                             )}
-                            {cliente.complemento_res && <InfoRow label="Complemento" value={cliente.complemento_res} />}
-                            {cliente.bairro_res && <InfoRow label="Bairro" value={cliente.bairro_res} />}
-                            {cliente.cidade_res && cliente.estado_res && (
-                                <InfoRow label="Cidade/Estado" value={`${cliente.cidade_res} - ${cliente.estado_res}`} />
-                            )}
-                            {cliente.cep_res && <InfoRow label="CEP" value={cliente.cep_res} />}
+                            {cliente.numero_res && <EditableInfoRow label="Número" value={cliente.numero_res} field="numero_res" />}
+                            {cliente.complemento_res && <EditableInfoRow label="Complemento" value={cliente.complemento_res} field="complemento_res" />}
+                            {cliente.bairro_res && <EditableInfoRow label="Bairro" value={cliente.bairro_res} field="bairro_res" />}
+                            {cliente.cidade_res && <EditableInfoRow label="Cidade" value={cliente.cidade_res} field="cidade_res" />}
+                            {cliente.estado_res && <EditableInfoRow label="Estado" value={cliente.estado_res} field="estado_res" />}
+                            {cliente.cep_res && <EditableInfoRow label="CEP" value={cliente.cep_res} field="cep_res" />}
                         </View>
                     </View>
                 )}
@@ -355,12 +358,12 @@ export default function GeralTab() {
                     </View>
 
                     <View className="bg-gray-50 rounded-xl p-3">
-                        {cliente.plano && <InfoRow label="Plano" value={cliente.plano} />}
-                        {cliente.login && <InfoRow label="Login" value={cliente.login} />}
-                        {cliente.senha && <InfoRow label="Senha" value={cliente.senha} />}
-                        {cliente.venc && <InfoRow label="Vencimento" value={`Dia ${cliente.venc}`} />}
-                        {cliente.contrato && <InfoRow label="Contrato" value={cliente.contrato} />}
-                        {cliente.tipo && <InfoRow label="Tipo de Conexão" value={cliente.tipo.toUpperCase()} />}
+                        {cliente.plano && <EditableInfoRow label="Plano" value={cliente.plano} field="plano" />}
+                        {cliente.login && <EditableInfoRow label="Login" value={cliente.login} field="login" />}
+                        {cliente.senha && <EditableInfoRow label="Senha" value={cliente.senha} field="senha" />}
+                        {cliente.venc && <EditableInfoRow label="Vencimento" value={cliente.venc} field="venc" />}
+                        {cliente.contrato && <EditableInfoRow label="Contrato" value={cliente.contrato} field="contrato" />}
+                        {cliente.tipo && <EditableInfoRow label="Tipo de Conexão" value={cliente.tipo} field="tipo" />}
                     </View>
                 </View>
 
@@ -374,16 +377,20 @@ export default function GeralTab() {
                     </View>
 
                     <View className="bg-gray-50 rounded-xl p-3">
-                        <InfoRow
+                        <EditableInfoRow
                             label="Cliente Ativado"
                             value={cliente.cli_ativado === 's' ? 'Sim' : 'Não'}
+                            field="cli_ativado"
+                            editable={false}
                         />
-                        <InfoRow
+                        <EditableInfoRow
                             label="Bloqueado"
                             value={cliente.bloqueado === 'sim' ? 'Sim' : 'Não'}
+                            field="bloqueado"
+                            editable={false}
                         />
                         {cliente.status_corte && (
-                            <InfoRow label="Status de Corte" value={cliente.status_corte} />
+                            <EditableInfoRow label="Status de Corte" value={cliente.status_corte} field="status_corte" editable={false} />
                         )}
                     </View>
                 </View>
@@ -400,13 +407,7 @@ export default function GeralTab() {
     );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-    return (
-        <View className="flex-row justify-between py-2 border-b border-gray-100">
-            <Text className="text-gray-600 text-sm">{label}</Text>
-            <Text className="text-gray-900 text-sm font-medium flex-1 text-right ml-4">
-                {value}
-            </Text>
-        </View>
-    );
-}
+GeralTab.displayName = 'GeralTab';
+export default GeralTab;
+
+

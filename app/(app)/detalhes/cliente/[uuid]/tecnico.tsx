@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ScrollView, Text, View } from 'react-native';
 import { useClienteContext } from './ClienteContext';
+import { EditableInfoRow } from './SharedComponents';
 
-export default function TecnicoTab() {
+function TecnicoTab() {
   const { cliente } = useClienteContext();
 
   return (
@@ -18,11 +19,11 @@ export default function TecnicoTab() {
           </View>
 
           <View className="bg-gray-50 rounded-xl p-3">
-            {cliente.tipo && <InfoRow label="Tipo" value={cliente.tipo} />}
-            {cliente.ip && <InfoRow label="IP" value={cliente.ip} />}
-            {cliente.mac && <InfoRow label="MAC" value={cliente.mac} />}
-            {cliente.pool_name && <InfoRow label="Pool" value={cliente.pool_name} />}
-            {cliente.simultaneo && <InfoRow label="Simultâneo" value={cliente.simultaneo} />}
+            {cliente.tipo && <EditableInfoRow label="Tipo" value={cliente.tipo} field="tipo" />}
+            {cliente.ip && <EditableInfoRow label="IP" value={cliente.ip} field="ip" />}
+            {cliente.mac && <EditableInfoRow label="MAC" value={cliente.mac} field="mac" />}
+            {cliente.pool_name && <EditableInfoRow label="Pool" value={cliente.pool_name} field="pool_name" />}
+            {cliente.simultaneo && <EditableInfoRow label="Simultâneo" value={cliente.simultaneo} field="simultaneo" />}
           </View>
         </View>
 
@@ -37,18 +38,18 @@ export default function TecnicoTab() {
 
           <View className="bg-gray-50 rounded-xl p-3">
             {cliente.equipamento && cliente.equipamento !== 'nenhum' && (
-              <InfoRow label="Equipamento" value={cliente.equipamento} />
+              <EditableInfoRow label="Equipamento" value={cliente.equipamento} field="equipamento" />
             )}
-            {cliente.onu_ont && <InfoRow label="ONU/ONT" value={cliente.onu_ont} />}
-            {cliente.porta_olt && <InfoRow label="Porta OLT" value={cliente.porta_olt} />}
-            {cliente.porta_splitter && <InfoRow label="Porta Splitter" value={cliente.porta_splitter} />}
+            {cliente.onu_ont && <EditableInfoRow label="ONU/ONT" value={cliente.onu_ont} field="onu_ont" />}
+            {cliente.porta_olt && <EditableInfoRow label="Porta OLT" value={cliente.porta_olt} field="porta_olt" />}
+            {cliente.porta_splitter && <EditableInfoRow label="Porta Splitter" value={cliente.porta_splitter} field="porta_splitter" />}
             {cliente.switch && cliente.switch !== 'nenhum' && (
-              <InfoRow label="Switch" value={cliente.switch} />
+              <EditableInfoRow label="Switch" value={cliente.switch} field="switch" />
             )}
-            {cliente.armario_olt && <InfoRow label="Armário OLT" value={cliente.armario_olt} />}
-            {cliente.caixa_herm && <InfoRow label="Caixa Hermética" value={cliente.caixa_herm} />}
+            {cliente.armario_olt && <EditableInfoRow label="Armário OLT" value={cliente.armario_olt} field="armario_olt" />}
+            {cliente.caixa_herm && <EditableInfoRow label="Caixa Hermética" value={cliente.caixa_herm} field="caixa_herm" />}
             {cliente.comodato && cliente.comodato !== 'nao' && (
-              <InfoRow label="Comodato" value="Sim" />
+              <EditableInfoRow label="Comodato" value={cliente.comodato} field="comodato" editable={false} />
             )}
           </View>
         </View>
@@ -63,9 +64,9 @@ export default function TecnicoTab() {
           </View>
 
           <View className="bg-gray-50 rounded-xl p-3">
-            {cliente.login && <InfoRow label="Login" value={cliente.login} />}
-            {cliente.senha && <InfoRow label="Senha" value={cliente.senha} />}
-            {cliente.altsenha && <InfoRow label="Senha Alternativa" value={cliente.altsenha} />}
+            {cliente.login && <EditableInfoRow label="Login" value={cliente.login} field="login" />}
+            {cliente.senha && <EditableInfoRow label="Senha" value={cliente.senha} field="senha" />}
+            {cliente.altsenha && <EditableInfoRow label="Senha Alternativa" value={cliente.altsenha} field="altsenha" />}
           </View>
         </View>
 
@@ -81,10 +82,10 @@ export default function TecnicoTab() {
 
             <View className="bg-gray-50 rounded-xl p-3">
               {cliente.tit_abertos !== '0' && (
-                <InfoRow label="Títulos em Aberto" value={cliente.tit_abertos} />
+                <EditableInfoRow label="Títulos em Aberto" value={cliente.tit_abertos} field="tit_abertos" editable={false} />
               )}
               {cliente.tit_vencidos !== '0' && (
-                <InfoRow label="Títulos Vencidos" value={cliente.tit_vencidos} />
+                <EditableInfoRow label="Títulos Vencidos" value={cliente.tit_vencidos} field="tit_vencidos" editable={false} />
               )}
             </View>
           </View>
@@ -94,13 +95,5 @@ export default function TecnicoTab() {
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="flex-row justify-between py-2 border-b border-gray-100">
-      <Text className="text-gray-600 text-sm">{label}</Text>
-      <Text className="text-gray-900 text-sm font-medium flex-1 text-right ml-4">
-        {value}
-      </Text>
-    </View>
-  );
-}
+TecnicoTab.displayName = 'TecnicoTab';
+export default TecnicoTab;

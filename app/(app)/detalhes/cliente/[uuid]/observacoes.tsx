@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ScrollView, Text, View } from 'react-native';
 import { useClienteContext } from './ClienteContext';
+import { EditableInfoRow } from './SharedComponents';
 
-export default function ObservacoesTab() {
+function ObservacoesTab() {
   const { cliente } = useClienteContext();
 
   return (
@@ -20,28 +21,34 @@ export default function ObservacoesTab() {
 
             {cliente.obs && (
               <View className="bg-gray-50 rounded-xl p-3 mb-3">
-                <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
-                  Observações
-                </Text>
-                <Text className="text-gray-700 text-sm">{cliente.obs}</Text>
+                <EditableInfoRow 
+                  label="Observações" 
+                  value={cliente.obs} 
+                  field="obs" 
+                  multiline={true}
+                />
               </View>
             )}
 
             {cliente.observacao && (
               <View className="bg-gray-50 rounded-xl p-3 mb-3">
-                <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
-                  Observação Adicional
-                </Text>
-                <Text className="text-gray-700 text-sm">{cliente.observacao}</Text>
+                <EditableInfoRow 
+                  label="Observação Adicional" 
+                  value={cliente.observacao} 
+                  field="observacao"
+                  multiline={true}
+                />
               </View>
             )}
 
             {cliente.rem_obs && (
               <View className="bg-gray-50 rounded-xl p-3">
-                <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
-                  Observação de Remessa
-                </Text>
-                <Text className="text-gray-700 text-sm">{cliente.rem_obs}</Text>
+                <EditableInfoRow 
+                  label="Observação de Remessa" 
+                  value={cliente.rem_obs} 
+                  field="rem_obs"
+                  multiline={true}
+                />
               </View>
             )}
           </View>
@@ -58,7 +65,7 @@ export default function ObservacoesTab() {
             </View>
 
             <View className="bg-gray-50 rounded-xl p-3">
-              <Text className="text-gray-700 text-sm">{cliente.tags}</Text>
+              <EditableInfoRow label="Tags" value={cliente.tags} field="tags" multiline={true} />
             </View>
           </View>
         )}
@@ -73,13 +80,13 @@ export default function ObservacoesTab() {
           </View>
 
           <View className="bg-gray-50 rounded-xl p-3">
-            {cliente.cadastro && <InfoRow label="Cadastrado em" value={cliente.cadastro} />}
-            {cliente.last_update && <InfoRow label="Última Atualização" value={cliente.last_update} />}
-            {cliente.data_ins && <InfoRow label="Data de Instalação" value={cliente.data_ins} />}
-            {cliente.data_bloq && <InfoRow label="Data de Bloqueio" value={cliente.data_bloq} />}
-            {cliente.data_desbloq && <InfoRow label="Data de Desbloqueio" value={cliente.data_desbloq} />}
+            {cliente.cadastro && <EditableInfoRow label="Cadastrado em" value={cliente.cadastro} field="cadastro" editable={false} />}
+            {cliente.last_update && <EditableInfoRow label="Última Atualização" value={cliente.last_update} field="last_update" editable={false} />}
+            {cliente.data_ins && <EditableInfoRow label="Data de Instalação" value={cliente.data_ins} field="data_ins" />}
+            {cliente.data_bloq && <EditableInfoRow label="Data de Bloqueio" value={cliente.data_bloq} field="data_bloq" editable={false} />}
+            {cliente.data_desbloq && <EditableInfoRow label="Data de Desbloqueio" value={cliente.data_desbloq} field="data_desbloq" editable={false} />}
             {cliente.data_desativacao && (
-              <InfoRow label="Data de Desativação" value={cliente.data_desativacao} />
+              <EditableInfoRow label="Data de Desativação" value={cliente.data_desativacao} field="data_desativacao" editable={false} />
             )}
           </View>
         </View>
@@ -94,11 +101,11 @@ export default function ObservacoesTab() {
           </View>
 
           <View className="bg-gray-50 rounded-xl p-3">
-            {cliente.vendedor && <InfoRow label="Vendedor" value={cliente.vendedor} />}
-            {cliente.tecnico && <InfoRow label="Técnico" value={cliente.tecnico} />}
-            {cliente.grupo && <InfoRow label="Grupo" value={cliente.grupo} />}
-            {cliente.codigo && <InfoRow label="Código" value={cliente.codigo} />}
-            {cliente.termo && <InfoRow label="Termo" value={cliente.termo} />}
+            {cliente.vendedor && <EditableInfoRow label="Vendedor" value={cliente.vendedor} field="vendedor" />}
+            {cliente.tecnico && <EditableInfoRow label="Técnico" value={cliente.tecnico} field="tecnico" />}
+            {cliente.grupo && <EditableInfoRow label="Grupo" value={cliente.grupo} field="grupo" />}
+            {cliente.codigo && <EditableInfoRow label="Código" value={cliente.codigo} field="codigo" />}
+            {cliente.termo && <EditableInfoRow label="Termo" value={cliente.termo} field="termo" />}
           </View>
         </View>
 
@@ -112,9 +119,9 @@ export default function ObservacoesTab() {
           </View>
 
           <View className="bg-gray-50 rounded-xl p-3">
-            <InfoRow label="ID" value={cliente.id} />
-            <InfoRow label="UUID Cliente" value={cliente.uuid_cliente} />
-            {cliente.uuid && <InfoRow label="UUID" value={cliente.uuid} />}
+            <EditableInfoRow label="ID" value={cliente.id} field="id" editable={false} />
+            <EditableInfoRow label="UUID Cliente" value={cliente.uuid_cliente} field="uuid_cliente" editable={false} />
+            {cliente.uuid && <EditableInfoRow label="UUID" value={cliente.uuid} field="uuid" editable={false} />}
           </View>
         </View>
       </View>
@@ -122,13 +129,5 @@ export default function ObservacoesTab() {
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="flex-row justify-between py-2 border-b border-gray-100">
-      <Text className="text-gray-600 text-sm">{label}</Text>
-      <Text className="text-gray-900 text-sm font-medium flex-1 text-right ml-4">
-        {value}
-      </Text>
-    </View>
-  );
-}
+ObservacoesTab.displayName = 'ObservacoesTab';
+export default ObservacoesTab;

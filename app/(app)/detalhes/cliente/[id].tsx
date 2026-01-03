@@ -1,17 +1,79 @@
-import { useClientDetail } from '@/hooks/cliente';
+import { EditModal } from '@/components/instalacao/EditModal';
+import { EditableInfoRow, InfoRow } from '@/components/instalacao/InfoRows';
+import { useClientDetail, useUpdateClient } from '@/hooks/cliente';
 import type { ClienteDetalhesParams } from '@/types/navigation';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Share, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, ScrollView, Share, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
 export default function ClienteDetalhesScreen() {
   const { id } = useLocalSearchParams<ClienteDetalhesParams>();
   const { data: cliente, isLoading, error } = useClientDetail(id);
+  const updateClientMutation = useUpdateClient();
   const [senhaVisivel, setSenhaVisivel] = useState(false);
+
+  // Estados para edição
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editField, setEditField] = useState<'celular' | 'fone' | 'email' | 'endereco' | 'numero' | 'complemento' | 'bairro' | 'cidade' | 'estado' | 'cep' | 'obs' | null>(null);
+  const [editValue, setEditValue] = useState('');
+
+  const abrirEdicao = (field: typeof editField, value: string) => {
+    setEditField(field);
+    setEditValue(value);
+    setEditModalVisible(true);
+  };
+
+  const getFieldLabel = () => {
+    const labels: Record<string, string> = {
+      celular: 'Celular',
+      fone: 'Telefone',
+      email: 'E-mail',
+      endereco: 'Endereço',
+      numero: 'Número',
+      complemento: 'Complemento',
+      bairro: 'Bairro',
+      cidade: 'Cidade',
+      estado: 'Estado',
+      cep: 'CEP',
+      obs: 'Observações',
+    };
+    return labels[editField || ''] || '';
+  };
+
+  const salvarEdicao = () => {
+    if (!editField || !cliente) return;
+
+    const payload = {
+      uuid: cliente.uuid_cliente,
+      [editField]: editValue,
+    };
+
+    updateClientMutation.mutate(payload, {
+      onSuccess: () => {
+        setEditModalVisible(false);
+        Toast.show({
+          type: 'success',
+          text1: 'Alteração salva! ✅',
+          position: 'top',
+          visibilityTime: 2000,
+          topOffset: 60,
+        });
+      },
+      onError: (error) => {
+        Toast.show({
+          type: 'error',
+          text1: 'Erro ao salvar',
+          text2: error instanceof Error ? error.message : 'Tente novamente',
+          position: 'top',
+          topOffset: 60,
+        });
+      },
+    });
+  };
 
   const copiarParaClipboard = async (texto: string, label: string) => {
     await Clipboard.setStringAsync(texto);
@@ -254,22 +316,42 @@ export default function ClienteDetalhesScreen() {
             
             {/* Celular com botão WhatsApp */}
             {cliente.celular && (
-              <View className="flex-row justify-between items-center py-2 border-b border-gray-100">
-                <Text className="text-gray-600 text-sm">Celular</Text>
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-gray-900 text-sm font-medium">{cliente.celular}</Text>
+              <View className="border-b border-gray-100">
+                <EditableInfoRow
+                  label="Celular"
+                  value={cliente.celular}
+                  onEdit={() => abrirEdicao('celular', cliente.celular || '')}
+                  editable={true}
+                />
+                {/* Botão WhatsApp abaixo */}
+                <View className="flex-row justify-end pb-2 -mt-1">
                   <TouchableOpacity
                     onPress={enviarWhatsApp}
-                    className="bg-emerald-50 p-2 rounded-lg active:bg-emerald-100"
+                    className="bg-emerald-50 px-3 py-1.5 rounded-lg active:bg-emerald-100 flex-row items-center gap-1"
                   >
-                    <Ionicons name="logo-whatsapp" size={16} color="#10b981" />
+                    <Ionicons name="logo-whatsapp" size={14} color="#10b981" />
+                    <Text className="text-emerald-600 text-xs font-medium">WhatsApp</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             )}
             
-            {cliente.fone && <InfoRow label="Telefone" value={cliente.fone} />}
-            {cliente.email && <InfoRow label="Email" value={cliente.email} />}
+            {cliente.fone && (
+              <EditableInfoRow
+                label="Telefone"
+                value={cliente.fone}
+                onEdit={() => abrirEdicao('fone', cliente.fone || '')}
+                editable={true}
+              />
+            )}
+            {cliente.email && (
+              <EditableInfoRow
+                label="Email"
+                value={cliente.email}
+                onEdit={() => abrirEdicao('email', cliente.email || '')}
+                editable={true}
+              />
+            )}
           </View>
 
           {/* Endereço */}
@@ -278,19 +360,61 @@ export default function ClienteDetalhesScreen() {
               Endereço
             </Text>
             {cliente.endereco && (
-              <InfoRow
+              <EditableInfoRow
                 label="Endereço"
-                value={`${cliente.endereco}${cliente.numero ? `, ${cliente.numero}` : ''}`}
+                value={cliente.endereco}
+                onEdit={() => abrirEdicao('endereco', cliente.endereco || '')}
+                editable={true}
+              />
+            )}
+            {cliente.numero && (
+              <EditableInfoRow
+                label="Número"
+                value={cliente.numero}
+                onEdit={() => abrirEdicao('numero', cliente.numero || '')}
+                editable={true}
               />
             )}
             {cliente.complemento && (
-              <InfoRow label="Complemento" value={cliente.complemento} />
+              <EditableInfoRow
+                label="Complemento"
+                value={cliente.complemento}
+                onEdit={() => abrirEdicao('complemento', cliente.complemento || '')}
+                editable={true}
+              />
             )}
-            {cliente.bairro && <InfoRow label="Bairro" value={cliente.bairro} />}
-            {cliente.cidade && cliente.estado && (
-              <InfoRow label="Cidade/Estado" value={`${cliente.cidade} - ${cliente.estado}`} />
+            {cliente.bairro && (
+              <EditableInfoRow
+                label="Bairro"
+                value={cliente.bairro}
+                onEdit={() => abrirEdicao('bairro', cliente.bairro || '')}
+                editable={true}
+              />
             )}
-            {cliente.cep && <InfoRow label="CEP" value={cliente.cep} />}
+            {cliente.cidade && (
+              <EditableInfoRow
+                label="Cidade"
+                value={cliente.cidade}
+                onEdit={() => abrirEdicao('cidade', cliente.cidade || '')}
+                editable={true}
+              />
+            )}
+            {cliente.estado && (
+              <EditableInfoRow
+                label="Estado"
+                value={cliente.estado}
+                onEdit={() => abrirEdicao('estado', cliente.estado || '')}
+                editable={true}
+              />
+            )}
+            {cliente.cep && (
+              <EditableInfoRow
+                label="CEP"
+                value={cliente.cep}
+                onEdit={() => abrirEdicao('cep', cliente.cep || '')}
+                editable={true}
+              />
+            )}
             
             {/* Ações inline discretas */}
             {cliente.endereco && (
@@ -566,49 +690,43 @@ export default function ClienteDetalhesScreen() {
           )}
 
           {/* Observações */}
-          {cliente.obs && (
-            <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-              <Text className="text-xs text-gray-500 uppercase font-semibold mb-2">
+          <View className="bg-white rounded-lg p-4 mb-3 shadow-sm">
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-xs text-gray-500 uppercase font-semibold">
                 Observações
               </Text>
-              <Text className="text-gray-700">{cliente.obs}</Text>
+              <TouchableOpacity
+                onPress={() => abrirEdicao('obs', cliente?.obs || '')}
+                className="bg-blue-50 px-2 py-1 rounded-lg active:bg-blue-100 flex-row items-center gap-1"
+              >
+                <Ionicons name="create-outline" size={14} color="#3b82f6" />
+                <Text className="text-blue-600 text-xs font-medium">Editar</Text>
+              </TouchableOpacity>
             </View>
-          )}
+            {cliente?.obs ? (
+              <Text className="text-gray-700">{cliente.obs}</Text>
+            ) : (
+              <Text className="text-gray-400 italic">Nenhuma observação cadastrada</Text>
+            )}
+          </View>
         </View>
       </ScrollView>
+
+      {/* Modal de Edição */}
+      <EditModal
+        visible={editModalVisible}
+        onClose={() => setEditModalVisible(false)}
+        onSave={salvarEdicao}
+        title={`Editar ${getFieldLabel()}`}
+        value={editValue}
+        onChange={setEditValue}
+        placeholder={`Digite o ${getFieldLabel().toLowerCase()}`}
+        isPending={updateClientMutation.isPending}
+        multiline={editField === 'obs'}
+      />
       </SafeAreaView>
     </>
   );
 }
 
-// Componente helper para exibir informações com long press para copiar
-function InfoRow({ label, value }: { label: string; value: string }) {
-  const copiarValor = async () => {
-    await Clipboard.setStringAsync(value);
-    Toast.show({
-      type: 'success',
-      text1: `${label} copiado! 📋`,
-      position: 'top',
-      visibilityTime: 2000,
-      topOffset: 60,
-    });
-  };
 
-  return (
-    <Pressable 
-      onLongPress={copiarValor}
-      delayLongPress={500}
-      className="flex-row justify-between py-2 border-b border-gray-100"
-      style={({ pressed }) => [
-        {
-          backgroundColor: pressed ? '#f3f4f6' : 'transparent',
-        }
-      ]}
-    >
-      <Text className="text-gray-600 text-sm">{label}</Text>
-      <Text className="text-gray-900 text-sm font-medium flex-1 text-right ml-4">
-        {value}
-      </Text>
-    </Pressable>
-  );
-}
