@@ -1,3 +1,4 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
@@ -31,6 +32,7 @@ export function ResetMacModal({
   clienteUuid,
   onSuccess,
 }: ResetMacModalProps) {
+  const { colors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -94,24 +96,38 @@ export function ResetMacModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-blue-50">
-        {/* Header Celebrativo */}
-        <View className="bg-blue-600 px-6 pt-14 pb-8">
+      <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
+        {/* Header */}
+        <View 
+          className="px-6 pt-14 pb-8"
+          style={{ backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.headerBorder }}
+        >
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-1">
-              <Text className="text-xl font-bold text-white mb-1">Reset de MAC Address</Text>
-              <Text className="text-blue-100 text-sm">Detectar novo dispositivo</Text>
+              <Text 
+                className="text-xl font-bold mb-1"
+                style={{ color: colors.headerText }}
+              >
+                Reset de MAC Address
+              </Text>
+              <Text 
+                className="text-sm"
+                style={{ color: colors.cardTextSecondary }}
+              >
+                Detectar novo dispositivo
+              </Text>
             </View>
             <TouchableOpacity 
               onPress={onClose} 
-              className="bg-white/20 p-2 rounded-full"
+              className="p-2 rounded-full"
+              style={{ backgroundColor: colors.filterPillInactive }}
               disabled={updateClientMutation.isPending}
             >
-              <Ionicons name="close" size={24} color="white" />
+              <Ionicons name="close" size={24} color={colors.cardTextSecondary} />
             </TouchableOpacity>
           </View>
 
-          {/* Ícone Central Celebrativo */}
+          {/* Ícone Central */}
           <Animated.View 
             style={{ 
               transform: [{ scale: scaleAnim }], 
@@ -119,9 +135,15 @@ export function ResetMacModal({
               alignItems: 'center',
             }}
           >
-            <View className="bg-white/20 w-20 h-20 rounded-full items-center justify-center">
-              <View className="bg-white w-16 h-16 rounded-full items-center justify-center">
-                <Ionicons name="wifi" size={32} color="#2563eb" />
+            <View 
+              className="w-20 h-20 rounded-full items-center justify-center"
+              style={{ backgroundColor: colors.filterPillInactive }}
+            >
+              <View 
+                className="w-16 h-16 rounded-full items-center justify-center"
+                style={{ backgroundColor: colors.cardBackground }}
+              >
+                <Ionicons name="wifi" size={32} color={colors.tabBarActiveTint} />
               </View>
             </View>
           </Animated.View>
@@ -134,41 +156,86 @@ export function ResetMacModal({
         >
           <View className="px-6 py-6">
             {/* Informações do Cliente */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
+            <View 
+              className="rounded-2xl p-5 mb-4"
+              style={{ backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.cardBorder }}
+            >
               <View className="flex-row items-center mb-3">
                 <View className="bg-blue-100 w-10 h-10 rounded-full items-center justify-center mr-3">
                   <Ionicons name="person" size={20} color="#2563eb" />
                 </View>
-                <Text className="text-base font-bold text-gray-900">Cliente</Text>
+                <Text 
+                  className="text-base font-bold"
+                  style={{ color: colors.cardTextPrimary }}
+                >
+                  Cliente
+                </Text>
               </View>
-              <Text className="text-gray-700 text-base mb-3">{clienteNome}</Text>
+              <Text 
+                className="text-base mb-3"
+                style={{ color: colors.cardTextPrimary }}
+              >
+                {clienteNome}
+              </Text>
               
               {macAtual && (
-                <View className="bg-gray-50 rounded-xl p-3">
-                  <Text className="text-xs text-gray-500 font-semibold mb-1">MAC Atual</Text>
-                  <Text className="text-gray-900 font-mono text-sm">{macAtual}</Text>
+                <View 
+                  className="rounded-xl p-3"
+                  style={{ backgroundColor: colors.searchInputBackground }}
+                >
+                  <Text 
+                    className="text-xs font-semibold mb-1"
+                    style={{ color: colors.cardTextSecondary }}
+                  >
+                    MAC Atual
+                  </Text>
+                  <Text 
+                    className="font-mono text-sm"
+                    style={{ color: colors.cardTextPrimary }}
+                  >
+                    {macAtual}
+                  </Text>
                 </View>
               )}
             </View>
 
             {/* Como Funciona */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
+            <View 
+              className="rounded-2xl p-5 mb-4"
+              style={{ backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.cardBorder }}
+            >
               <View className="flex-row items-center mb-4">
                 <View className="bg-blue-100 w-10 h-10 rounded-full items-center justify-center mr-3">
                   <Ionicons name="information-circle" size={20} color="#3b82f6" />
                 </View>
-                <Text className="text-base font-bold text-gray-900">Como funciona?</Text>
+                <Text 
+                  className="text-base font-bold"
+                  style={{ color: colors.cardTextPrimary }}
+                >
+                  Como funciona?
+                </Text>
               </View>
 
               <View className="gap-4">
                 {/* Passo 1 */}
                 <View className="flex-row items-start gap-3">
-                  <View className="bg-blue-500 w-6 h-6 rounded-full items-center justify-center mt-0.5">
+                  <View 
+                    className="w-6 h-6 rounded-full items-center justify-center mt-0.5"
+                    style={{ backgroundColor: colors.tabBarActiveTint }}
+                  >
                     <Text className="text-white text-xs font-bold">1</Text>
                   </View>
                   <View className="flex-1">
-                    <Text className="text-gray-900 font-semibold mb-1">App limpa o MAC</Text>
-                    <Text className="text-gray-600 text-sm">
+                    <Text 
+                      className="font-semibold mb-1"
+                      style={{ color: colors.cardTextPrimary }}
+                    >
+                      App limpa o MAC
+                    </Text>
+                    <Text 
+                      className="text-sm"
+                      style={{ color: colors.cardTextSecondary }}
+                    >
                       O aplicativo vai resetar o campo MAC no banco de dados do MK-Auth
                     </Text>
                   </View>
@@ -176,12 +243,23 @@ export function ResetMacModal({
 
                 {/* Passo 2 */}
                 <View className="flex-row items-start gap-3">
-                  <View className="bg-blue-500 w-6 h-6 rounded-full items-center justify-center mt-0.5">
+                  <View 
+                    className="w-6 h-6 rounded-full items-center justify-center mt-0.5"
+                    style={{ backgroundColor: colors.tabBarActiveTint }}
+                  >
                     <Text className="text-white text-xs font-bold">2</Text>
                   </View>
                   <View className="flex-1">
-                    <Text className="text-gray-900 font-semibold mb-1">Automação detecta</Text>
-                    <Text className="text-gray-600 text-sm">
+                    <Text 
+                      className="font-semibold mb-1"
+                      style={{ color: colors.cardTextPrimary }}
+                    >
+                      Automação detecta
+                    </Text>
+                    <Text 
+                      className="text-sm"
+                      style={{ color: colors.cardTextSecondary }}
+                    >
                       Em alguns segundos, a automação do MK-Auth vai detectar automaticamente o novo MAC na rede
                     </Text>
                   </View>
@@ -189,12 +267,23 @@ export function ResetMacModal({
 
                 {/* Passo 3 */}
                 <View className="flex-row items-start gap-3">
-                  <View className="bg-blue-500 w-6 h-6 rounded-full items-center justify-center mt-0.5">
+                  <View 
+                    className="w-6 h-6 rounded-full items-center justify-center mt-0.5"
+                    style={{ backgroundColor: colors.tabBarActiveTint }}
+                  >
                     <Text className="text-white text-xs font-bold">3</Text>
                   </View>
                   <View className="flex-1">
-                    <Text className="text-gray-900 font-semibold mb-1">Você atualiza a tela</Text>
-                    <Text className="text-gray-600 text-sm">
+                    <Text 
+                      className="font-semibold mb-1"
+                      style={{ color: colors.cardTextPrimary }}
+                    >
+                      Você atualiza a tela
+                    </Text>
+                    <Text 
+                      className="text-sm"
+                      style={{ color: colors.cardTextSecondary }}
+                    >
                       Puxe para baixo para atualizar e ver o novo MAC detectado
                     </Text>
                   </View>
@@ -221,7 +310,10 @@ export function ResetMacModal({
         </ScrollView>
 
         {/* Botões de Ação */}
-        <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
+        <View 
+          className="absolute bottom-0 left-0 right-0 px-6 py-4"
+          style={{ backgroundColor: colors.cardBackground, borderTopWidth: 1, borderTopColor: colors.cardBorder }}
+        >
           <TouchableOpacity
             onPress={handleResetar}
             disabled={updateClientMutation.isPending}
@@ -248,7 +340,12 @@ export function ResetMacModal({
             disabled={updateClientMutation.isPending}
             className="py-3 items-center"
           >
-            <Text className="text-gray-600 font-semibold">Cancelar</Text>
+            <Text 
+              className="font-semibold"
+              style={{ color: colors.cardTextSecondary }}
+            >
+              Cancelar
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

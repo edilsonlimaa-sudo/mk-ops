@@ -1,16 +1,17 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { useClients } from '@/hooks/cliente';
 import { Client } from '@/types/client';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -25,6 +26,7 @@ export function ClientSearchModal({
   onClose,
   initialSearchQuery,
 }: ClientSearchModalProps) {
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const { data, isLoading, isError } = useClients();
 
@@ -95,12 +97,16 @@ export function ClientSearchModal({
     return (
       <TouchableOpacity
         onPress={() => handleSelectClient(item)}
-        className="bg-white border-b border-gray-100 p-4 active:bg-gray-50"
+        className="p-4"
+        style={{ backgroundColor: colors.cardBackground, borderBottomWidth: 1, borderBottomColor: colors.cardBorder }}
       >
         <View className="flex-row items-start justify-between">
           <View className="flex-1">
             <View className="flex-row items-center gap-2 mb-1">
-              <Text className={`text-gray-900 ${isExactMatch ? 'font-bold' : 'font-semibold'} text-base`}>
+              <Text 
+                className={`${isExactMatch ? 'font-bold' : 'font-semibold'} text-base`}
+                style={{ color: colors.cardTextPrimary }}
+              >
                 {item.nome}
               </Text>
               {isExactMatch && (
@@ -109,14 +115,14 @@ export function ClientSearchModal({
                 </View>
               )}
             </View>
-            <Text className="text-gray-600 text-sm mb-1">
+            <Text className="text-sm mb-1" style={{ color: colors.cardTextSecondary }}>
               CPF: {item.cpf_cnpj}
             </Text>
-            <Text className="text-gray-500 text-xs">
+            <Text className="text-xs" style={{ color: colors.cardTextSecondary }}>
               Login: {item.login} • {item.plano || 'Sem plano'}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+          <Ionicons name="chevron-forward" size={20} color={colors.cardTextSecondary} />
         </View>
       </TouchableOpacity>
     );
@@ -129,32 +135,44 @@ export function ClientSearchModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['top']}>
         {/* Header */}
-        <View className="bg-white border-b border-gray-200 px-4 py-3">
+        <View 
+          className="px-4 py-3"
+          style={{ backgroundColor: colors.headerBackground, borderBottomWidth: 1, borderBottomColor: colors.headerBorder }}
+        >
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-xl font-bold text-gray-900">Buscar Cliente</Text>
+            <Text 
+              className="text-xl font-bold"
+              style={{ color: colors.headerText }}
+            >
+              Buscar Cliente
+            </Text>
             <TouchableOpacity onPress={onClose} className="p-2 -mr-2">
-              <Ionicons name="close" size={24} color="#374151" />
+              <Ionicons name="close" size={24} color={colors.cardTextSecondary} />
             </TouchableOpacity>
           </View>
 
           {/* Search Input */}
-          <View className="flex-row items-center bg-gray-100 rounded-lg px-3 py-2">
-            <Ionicons name="search" size={20} color="#6b7280" />
+          <View 
+            className="flex-row items-center rounded-lg px-3 py-2"
+            style={{ backgroundColor: colors.searchInputBackground }}
+          >
+            <Ionicons name="search" size={20} color={colors.cardTextSecondary} />
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="Nome, login ou CPF..."
-              placeholderTextColor="#9ca3af"
-              className="flex-1 ml-2 text-gray-900 text-base"
+              placeholderTextColor={colors.cardTextSecondary}
+              className="flex-1 ml-2 text-base"
+              style={{ color: colors.cardTextPrimary }}
               autoFocus
               autoCapitalize="words"
               autoCorrect={false}
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')} className="p-1">
-                <Ionicons name="close-circle" size={20} color="#6b7280" />
+                <Ionicons name="close-circle" size={20} color={colors.cardTextSecondary} />
               </TouchableOpacity>
             )}
           </View>
@@ -164,37 +182,40 @@ export function ClientSearchModal({
         <View className="flex-1">
           {isLoading ? (
             <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" color="#0284c7" />
-              <Text className="mt-4 text-gray-600">Carregando clientes...</Text>
+              <ActivityIndicator size="large" color={colors.tabBarActiveTint} />
+              <Text className="mt-4" style={{ color: colors.cardTextSecondary }}>Carregando clientes...</Text>
             </View>
           ) : isError ? (
             <View className="flex-1 items-center justify-center p-4">
               <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
               <Text className="mt-4 text-red-600 text-lg font-semibold">Erro ao carregar</Text>
-              <Text className="mt-2 text-gray-600 text-center">
+              <Text className="mt-2 text-center" style={{ color: colors.cardTextSecondary }}>
                 Não foi possível carregar a lista de clientes
               </Text>
             </View>
           ) : !searchQuery.trim() ? (
             <View className="flex-1 items-center justify-center p-4">
-              <Ionicons name="search-outline" size={48} color="#9ca3af" />
-              <Text className="mt-4 text-gray-600 text-center">
+              <Ionicons name="search-outline" size={48} color={colors.cardTextSecondary} />
+              <Text className="mt-4 text-center" style={{ color: colors.cardTextSecondary }}>
                 Digite o nome, login ou CPF do cliente para buscar
               </Text>
             </View>
           ) : sortedResults.length === 0 ? (
             <View className="flex-1 items-center justify-center p-4">
-              <Ionicons name="information-circle-outline" size={48} color="#9ca3af" />
-              <Text className="mt-4 text-gray-600 font-semibold">Nenhum resultado encontrado</Text>
-              <Text className="mt-2 text-gray-500 text-center">
+              <Ionicons name="information-circle-outline" size={48} color={colors.cardTextSecondary} />
+              <Text className="mt-4 font-semibold" style={{ color: colors.cardTextSecondary }}>Nenhum resultado encontrado</Text>
+              <Text className="mt-2 text-center" style={{ color: colors.cardTextSecondary }}>
                 Tente buscar por nome completo, login ou CPF
               </Text>
             </View>
           ) : (
             <>
               {/* Results Header */}
-              <View className="bg-gray-100 px-4 py-2 border-b border-gray-200">
-                <Text className="text-gray-600 text-sm font-medium">
+              <View 
+                className="px-4 py-2"
+                style={{ backgroundColor: colors.searchInputBackground, borderBottomWidth: 1, borderBottomColor: colors.cardBorder }}
+              >
+                <Text className="text-sm font-medium" style={{ color: colors.cardTextSecondary }}>
                   {sortedResults.length} {sortedResults.length === 1 ? 'resultado' : 'resultados'}
                 </Text>
               </View>
