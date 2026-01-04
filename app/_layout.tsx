@@ -1,4 +1,5 @@
-import { ThemeProvider } from '@/contexts/ThemeContext';
+import { ThemedStatusBar } from '@/components/ui/themed-status-bar';
+import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { useProactiveTokenRefresh } from '@/hooks/auth';
 import { queryClient } from '@/lib/queryClient';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -6,7 +7,6 @@ import { useUserStore } from '@/stores/useUserStore';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
@@ -67,14 +67,27 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(app)" options={{ headerShown: false }} />
-        </Stack>
-        <StatusBar style="dark" />
+        <RootLayoutInner />
+        <ThemedStatusBar />
         <Toast />
       </QueryClientProvider>
     </ThemeProvider>
+  );
+}
+
+function RootLayoutInner() {
+  const { colors } = useTheme();
+  
+  return (
+    <Stack 
+      screenOptions={{ 
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.screenBackground },
+      }}
+    >
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(app)" options={{ headerShown: false }} />
+    </Stack>
   );
 }

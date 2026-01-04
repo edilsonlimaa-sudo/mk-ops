@@ -1,3 +1,4 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { useThemedHeader } from '@/hooks/ui';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
@@ -7,6 +8,7 @@ import { Redirect, Stack } from 'expo-router';
  * Layout de app - Guard: precisa estar TOTALMENTE autenticado (API + identificado)
  */
 export default function AppLayout() {
+  const { colors } = useTheme();
   const headerOptions = useThemedHeader();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isIdentified = useUserStore((state) => state.isIdentified);
@@ -32,7 +34,10 @@ export default function AppLayout() {
 
   console.log('✅ [AppLayout] Totalmente autenticado, permitindo acesso');
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ 
+      headerShown: false,
+      contentStyle: { backgroundColor: colors.screenBackground },
+    }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen 
         name="detalhes/cliente/[uuid]" 

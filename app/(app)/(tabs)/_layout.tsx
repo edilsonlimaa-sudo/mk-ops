@@ -21,6 +21,7 @@ export default function TabLayout() {
           backgroundColor: colors.tabBarBackground,
           borderTopColor: colors.tabBarBorder,
         },
+        sceneStyle: { backgroundColor: colors.screenBackground },
         headerShown: false, // Default false, cada tela decide
         tabBarButton: HapticTab,
       }}>
@@ -32,7 +33,7 @@ export default function TabLayout() {
           headerShown: true,
           headerTitle: 'MK-Edge',
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={28} name="house.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
+            <IconSymbol size={24} name="house.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),
         }}
       />
@@ -45,7 +46,7 @@ export default function TabLayout() {
           headerTitle: 'Clientes',
           headerShadowVisible: false,
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={28} name="person.2.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
+            <IconSymbol size={24} name="person.2.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),
         }}
       />
@@ -58,7 +59,7 @@ export default function TabLayout() {
           headerShown: true,
           headerTitle: 'Agenda de Atendimentos',
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={28} name="calendar" color={color || (focused ? '#3b82f6' : '#6b7280')} />
+            <IconSymbol size={24} name="calendar" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),
         }}
       />
@@ -71,7 +72,7 @@ export default function TabLayout() {
           headerShown: true,
           headerTitle: 'Histórico',
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={28} name="checkmark.circle.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
+            <IconSymbol size={24} name="checkmark.circle.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),
         }}
       />
@@ -81,7 +82,7 @@ export default function TabLayout() {
           title: 'Config',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <IconSymbol size={28} name="gearshape.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
+            <IconSymbol size={24} name="gearshape.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),
         }}
       />

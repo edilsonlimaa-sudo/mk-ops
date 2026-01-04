@@ -1,3 +1,4 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { useThemedHeader } from '@/hooks/ui';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
@@ -7,6 +8,7 @@ import { Redirect, Stack } from 'expo-router';
  * Layout de autenticação - Guard: se TOTALMENTE autenticado (auth + identificado), redireciona para app
  */
 export default function AuthLayout() {
+  const { colors } = useTheme();
   const headerOptions = useThemedHeader();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isIdentified = useUserStore((state) => state.isIdentified);
@@ -26,7 +28,10 @@ export default function AuthLayout() {
 
   console.log('✅ [AuthLayout] Permitindo acesso à área de autenticação');
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ 
+      headerShown: false,
+      contentStyle: { backgroundColor: colors.screenBackground },
+    }}>
       <Stack.Screen name="login" />
       <Stack.Screen 
         name="user-identification" 
