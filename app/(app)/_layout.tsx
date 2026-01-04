@@ -1,12 +1,13 @@
+import { useThemedHeader } from '@/hooks/ui';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { Redirect, Stack } from 'expo-router';
-import React from 'react';
 
 /**
  * Layout de app - Guard: precisa estar TOTALMENTE autenticado (API + identificado)
  */
 export default function AppLayout() {
+  const headerOptions = useThemedHeader();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isIdentified = useUserStore((state) => state.isIdentified);
   const isRestored = useAuthStore((state) => state.isRestored);
@@ -36,6 +37,7 @@ export default function AppLayout() {
       <Stack.Screen 
         name="detalhes/cliente/[uuid]" 
         options={{ 
+          ...headerOptions,
           headerShown: true,
           headerBackTitle: 'Voltar',
           presentation: 'card',
@@ -44,6 +46,7 @@ export default function AppLayout() {
       <Stack.Screen 
         name="detalhes/chamado/[id]" 
         options={{ 
+          ...headerOptions,
           headerShown: true,
           headerBackTitle: 'Voltar',
           headerTitle: 'Detalhes do Chamado',
@@ -53,6 +56,7 @@ export default function AppLayout() {
       <Stack.Screen 
         name="detalhes/instalacao/[id]" 
         options={{ 
+          ...headerOptions,
           headerShown: true,
           headerBackTitle: 'Voltar',
           headerTitle: 'Detalhes da Instalação',
@@ -62,6 +66,7 @@ export default function AppLayout() {
       <Stack.Screen 
         name="detalhes/instalacao/cliente-info" 
         options={{ 
+          ...headerOptions,
           headerShown: true,
           headerBackTitle: 'Voltar',
           headerTitle: 'Dados do Cliente',

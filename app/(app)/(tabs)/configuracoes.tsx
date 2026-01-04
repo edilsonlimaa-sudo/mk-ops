@@ -1,4 +1,5 @@
 import { useTheme } from '@/contexts/ThemeContext';
+import { useThemedHeader } from '@/hooks/ui/useThemedHeader';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +13,7 @@ export default function ConfiguracoesScreen() {
   const { ipMkAuth, logout } = useAuthStore();
   const { currentUser, clearIdentification } = useUserStore();
   const { mode, setMode } = useTheme();
+  const headerOptions = useThemedHeader();
   const [showSobre, setShowSobre] = useState(false);
   const [showAjuda, setShowAjuda] = useState(false);
   const [showPerfil, setShowPerfil] = useState(false);
@@ -42,9 +44,9 @@ export default function ConfiguracoesScreen() {
     <>
       <Stack.Screen
         options={{
+          ...headerOptions,
           headerShown: true,
           title: 'Configurações',
-          headerShadowVisible: false,
         }}
       />
 

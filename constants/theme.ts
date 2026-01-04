@@ -16,6 +16,10 @@ export const Colors = {
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    // Header colors
+    headerBackground: '#ffffff',
+    headerText: '#11181C',
+    headerBorder: '#e5e7eb',
     // Filter Pill colors
     filterPillActive: '#2563eb',      // blue-600
     filterPillInactive: '#f3f4f6',    // gray-100
@@ -31,6 +35,10 @@ export const Colors = {
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
+    // Header colors
+    headerBackground: '#1f2937',
+    headerText: '#ECEDEE',
+    headerBorder: '#374151',
     // Filter Pill colors
     filterPillActive: '#3b82f6',      // blue-500 (lighter for dark mode)
     filterPillInactive: '#374151',    // gray-700

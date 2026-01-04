@@ -1,13 +1,13 @@
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColorScheme } from '@/hooks/ui';
+import { useColorScheme, useThemedHeader } from '@/hooks/ui';
 import { Tabs } from 'expo-router';
-import React from 'react';
 
 /**
  * Layout de tabs - Sem guard (já protegido pelo AppLayout)
  */
 export default function TabLayout() {
+  const headerOptions = useThemedHeader();
   const colorScheme = useColorScheme();
   console.log('✅ [TabLayout] Renderizando tabs (protegido pelo AppLayout)');
 
@@ -22,6 +22,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          ...headerOptions,
           title: 'Home',
           headerShown: true,
           headerTitle: 'MK-Edge',
@@ -33,10 +34,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="clientes"
         options={{
+          ...headerOptions,
           title: 'Clientes',
           headerShown: true,
           headerTitle: 'Clientes',
-          headerShadowVisible: false,
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol size={28} name="person.2.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),
@@ -45,10 +46,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="agenda"
         options={{
+          ...headerOptions,
           title: 'Agenda',
           headerShown: true,
           headerTitle: 'Agenda de Atendimentos',
-          headerShadowVisible: false,
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol size={28} name="calendar" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),
@@ -57,10 +58,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="historico"
         options={{
+          ...headerOptions,
           title: 'Histórico',
           headerShown: true,
           headerTitle: 'Histórico',
-          headerShadowVisible: false,
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol size={28} name="checkmark.circle.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),

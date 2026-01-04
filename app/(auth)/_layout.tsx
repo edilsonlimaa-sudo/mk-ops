@@ -1,3 +1,4 @@
+import { useThemedHeader } from '@/hooks/ui';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { Redirect, Stack } from 'expo-router';
@@ -6,6 +7,7 @@ import { Redirect, Stack } from 'expo-router';
  * Layout de autenticação - Guard: se TOTALMENTE autenticado (auth + identificado), redireciona para app
  */
 export default function AuthLayout() {
+  const headerOptions = useThemedHeader();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isIdentified = useUserStore((state) => state.isIdentified);
   const isRestored = useAuthStore((state) => state.isRestored);
@@ -29,6 +31,7 @@ export default function AuthLayout() {
       <Stack.Screen 
         name="user-identification" 
         options={{ 
+          ...headerOptions,
           headerShown: true,
           headerTitle: 'Quem é você?',
           headerBackVisible: false,
