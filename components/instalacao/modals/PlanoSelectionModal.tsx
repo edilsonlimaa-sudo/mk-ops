@@ -1,3 +1,4 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { Plano } from '@/types/plano';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
@@ -22,6 +23,8 @@ export function PlanoSelectionModal({
   onSelect,
   onClose,
 }: PlanoSelectionModalProps) {
+  const { colors, theme } = useTheme();
+
   return (
     <SelectionModal
       visible={visible}
@@ -34,49 +37,58 @@ export function PlanoSelectionModal({
       renderItem={({ item }) => {
         const isUpdating = updatingItemId === item.uuid_plano;
         const isAnyUpdating = updatingItemId !== null;
+        const isSelected = currentPlano === item.nome;
 
         return (
           <TouchableOpacity
             onPress={() => onSelect(item)}
             disabled={isAnyUpdating}
-            className="bg-gray-50 rounded-xl p-4 mb-3 border border-gray-200 active:bg-gray-100"
-            style={{ opacity: isAnyUpdating && !isUpdating ? 0.5 : 1 }}
+            style={{ 
+              backgroundColor: isSelected 
+                ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff')
+                : colors.searchInputBackground,
+              borderColor: isSelected 
+                ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.4)' : '#bfdbfe')
+                : colors.cardBorder,
+              opacity: isAnyUpdating && !isUpdating ? 0.5 : 1 
+            }}
+            className="rounded-xl p-4 mb-3 border"
           >
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
-                <Text className="text-base font-bold text-gray-800 mb-1">
+                <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold mb-1">
                   {item.nome}
                 </Text>
                 {item.descricao && (
-                  <Text className="text-sm text-gray-600 mb-2">
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-sm mb-2">
                     {item.descricao}
                   </Text>
                 )}
                 <View className="flex-row items-center gap-4">
                   <View className="flex-row items-center">
-                    <Ionicons name="arrow-down-circle" size={16} color="#9333ea" />
-                    <Text className="text-xs text-gray-600 ml-1">
+                    <Ionicons name="arrow-down-circle" size={16} color="#3b82f6" />
+                    <Text style={{ color: colors.cardTextSecondary }} className="text-xs ml-1">
                       {item.veldown} Mbps
                     </Text>
                   </View>
                   <View className="flex-row items-center">
-                    <Ionicons name="arrow-up-circle" size={16} color="#a855f7" />
-                    <Text className="text-xs text-gray-600 ml-1">
+                    <Ionicons name="arrow-up-circle" size={16} color="#60a5fa" />
+                    <Text style={{ color: colors.cardTextSecondary }} className="text-xs ml-1">
                       {item.velup} Mbps
                     </Text>
                   </View>
-                  <Text className="text-sm font-bold text-purple-600">
+                  <Text style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }} className="text-sm font-bold">
                     R$ {item.valor}
                   </Text>
                 </View>
               </View>
               {isUpdating ? (
-                <ActivityIndicator size="small" color="#9333ea" />
+                <ActivityIndicator size="small" color="#3b82f6" />
               ) : (
                 <Ionicons
-                  name={currentPlano === item.nome ? "checkmark-circle" : "chevron-forward"}
+                  name={isSelected ? "checkmark-circle" : "chevron-forward"}
                   size={24}
-                  color={currentPlano === item.nome ? "#9333ea" : "#9ca3af"}
+                  color={isSelected ? "#3b82f6" : colors.cardTextSecondary}
                 />
               )}
             </View>

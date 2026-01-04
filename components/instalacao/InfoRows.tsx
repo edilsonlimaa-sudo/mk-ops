@@ -1,3 +1,4 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
@@ -9,6 +10,8 @@ interface InfoRowProps {
 }
 
 export function InfoRow({ label, value }: InfoRowProps) {
+  const { colors } = useTheme();
+  
   const copiarValor = async () => {
     await Clipboard.setStringAsync(value);
     Toast.show({
@@ -21,21 +24,21 @@ export function InfoRow({ label, value }: InfoRowProps) {
   };
 
   return (
-    <Pressable
-      onLongPress={copiarValor}
-      delayLongPress={500}
-      className="flex-row justify-between py-2 border-b border-gray-100"
-      style={({ pressed }) => [
-        {
-          backgroundColor: pressed ? '#f3f4f6' : 'transparent',
-        }
-      ]}
-    >
-      <Text className="text-gray-600 text-sm">{label}</Text>
-      <Text className="text-gray-900 text-sm font-medium flex-1 text-right ml-4">
-        {value}
-      </Text>
-    </Pressable>
+    <View style={{ borderBottomWidth: 1, borderBottomColor: colors.infoRowBorder }}>
+      <Pressable
+        onLongPress={copiarValor}
+        delayLongPress={500}
+        className="flex-row justify-between py-2"
+        style={({ pressed }) => ({
+          backgroundColor: pressed ? colors.filterPillBackground : 'transparent',
+        })}
+      >
+        <Text className="text-sm" style={{ color: colors.cardTextSecondary }}>{label}</Text>
+        <Text className="text-sm font-medium flex-1 text-right ml-4" style={{ color: colors.cardTextPrimary }}>
+          {value}
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -56,6 +59,8 @@ export function EditableInfoRow({
   labelStyle,
   valueStyle
 }: EditableInfoRowProps) {
+  const { colors } = useTheme();
+  
   const copiarValor = async () => {
     await Clipboard.setStringAsync(value);
     Toast.show({
@@ -85,33 +90,33 @@ export function EditableInfoRow({
             <Text className={labelStyle}>{label}</Text>
             <Text className={valueStyle}>{value}</Text>
           </View>
-          <Ionicons name="create-outline" size={18} color="#6b7280" />
+          <Ionicons name="create-outline" size={18} color={colors.cardTextSecondary} />
         </View>
       </TouchableOpacity>
     );
   }
 
   return (
-    <Pressable
-      onLongPress={copiarValor}
-      delayLongPress={500}
-      className="flex-row justify-between items-center py-2 border-b border-gray-100"
-      style={({ pressed }) => [
-        {
-          backgroundColor: pressed ? '#f3f4f6' : 'transparent',
-        }
-      ]}
-    >
-      <Text className="text-gray-600 text-sm">{label}</Text>
-      <TouchableOpacity
-        onPress={onEdit}
-        className="flex-row items-center gap-2 flex-1 justify-end ml-4"
+    <View style={{ borderBottomWidth: 1, borderBottomColor: colors.infoRowBorder }}>
+      <Pressable
+        onLongPress={copiarValor}
+        delayLongPress={500}
+        className="flex-row justify-between items-center py-2"
+        style={({ pressed }) => ({
+          backgroundColor: pressed ? colors.filterPillBackground : 'transparent',
+        })}
       >
-        <Text className="text-gray-900 text-sm font-medium text-right flex-1">
-          {value}
-        </Text>
-        <Ionicons name="create-outline" size={16} color="#6b7280" />
-      </TouchableOpacity>
-    </Pressable>
+        <Text className="text-sm" style={{ color: colors.cardTextSecondary }}>{label}</Text>
+        <TouchableOpacity
+          onPress={onEdit}
+          className="flex-row items-center gap-2 flex-1 justify-end ml-4"
+        >
+          <Text className="text-sm font-medium text-right flex-1" style={{ color: colors.cardTextPrimary }}>
+            {value}
+          </Text>
+          <Ionicons name="create-outline" size={16} color={colors.cardTextSecondary} />
+        </TouchableOpacity>
+      </Pressable>
+    </View>
   );
 }

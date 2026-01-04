@@ -1,3 +1,4 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { Funcionario } from '@/types/funcionario';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
@@ -22,6 +23,8 @@ export function FuncionarioSelectionModal({
   onSelect,
   onClose,
 }: FuncionarioSelectionModalProps) {
+  const { colors, theme } = useTheme();
+
   return (
     <SelectionModal
       visible={visible}
@@ -34,37 +37,46 @@ export function FuncionarioSelectionModal({
       renderItem={({ item }) => {
         const isUpdating = updatingItemId === item.uuid_func;
         const isAnyUpdating = updatingItemId !== null;
+        const isSelected = currentTecnico === item.nome;
 
         return (
           <TouchableOpacity
             onPress={() => onSelect(item)}
             disabled={isAnyUpdating}
-            className="bg-gray-50 rounded-xl p-4 mb-3 border border-gray-200 active:bg-gray-100"
-            style={{ opacity: isAnyUpdating && !isUpdating ? 0.5 : 1 }}
+            style={{ 
+              backgroundColor: isSelected 
+                ? (theme === 'dark' ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5')
+                : colors.searchInputBackground,
+              borderColor: isSelected 
+                ? (theme === 'dark' ? 'rgba(16, 185, 129, 0.4)' : '#a7f3d0')
+                : colors.cardBorder,
+              opacity: isAnyUpdating && !isUpdating ? 0.5 : 1 
+            }}
+            className="rounded-xl p-4 mb-3 border"
           >
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
-                <Text className="text-base font-bold text-gray-800 mb-1">
+                <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold mb-1">
                   {item.nome}
                 </Text>
                 {item.cargo && (
-                  <Text className="text-sm text-gray-600 mb-1">
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-sm mb-1">
                     {item.cargo}
                   </Text>
                 )}
                 <View className="flex-row items-center gap-4 flex-wrap">
                   {item.email && (
                     <View className="flex-row items-center">
-                      <Ionicons name="mail-outline" size={14} color="#6b7280" />
-                      <Text className="text-xs text-gray-600 ml-1" numberOfLines={1}>
+                      <Ionicons name="mail-outline" size={14} color={colors.cardTextSecondary} />
+                      <Text style={{ color: colors.cardTextSecondary }} className="text-xs ml-1" numberOfLines={1}>
                         {item.email}
                       </Text>
                     </View>
                   )}
                   {item.celular && (
                     <View className="flex-row items-center">
-                      <Ionicons name="call-outline" size={14} color="#6b7280" />
-                      <Text className="text-xs text-gray-600 ml-1" numberOfLines={1}>
+                      <Ionicons name="call-outline" size={14} color={colors.cardTextSecondary} />
+                      <Text style={{ color: colors.cardTextSecondary }} className="text-xs ml-1" numberOfLines={1}>
                         {item.celular}
                       </Text>
                     </View>
@@ -72,12 +84,12 @@ export function FuncionarioSelectionModal({
                 </View>
               </View>
               {isUpdating ? (
-                <ActivityIndicator size="small" color="#9333ea" />
+                <ActivityIndicator size="small" color="#3b82f6" />
               ) : (
                 <Ionicons
-                  name={currentTecnico === item.nome ? "checkmark-circle" : "chevron-forward"}
+                  name={isSelected ? "checkmark-circle" : "chevron-forward"}
                   size={24}
-                  color={currentTecnico === item.nome ? "#10b981" : "#9ca3af"}
+                  color={isSelected ? "#10b981" : colors.cardTextSecondary}
                 />
               )}
             </View>

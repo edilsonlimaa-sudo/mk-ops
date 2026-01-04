@@ -1,3 +1,4 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, FlatList, Modal, Text, TouchableOpacity, View } from 'react-native';
 
@@ -22,6 +23,8 @@ export function SelectionModal<T>({
   renderItem,
   emptyMessage = 'Nenhum item disponível',
 }: SelectionModalProps<T>) {
+  const { colors } = useTheme();
+
   return (
     <Modal
       visible={visible}
@@ -30,23 +33,26 @@ export function SelectionModal<T>({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-black/50 justify-end">
-        <View className="bg-white rounded-t-3xl p-6" style={{ maxHeight: '80%' }}>
+        <View 
+          style={{ backgroundColor: colors.cardBackground, maxHeight: '80%' }} 
+          className="rounded-t-3xl p-6"
+        >
           <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-base font-bold text-gray-800">{title}</Text>
+            <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold">{title}</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color="#6b7280" />
+              <Ionicons name="close" size={24} color={colors.cardTextSecondary} />
             </TouchableOpacity>
           </View>
 
           {isLoading ? (
             <View className="py-8 items-center">
               <ActivityIndicator size="large" color="#3b82f6" />
-              <Text className="text-gray-500 mt-2">Carregando...</Text>
+              <Text style={{ color: colors.cardTextSecondary }} className="mt-2">Carregando...</Text>
             </View>
           ) : !data || data.length === 0 ? (
             <View className="py-8 items-center">
-              <Ionicons name="alert-circle-outline" size={48} color="#9ca3af" />
-              <Text className="text-gray-500 mt-2">{emptyMessage}</Text>
+              <Ionicons name="alert-circle-outline" size={48} color={colors.cardTextSecondary} />
+              <Text style={{ color: colors.cardTextSecondary }} className="mt-2">{emptyMessage}</Text>
             </View>
           ) : (
             <FlatList

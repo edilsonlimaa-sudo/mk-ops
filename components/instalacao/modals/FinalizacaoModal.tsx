@@ -1,3 +1,4 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import type { Instalacao } from '@/types/instalacao';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
@@ -31,6 +32,7 @@ export function FinalizacaoModal({
   fechaInstalacaoMutation,
   editaInstalacaoMutation,
 }: FinalizacaoModalProps) {
+  const { colors, theme } = useTheme();
   const finalizacaoScrollRef = useRef<ScrollView>(null);
   
   // Estados para finalização
@@ -155,24 +157,34 @@ export function FinalizacaoModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-purple-50">
+      <View style={{ backgroundColor: colors.screenBackground }} className="flex-1">
         {/* Header Celebrativo */}
-        <View className="bg-purple-600 px-6 pt-14 pb-8">
+        <View style={{ backgroundColor: colors.headerBackground }} className="px-6 pt-14 pb-8">
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-1">
-              <Text className="text-xl font-bold text-white mb-1">Finalizar Instalação</Text>
-              <Text className="text-purple-100 text-sm">Complete as informações da instalação</Text>
+              <Text style={{ color: colors.cardTextPrimary }} className="text-xl font-bold mb-1">Finalizar Instalação</Text>
+              <Text style={{ color: colors.cardTextSecondary }} className="text-sm">Complete as informações da instalação</Text>
             </View>
-            <TouchableOpacity onPress={onClose} className="bg-white/20 p-2 rounded-full">
-              <Ionicons name="close" size={24} color="white" />
+            <TouchableOpacity 
+              onPress={onClose} 
+              style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}
+              className="p-2 rounded-full"
+            >
+              <Ionicons name="close" size={24} color={colors.cardTextPrimary} />
             </TouchableOpacity>
           </View>
 
           {/* Ícone Central Celebrativo */}
           <View className="items-center">
-            <View className="bg-white/20 w-20 h-20 rounded-full items-center justify-center">
-              <View className="bg-white w-16 h-16 rounded-full items-center justify-center">
-                <Ionicons name="rocket" size={28} color="#9333ea" />
+            <View 
+              style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe' }}
+              className="w-20 h-20 rounded-full items-center justify-center"
+            >
+              <View 
+                style={{ backgroundColor: colors.cardBackground }}
+                className="w-16 h-16 rounded-full items-center justify-center"
+              >
+                <Ionicons name="rocket" size={28} color={theme === 'dark' ? '#60a5fa' : '#2563eb'} />
               </View>
             </View>
           </View>
@@ -181,14 +193,20 @@ export function FinalizacaoModal({
         <ScrollView ref={finalizacaoScrollRef} className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="px-6 py-6">
             {/* Card 1: Visita */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
+            <View 
+              style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} 
+              className="rounded-2xl p-5 mb-4 shadow-sm border"
+            >
               <View className="flex-row items-center mb-4">
-                <View className="bg-purple-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                  <Text className="text-purple-600 font-bold text-base">1</Text>
+                <View 
+                  style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe' }} 
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                >
+                  <Text style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }} className="font-bold text-base">1</Text>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-base font-bold text-gray-900">Visita ao Cliente</Text>
-                  <Text className="text-xs text-gray-500">O cliente foi visitado?</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold">Visita ao Cliente</Text>
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs">O cliente foi visitado?</Text>
                 </View>
               </View>
 
@@ -203,8 +221,8 @@ export function FinalizacaoModal({
                     }, 100);
                   }}
                   style={{
-                    backgroundColor: visitadoSim ? '#f0fdf4' : '#f9fafb',
-                    borderColor: visitadoSim ? '#22c55e' : '#e5e7eb',
+                    backgroundColor: visitadoSim ? '#f0fdf4' : colors.searchInputBackground,
+                    borderColor: visitadoSim ? '#22c55e' : colors.cardBorder,
                     borderWidth: 2,
                   }}
                   className="flex-1 py-3 rounded-xl"
@@ -213,12 +231,12 @@ export function FinalizacaoModal({
                     <View
                       className="w-12 h-12 rounded-full items-center justify-center"
                       style={{
-                        backgroundColor: visitadoSim ? '#22c55e' : '#e5e7eb',
+                        backgroundColor: visitadoSim ? '#22c55e' : (theme === 'dark' ? '#374151' : '#e5e7eb'),
                       }}
                     >
                       <Ionicons name="checkmark" size={24} color={visitadoSim ? 'white' : '#9ca3af'} />
                     </View>
-                    <Text className={`font-bold ${visitadoSim ? 'text-green-700' : 'text-gray-500'}`}>
+                    <Text style={{ color: visitadoSim ? '#15803d' : colors.cardTextSecondary }} className="font-bold">
                       Sim
                     </Text>
                   </View>
@@ -230,8 +248,8 @@ export function FinalizacaoModal({
                     setInstaladoSim(null);
                   }}
                   style={{
-                    backgroundColor: visitadoSim === false ? '#f3f4f6' : '#f9fafb',
-                    borderColor: visitadoSim === false ? '#9ca3af' : '#e5e7eb',
+                    backgroundColor: visitadoSim === false ? (theme === 'dark' ? '#374151' : '#f3f4f6') : colors.searchInputBackground,
+                    borderColor: visitadoSim === false ? '#9ca3af' : colors.cardBorder,
                     borderWidth: 2,
                   }}
                   className="flex-1 py-3 rounded-xl"
@@ -240,14 +258,12 @@ export function FinalizacaoModal({
                     <View
                       className="w-12 h-12 rounded-full items-center justify-center"
                       style={{
-                        backgroundColor: visitadoSim === false ? '#9ca3af' : '#e5e7eb',
+                        backgroundColor: visitadoSim === false ? '#9ca3af' : (theme === 'dark' ? '#374151' : '#e5e7eb'),
                       }}
                     >
                       <Ionicons name="close" size={24} color={visitadoSim === false ? 'white' : '#9ca3af'} />
                     </View>
-                    <Text
-                      className={`font-bold ${visitadoSim === false ? 'text-gray-700' : 'text-gray-500'}`}
-                    >
+                    <Text style={{ color: visitadoSim === false ? colors.cardTextPrimary : colors.cardTextSecondary }} className="font-bold">
                       Não
                     </Text>
                   </View>
@@ -257,29 +273,34 @@ export function FinalizacaoModal({
 
             {/* Card 2: Instalação */}
             <View
-              className={`bg-white rounded-2xl p-5 mb-4 shadow-sm border ${
-                visitadoSim ? 'border-gray-100' : 'border-gray-200 opacity-50'
-              }`}
+              style={{ 
+                backgroundColor: colors.cardBackground, 
+                borderColor: colors.cardBorder,
+                opacity: visitadoSim ? 1 : 0.5
+              }}
+              className="rounded-2xl p-5 mb-4 shadow-sm border"
             >
               <View className="flex-row items-center mb-4">
                 <View
-                  className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                    visitadoSim ? 'bg-purple-100' : 'bg-gray-100'
-                  }`}
+                  style={{ 
+                    backgroundColor: visitadoSim 
+                      ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe') 
+                      : (theme === 'dark' ? '#374151' : '#f3f4f6')
+                  }}
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
                 >
                   <Text
-                    className={`font-bold text-base ${visitadoSim ? 'text-purple-600' : 'text-gray-400'}`}
+                    style={{ color: visitadoSim ? (theme === 'dark' ? '#60a5fa' : '#2563eb') : colors.cardTextSecondary }}
+                    className="font-bold text-base"
                   >
                     2
                   </Text>
                 </View>
                 <View className="flex-1">
-                  <Text
-                    className={`text-base font-bold ${visitadoSim ? 'text-gray-900' : 'text-gray-400'}`}
-                  >
+                  <Text style={{ color: visitadoSim ? colors.cardTextPrimary : colors.cardTextSecondary }} className="text-base font-bold">
                     Status da Instalação
                   </Text>
-                  <Text className={`text-xs ${visitadoSim ? 'text-gray-500' : 'text-gray-400'}`}>
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs">
                     A instalação foi realizada?
                   </Text>
                 </View>
@@ -299,15 +320,15 @@ export function FinalizacaoModal({
                   disabled={!visitadoSim}
                   style={{
                     backgroundColor: !visitadoSim
-                      ? '#f9fafb'
+                      ? colors.searchInputBackground
                       : instaladoSim === true
-                      ? '#faf5ff'
-                      : '#f9fafb',
+                      ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff')
+                      : colors.searchInputBackground,
                     borderColor: !visitadoSim
-                      ? '#e5e7eb'
+                      ? colors.cardBorder
                       : instaladoSim === true
-                      ? '#9333ea'
-                      : '#e5e7eb',
+                      ? '#3b82f6'
+                      : colors.cardBorder,
                     borderWidth: 2,
                   }}
                   className="flex-1 py-3 rounded-xl"
@@ -317,10 +338,10 @@ export function FinalizacaoModal({
                       className="w-12 h-12 rounded-full items-center justify-center"
                       style={{
                         backgroundColor: !visitadoSim
-                          ? '#e5e7eb'
+                          ? (theme === 'dark' ? '#374151' : '#e5e7eb')
                           : instaladoSim === true
-                          ? '#9333ea'
-                          : '#e5e7eb',
+                          ? '#3b82f6'
+                          : (theme === 'dark' ? '#374151' : '#e5e7eb'),
                       }}
                     >
                       <Ionicons
@@ -330,13 +351,14 @@ export function FinalizacaoModal({
                       />
                     </View>
                     <Text
-                      className={`font-bold ${
-                        !visitadoSim
-                          ? 'text-gray-400'
-                          : instaladoSim === true
-                          ? 'text-purple-700'
-                          : 'text-gray-500'
-                      }`}
+                      style={{ 
+                        color: !visitadoSim 
+                          ? colors.cardTextSecondary 
+                          : instaladoSim === true 
+                          ? (theme === 'dark' ? '#60a5fa' : '#2563eb')
+                          : colors.cardTextSecondary
+                      }}
+                      className="font-bold"
                     >
                       Sim
                     </Text>
@@ -348,15 +370,15 @@ export function FinalizacaoModal({
                   disabled={!visitadoSim}
                   style={{
                     backgroundColor: !visitadoSim
-                      ? '#f9fafb'
+                      ? colors.searchInputBackground
                       : instaladoSim === false
-                      ? '#fff7ed'
-                      : '#f9fafb',
+                      ? (theme === 'dark' ? 'rgba(249, 115, 22, 0.15)' : '#fff7ed')
+                      : colors.searchInputBackground,
                     borderColor: !visitadoSim
-                      ? '#e5e7eb'
+                      ? colors.cardBorder
                       : instaladoSim === false
                       ? '#f97316'
-                      : '#e5e7eb',
+                      : colors.cardBorder,
                     borderWidth: 2,
                   }}
                   className="flex-1 py-3 rounded-xl"
@@ -366,10 +388,10 @@ export function FinalizacaoModal({
                       className="w-12 h-12 rounded-full items-center justify-center"
                       style={{
                         backgroundColor: !visitadoSim
-                          ? '#e5e7eb'
+                          ? (theme === 'dark' ? '#374151' : '#e5e7eb')
                           : instaladoSim === false
                           ? '#f97316'
-                          : '#e5e7eb',
+                          : (theme === 'dark' ? '#374151' : '#e5e7eb'),
                       }}
                     >
                       <Ionicons
@@ -379,13 +401,14 @@ export function FinalizacaoModal({
                       />
                     </View>
                     <Text
-                      className={`font-bold ${
-                        !visitadoSim
-                          ? 'text-gray-400'
-                          : instaladoSim === false
-                          ? 'text-orange-700'
-                          : 'text-gray-500'
-                      }`}
+                      style={{ 
+                        color: !visitadoSim 
+                          ? colors.cardTextSecondary 
+                          : instaladoSim === false 
+                          ? '#ea580c'
+                          : colors.cardTextSecondary
+                      }}
+                      className="font-bold"
                     >
                       Não
                     </Text>
@@ -396,35 +419,34 @@ export function FinalizacaoModal({
 
             {/* Card 3: Data */}
             <View
-              className={`bg-white rounded-2xl p-5 mb-4 shadow-sm border ${
-                instaladoSim === true ? 'border-gray-100' : 'border-gray-200 opacity-50'
-              }`}
+              style={{ 
+                backgroundColor: colors.cardBackground, 
+                borderColor: colors.cardBorder,
+                opacity: instaladoSim === true ? 1 : 0.5
+              }}
+              className="rounded-2xl p-5 mb-4 shadow-sm border"
             >
               <View className="flex-row items-center mb-4">
                 <View
-                  className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                    instaladoSim === true ? 'bg-purple-100' : 'bg-gray-100'
-                  }`}
+                  style={{ 
+                    backgroundColor: instaladoSim === true 
+                      ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe') 
+                      : (theme === 'dark' ? '#374151' : '#f3f4f6')
+                  }}
+                  className="w-10 h-10 rounded-full items-center justify-center mr-3"
                 >
                   <Text
-                    className={`font-bold text-base ${
-                      instaladoSim === true ? 'text-purple-600' : 'text-gray-400'
-                    }`}
+                    style={{ color: instaladoSim === true ? (theme === 'dark' ? '#60a5fa' : '#2563eb') : colors.cardTextSecondary }}
+                    className="font-bold text-base"
                   >
                     3
                   </Text>
                 </View>
                 <View className="flex-1">
-                  <Text
-                    className={`text-base font-bold ${
-                      instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
-                    }`}
-                  >
+                  <Text style={{ color: instaladoSim === true ? colors.cardTextPrimary : colors.cardTextSecondary }} className="text-base font-bold">
                     Data da Instalação
                   </Text>
-                  <Text
-                    className={`text-xs ${instaladoSim === true ? 'text-gray-500' : 'text-gray-400'}`}
-                  >
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs">
                     Quando foi realizada?
                   </Text>
                 </View>
@@ -433,16 +455,23 @@ export function FinalizacaoModal({
               <TouchableOpacity
                 onPress={openDatePicker}
                 disabled={instaladoSim !== true}
-                className={`rounded-xl p-2 border-2 ${
-                  instaladoSim === true ? 'bg-purple-50 border-purple-200' : 'bg-gray-50 border-gray-200'
-                }`}
+                style={{
+                  backgroundColor: instaladoSim === true 
+                    ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff')
+                    : colors.searchInputBackground,
+                  borderColor: instaladoSim === true 
+                    ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.4)' : '#bfdbfe')
+                    : colors.cardBorder,
+                  borderWidth: 2,
+                }}
+                className="rounded-xl p-2"
               >
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-2">
                     <View
                       className="w-10 h-10 rounded-full items-center justify-center"
                       style={{
-                        backgroundColor: instaladoSim === true ? '#9333ea' : '#e5e7eb',
+                        backgroundColor: instaladoSim === true ? '#3b82f6' : (theme === 'dark' ? '#374151' : '#e5e7eb'),
                       }}
                     >
                       <Ionicons
@@ -453,16 +482,14 @@ export function FinalizacaoModal({
                     </View>
                     <View>
                       <Text
-                        className={`text-xs ${
-                          instaladoSim === true ? 'text-purple-600' : 'text-gray-400'
-                        } font-semibold`}
+                        style={{ color: instaladoSim === true ? (theme === 'dark' ? '#60a5fa' : '#2563eb') : colors.cardTextSecondary }}
+                        className="text-xs font-semibold"
                       >
                         Data selecionada
                       </Text>
                       <Text
-                        className={`text-sm font-bold ${
-                          instaladoSim === true ? 'text-gray-900' : 'text-gray-400'
-                        }`}
+                        style={{ color: instaladoSim === true ? colors.cardTextPrimary : colors.cardTextSecondary }}
+                        className="text-sm font-bold"
                       >
                         {dataInstalacao.toLocaleString('pt-BR', {
                           day: '2-digit',
@@ -474,7 +501,7 @@ export function FinalizacaoModal({
                       </Text>
                     </View>
                   </View>
-                  {instaladoSim === true && <Ionicons name="chevron-forward" size={24} color="#9333ea" />}
+                  {instaladoSim === true && <Ionicons name="chevron-forward" size={24} color="#3b82f6" />}
                 </View>
               </TouchableOpacity>
 
@@ -493,7 +520,10 @@ export function FinalizacaoModal({
             </View>
 
             {/* Botões dentro do ScrollView */}
-            <View className="bg-white rounded-2xl p-4 border border-gray-100 mt-4">
+            <View 
+              style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} 
+              className="rounded-2xl p-4 border mt-4"
+            >
               {/* Botão Principal - Finalizar */}
               <TouchableOpacity
                 onPress={handleFinalizar}
@@ -514,8 +544,12 @@ export function FinalizacaoModal({
               </TouchableOpacity>
 
               {/* Botão Secundário - Cancelar */}
-              <TouchableOpacity onPress={onClose} className="bg-gray-100 py-4 rounded-xl">
-                <Text className="text-gray-700 font-semibold text-center text-base">Cancelar</Text>
+              <TouchableOpacity 
+                onPress={onClose} 
+                style={{ backgroundColor: colors.searchInputBackground }}
+                className="py-4 rounded-xl"
+              >
+                <Text style={{ color: colors.cardTextPrimary }} className="font-semibold text-center text-base">Cancelar</Text>
               </TouchableOpacity>
             </View>
           </View>
