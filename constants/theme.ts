@@ -46,6 +46,8 @@ export const Colors = {
     // Success colors (for historico)
     successBackground: '#dcfce7',      // green-100
     successText: '#15803d',            // green-700
+    // Info row border (inside searchInputBackground)
+    infoRowBorder: '#e5e7eb',          // gray-200 (mais sutil)
   },
   dark: {
     text: '#ECEDEE',
@@ -84,6 +86,8 @@ export const Colors = {
     // Success colors (for historico)
     successBackground: '#166534',      // green-800 (darker for dark mode)
     successText: '#86efac',            // green-300
+    // Info row border (inside searchInputBackground)
+    infoRowBorder: '#4b5563',          // gray-600 (mais contraste que cardBorder)
   },
 };
 
