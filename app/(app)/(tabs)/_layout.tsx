@@ -1,6 +1,7 @@
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColorScheme, useThemedHeader } from '@/hooks/ui';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useThemedHeader } from '@/hooks/ui';
 import { Tabs } from 'expo-router';
 
 /**
@@ -8,14 +9,18 @@ import { Tabs } from 'expo-router';
  */
 export default function TabLayout() {
   const headerOptions = useThemedHeader();
-  const colorScheme = useColorScheme();
+  const { colors } = useTheme();
   console.log('✅ [TabLayout] Renderizando tabs (protegido pelo AppLayout)');
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#3b82f6', // Azul visível
-        tabBarInactiveTintColor: '#6b7280', // Cinza visível
+        tabBarActiveTintColor: colors.tabBarActiveTint,
+        tabBarInactiveTintColor: colors.tabBarInactiveTint,
+        tabBarStyle: {
+          backgroundColor: colors.tabBarBackground,
+          borderTopColor: colors.tabBarBorder,
+        },
         headerShown: false, // Default false, cada tela decide
         tabBarButton: HapticTab,
       }}>
@@ -38,6 +43,7 @@ export default function TabLayout() {
           title: 'Clientes',
           headerShown: true,
           headerTitle: 'Clientes',
+          headerShadowVisible: false,
           tabBarIcon: ({ color, focused }) => (
             <IconSymbol size={28} name="person.2.fill" color={color || (focused ? '#3b82f6' : '#6b7280')} />
           ),
@@ -48,6 +54,7 @@ export default function TabLayout() {
         options={{
           ...headerOptions,
           title: 'Agenda',
+          headerShadowVisible: false,
           headerShown: true,
           headerTitle: 'Agenda de Atendimentos',
           tabBarIcon: ({ color, focused }) => (
@@ -60,6 +67,7 @@ export default function TabLayout() {
         options={{
           ...headerOptions,
           title: 'Histórico',
+          headerShadowVisible: false,
           headerShown: true,
           headerTitle: 'Histórico',
           tabBarIcon: ({ color, focused }) => (

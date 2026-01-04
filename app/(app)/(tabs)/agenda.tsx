@@ -1,4 +1,5 @@
 import { FilterPill, FilterPillOption } from '@/components/ui/filter-pill';
+import { ThemedView } from '@/components/ui/themed-view';
 import { useAgenda, useInvalidateAgenda } from '@/hooks/agenda';
 import { isChamado, isInstalacao } from '@/services/api/agenda';
 import { Chamado } from '@/types/chamado';
@@ -149,9 +150,9 @@ export default function AgendaScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <ThemedView variant="screen" className="flex-1">
       {/* Filter Pills - fixas abaixo do header */}
-      <View className="bg-white px-4 py-3 border-b border-gray-200">
+      <ThemedView variant="header" className="px-4 py-3">
         <Text className="text-gray-500 text-sm mb-3">
           {servicos?.length || 0} serviços em aberto
         </Text>
@@ -169,7 +170,7 @@ export default function AgendaScreen() {
             />
           ))}
         </ScrollView>
-      </View>
+      </ThemedView>
 
       {/* Lista de serviços */}
       <FlatList
@@ -342,6 +343,6 @@ export default function AgendaScreen() {
             return null;
           }}
       />
-    </View>
+    </ThemedView>
   );
 }

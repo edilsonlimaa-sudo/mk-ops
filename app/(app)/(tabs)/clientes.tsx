@@ -1,4 +1,5 @@
 import { FilterPill, FilterPillOption } from '@/components/ui/filter-pill';
+import { ThemedView } from '@/components/ui/themed-view';
 import { useClients, useInvalidateClients } from '@/hooks/cliente';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -100,9 +101,9 @@ export default function ClientesScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <ThemedView variant="screen" className="flex-1">
       {/* Filter Pills e Busca - fixas abaixo do header */}
-      <View className="bg-white px-4 py-3 border-b border-gray-200">
+      <ThemedView variant="header" className="px-4 py-3">
         <Text className="text-gray-500 text-sm mb-3">
           {buscaTexto.trim() 
             ? `${clientesFiltrados.length} encontrados de ${clientesPorPill.length} ${filtroAtivo === 'todos' ? 'clientes' : filtroAtivo}`
@@ -145,7 +146,7 @@ export default function ClientesScreen() {
             </TouchableOpacity>
           )}
         </View>
-      </View>
+      </ThemedView>
 
       {/* Lista de Clientes */}
       <FlatList
@@ -170,10 +171,10 @@ export default function ClientesScreen() {
             <View className="bg-white rounded-lg p-4 mb-3 shadow-sm border-l-4 border-blue-500">
               {/* Header */}
               <View className="mb-2">
-              <Text className="text-lg font-semibold text-gray-900">
-                {item.nome}
-              </Text>
-            </View>
+                <Text className="text-lg font-semibold text-gray-900">
+                  {item.nome}
+                </Text>
+              </View>
             
             {item.cpf_cnpj && (
               <Text className="text-sm text-gray-600 mt-1">
@@ -189,46 +190,6 @@ export default function ClientesScreen() {
                 </Text>
               </View>
               
-              <View className="flex-row gap-2">
-                {/* Badge Ativação */}
-                <View
-                  className={`px-2 py-1 rounded ${
-                    item.cli_ativado === 's'
-                      ? 'bg-green-100'
-                      : 'bg-gray-100'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-medium ${
-                      item.cli_ativado === 's'
-                        ? 'text-green-700'
-                        : 'text-gray-600'
-                    }`}
-                  >
-                    {item.cli_ativado === 's' ? 'Ativo' : 'Inativo'}
-                  </Text>
-                </View>
-                
-                {/* Badge Bloqueio */}
-                <View
-                  className={`px-2 py-1 rounded ${
-                    item.bloqueado === 'sim'
-                      ? 'bg-red-100'
-                      : 'bg-blue-100'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-medium ${
-                      item.bloqueado === 'sim'
-                        ? 'text-red-700'
-                        : 'text-blue-700'
-                    }`}
-                  >
-                    {item.bloqueado === 'sim' ? 'Bloqueado' : 'Desbloqueado'}
-                  </Text>
-                </View>
-              </View>
-              
               {item.celular && (
                 <View>
                   <Text className="text-xs text-gray-500">Contato</Text>
@@ -236,10 +197,50 @@ export default function ClientesScreen() {
                 </View>
               )}
             </View>
+
+            <View className="flex-row gap-2 mt-3">
+              {/* Badge Ativação */}
+              <View
+                className={`px-2 py-1 rounded ${
+                  item.cli_ativado === 's'
+                    ? 'bg-green-100'
+                    : 'bg-gray-100'
+                }`}
+              >
+                <Text
+                  className={`text-xs font-medium ${
+                    item.cli_ativado === 's'
+                      ? 'text-green-700'
+                      : 'text-gray-600'
+                  }`}
+                >
+                  {item.cli_ativado === 's' ? 'Ativo' : 'Inativo'}
+                </Text>
+              </View>
+              
+              {/* Badge Bloqueio */}
+              <View
+                className={`px-2 py-1 rounded ${
+                  item.bloqueado === 'sim'
+                    ? 'bg-red-100'
+                    : 'bg-blue-100'
+                }`}
+              >
+                <Text
+                  className={`text-xs font-medium ${
+                    item.bloqueado === 'sim'
+                      ? 'text-red-700'
+                      : 'text-blue-700'
+                  }`}
+                >
+                  {item.bloqueado === 'sim' ? 'Bloqueado' : 'Desbloqueado'}
+                </Text>
+              </View>
+            </View>
             </View>
           </TouchableOpacity>
         )}
       />
-    </View>
+    </ThemedView>
   );
 }

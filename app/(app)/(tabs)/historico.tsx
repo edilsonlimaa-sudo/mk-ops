@@ -1,4 +1,5 @@
 import { FilterPill, FilterPillOption } from '@/components/ui/filter-pill';
+import { ThemedView } from '@/components/ui/themed-view';
 import { useHistorico, useInvalidateHistorico } from '@/hooks/historico';
 import { isChamado, isInstalacao } from '@/services/api/agenda';
 import { Chamado } from '@/types/chamado';
@@ -112,9 +113,9 @@ export default function HistoricoScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <ThemedView variant="screen" className="flex-1">
       {/* Filter Pills - fixas abaixo do header */}
-      <View className="bg-white px-4 py-3 border-b border-gray-200">
+      <ThemedView variant="header" className="px-4 py-3">
         <Text className="text-gray-500 text-sm mb-3">
           {historicoFiltrado.length} de {historico?.length || 0} itens concluídos
         </Text>
@@ -132,7 +133,7 @@ export default function HistoricoScreen() {
             />
           ))}
         </ScrollView>
-      </View>
+      </ThemedView>
 
       {/* Lista */}
       <FlatList
@@ -251,6 +252,6 @@ export default function HistoricoScreen() {
           );
         }}
       />
-    </View>
+    </ThemedView>
   );
 }

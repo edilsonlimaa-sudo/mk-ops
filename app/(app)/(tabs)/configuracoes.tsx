@@ -1,3 +1,4 @@
+import { ThemedView } from '@/components/ui/themed-view';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemedHeader } from '@/hooks/ui/useThemedHeader';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -50,7 +51,8 @@ export default function ConfiguracoesScreen() {
         }}
       />
 
-      <ScrollView className="flex-1 bg-gray-50">
+      <ThemedView variant="screen" className="flex-1">
+      <ScrollView className="flex-1">
         {/* Perfil do Usuário */}
         {currentUser && (
           <TouchableOpacity
@@ -262,6 +264,7 @@ export default function ConfiguracoesScreen() {
         {/* Espaçamento final */}
         <View className="h-8" />
       </ScrollView>
+      </ThemedView>
 
       {/* Modal Sobre */}
       <Modal

@@ -1,3 +1,4 @@
+import { ThemedView } from '@/components/ui/themed-view';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,8 +51,11 @@ export default function HomeScreen() {
           ),
         }}
       />
-      <ScrollView className="flex-1 bg-gray-50">
-        <View className="p-6">
+
+      {/* Content */}
+      <ThemedView variant="screen" className="flex-1">
+        <ScrollView className="flex-1">
+          <View className="p-6">
           {/* Greeting Card */}
           {currentUser && (
             <View className="bg-blue-600 rounded-2xl p-6 mb-4 shadow-lg">
@@ -128,6 +132,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
+      </ThemedView>
 
       {/* Profile Menu Modal */}
       <Modal

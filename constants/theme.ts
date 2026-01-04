@@ -16,10 +16,18 @@ export const Colors = {
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    // Screen backgrounds
+    screenBackground: '#f9fafb',      // gray-50
+    cardBackground: '#ffffff',
     // Header colors
     headerBackground: '#ffffff',
     headerText: '#11181C',
     headerBorder: '#e5e7eb',
+    // Tab bar colors
+    tabBarBackground: '#ffffff',
+    tabBarBorder: '#e5e7eb',
+    tabBarActiveTint: '#3b82f6',      // blue-500
+    tabBarInactiveTint: '#6b7280',    // gray-500
     // Filter Pill colors
     filterPillActive: '#2563eb',      // blue-600
     filterPillInactive: '#f3f4f6',    // gray-100
@@ -35,10 +43,18 @@ export const Colors = {
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
+    // Screen backgrounds
+    screenBackground: '#0f172a',      // slate-900
+    cardBackground: '#1e293b',        // slate-800
     // Header colors
     headerBackground: '#1f2937',
     headerText: '#ECEDEE',
     headerBorder: '#374151',
+    // Tab bar colors
+    tabBarBackground: '#1f2937',
+    tabBarBorder: '#374151',
+    tabBarActiveTint: '#60a5fa',      // blue-400 (lighter for dark)
+    tabBarInactiveTint: '#9ca3af',    // gray-400
     // Filter Pill colors
     filterPillActive: '#3b82f6',      // blue-500 (lighter for dark mode)
     filterPillInactive: '#374151',    // gray-700
