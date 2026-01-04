@@ -1,4 +1,6 @@
 import { EditModal } from '@/components/instalacao/EditModal';
+import { Badge } from '@/components/ui/badge';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useClientDetail, useUpdateClient } from '@/hooks/cliente';
 import { ClienteContext } from '@/lib/cliente/ClienteContext';
 import { ErrorBoundary } from '@/lib/cliente/ErrorBoundary';
@@ -6,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, StatusBar, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import EnderecosTab from './enderecos';
@@ -19,6 +21,7 @@ export default function ClienteDetalhesLayout() {
   const { uuid } = useLocalSearchParams<{ uuid: string }>();
   const { data: cliente, isLoading, error, refetch, isFetching } = useClientDetail(uuid);
   const updateClientMutation = useUpdateClient();
+  const { colors, mode } = useTheme();
 
   // Estados para edição
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -113,74 +116,45 @@ export default function ClienteDetalhesLayout() {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#0284c7" />
       <Stack.Screen 
         options={{ 
           title: '',
           headerBackTitle: 'Voltar',
           headerShadowVisible: false,
           headerStyle: {
-            backgroundColor: '#0284c7',
+            backgroundColor: colors.headerBackground,
           },
-          headerTintColor: '#fff',
+          headerTintColor: colors.headerText,
           headerTitleStyle: {
             fontWeight: 'bold',
           },
         }} 
       />
       <ClienteContext.Provider value={{ cliente, openEditModal, refetch, isFetching }}>
-        <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
           <ErrorBoundary>
             {/* HERO */}
-            <View className="bg-sky-600 px-4 pt-4 pb-4">
+            <View className="px-4 pt-4 pb-4" style={{ backgroundColor: colors.headerBackground }}>
               <View className="flex-row items-center mb-3">
-                <View className="bg-white w-16 h-16 rounded-full items-center justify-center mr-4">
-                  <Ionicons name="person" size={32} color="#0284c7" />
+                <View className="w-16 h-16 rounded-full items-center justify-center mr-4" style={{ backgroundColor: colors.searchInputBackground }}>
+                  <Ionicons name="person" size={32} color={colors.tabBarActiveTint} />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-white text-xl font-bold mb-1">{cliente.nome}</Text>
+                  <Text className="text-xl font-bold mb-1" style={{ color: colors.headerText }}>{cliente.nome}</Text>
                   <View className="flex-row items-center gap-2">
-                    {/* Status de Ativação */}
-                    {cliente.cli_ativado === 's' ? (
-                      <View className="bg-white px-2 py-1 rounded-full flex-row items-center">
-                        <Ionicons name="checkmark-circle" size={12} color="#0284c7" />
-                        <Text className="text-sky-600 text-xs font-semibold ml-1">Ativo</Text>
-                      </View>
-                    ) : (
-                      <View className="bg-sky-800 px-2 py-1 rounded-full flex-row items-center">
-                        <Ionicons name="close-circle" size={12} color="white" />
-                        <Text className="text-white text-xs font-semibold ml-1">Inativo</Text>
-                      </View>
-                    )}
-                    
-                    {/* Status de Bloqueio */}
-                    {cliente.bloqueado === 'sim' ? (
-                      <View className="bg-amber-500 px-2 py-1 rounded-full flex-row items-center">
-                        <Ionicons name="lock-closed" size={12} color="white" />
-                        <Text className="text-white text-xs font-semibold ml-1">Bloqueado</Text>
-                      </View>
-                    ) : (
-                      <View className="bg-white px-2 py-1 rounded-full flex-row items-center">
-                        <Ionicons name="lock-open" size={12} color="#0284c7" />
-                        <Text className="text-sky-600 text-xs font-semibold ml-1">Desbloqueado</Text>
-                      </View>
-                    )}
+                    <Badge
+                      label={cliente.cli_ativado === 's' ? 'Ativo' : 'Inativo'}
+                      color={cliente.cli_ativado === 's' ? 'green' : 'gray'}
+                      variant="outline"
+                      bold={false}
+                    />
+                    <Badge
+                      label={cliente.bloqueado === 'sim' ? 'Bloqueado' : 'Desbloqueado'}
+                      color={cliente.bloqueado === 'sim' ? 'red' : 'blue'}
+                      variant="outline"
+                      bold={false}
+                    />
                   </View>
-                </View>
-              </View>
-              
-              <View className="flex-row justify-between bg-sky-700 rounded-xl p-3">
-                <View className="flex-1">
-                  <Text className="text-sky-200 text-xs mb-1">Plano</Text>
-                  <Text className="text-white font-semibold">{cliente.plano || '-'}</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-sky-200 text-xs mb-1">Vencimento</Text>
-                  <Text className="text-white font-semibold">{cliente.venc || '-'}</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-sky-200 text-xs mb-1">Contrato</Text>
-                  <Text className="text-white font-semibold">{cliente.contrato || '-'}</Text>
                 </View>
               </View>
             </View>
@@ -188,18 +162,18 @@ export default function ClienteDetalhesLayout() {
             <Tab.Navigator
               screenOptions={{
                 tabBarScrollEnabled: false,
-                tabBarActiveTintColor: '#3b82f6',
-                tabBarInactiveTintColor: '#6b7280',
+                tabBarActiveTintColor: colors.tabBarActiveTint,
+                tabBarInactiveTintColor: colors.tabBarInactiveTint,
                 tabBarIndicatorStyle: {
-                  backgroundColor: '#3b82f6',
+                  backgroundColor: colors.tabBarActiveTint,
                   height: 3,
                 },
                 tabBarStyle: {
-                  backgroundColor: '#ffffff',
+                  backgroundColor: colors.tabBarBackground,
                   elevation: 0,
                   shadowOpacity: 0,
                   borderBottomWidth: 1,
-                  borderBottomColor: '#e5e7eb',
+                  borderBottomColor: colors.tabBarBorder,
                   height: 48,
                 },
                 tabBarLabelStyle: {

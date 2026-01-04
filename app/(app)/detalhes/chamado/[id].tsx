@@ -1,20 +1,22 @@
 import { FechaChamadoModal } from '@/components/chamado/FechaChamadoModal';
 import { ClientSearchModal } from '@/components/ClientSearchModal';
-import { InfoRow } from '@/components/instalacao/InfoRows';
+import { Badge } from '@/components/ui/badge';
+import { InfoRow } from '@/components/ui/info-row';
+import { InfoSection } from '@/components/ui/info-section';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useChamadoDetail, useFechaChamado, useReabrirChamado } from '@/hooks/chamado';
 import { useFuncionarios } from '@/hooks/funcionario';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -22,6 +24,7 @@ import Toast from 'react-native-toast-message';
 export default function ChamadoDetalhesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { colors, theme } = useTheme();
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [fecharModalVisible, setFecharModalVisible] = useState(false);
   const fechaChamadoMutation = useFechaChamado();
@@ -42,8 +45,8 @@ export default function ChamadoDetalhesScreen() {
 
   if (!id) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <Text className="text-gray-500">ID do chamado não fornecido</Text>
+      <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.screenBackground }}>
+        <Text style={{ color: colors.cardTextSecondary }}>ID do chamado não fornecido</Text>
       </View>
     );
   }
@@ -59,18 +62,18 @@ export default function ChamadoDetalhesScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#0284c7" />
-        <Text className="mt-4 text-gray-600">Carregando chamado...</Text>
+      <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.screenBackground }}>
+        <ActivityIndicator size="large" color={colors.tabBarActiveTint} />
+        <Text className="mt-4" style={{ color: colors.cardTextSecondary }}>Carregando chamado...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50 p-4">
+      <View className="flex-1 items-center justify-center p-4" style={{ backgroundColor: colors.screenBackground }}>
         <Text className="text-red-600 text-lg font-semibold mb-2">Erro ao carregar chamado</Text>
-        <Text className="text-gray-600 text-center">
+        <Text className="text-center" style={{ color: colors.cardTextSecondary }}>
           {error instanceof Error ? error.message : 'Erro desconhecido'}
         </Text>
       </View>
@@ -79,8 +82,8 @@ export default function ChamadoDetalhesScreen() {
 
   if (!chamado) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <Text className="text-gray-500">Chamado não encontrado</Text>
+      <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.screenBackground }}>
+        <Text style={{ color: colors.cardTextSecondary }}>Chamado não encontrado</Text>
       </View>
     );
   }
@@ -109,33 +112,32 @@ export default function ChamadoDetalhesScreen() {
 
   return (
     <>
-      <StatusBar style="light" />
       <Stack.Screen
         options={{
           title: `Chamado #${chamado.chamado}`,
           headerBackTitle: 'Voltar',
           headerStyle: {
-            backgroundColor: '#0284c7',
+            backgroundColor: colors.headerBackground,
           },
-          headerTintColor: '#fff',
+          headerTintColor: colors.headerText,
           headerTitleStyle: {
             fontWeight: 'bold',
           },
         }}
       />
-      <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
         <ScrollView ref={scrollRef} className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="p-4">
             {/* HERO SECTION - Informações Críticas */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
+            <View className="rounded-2xl p-5 mb-4" style={{ backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.cardBorder }}>
               {/* Header com Status Badge e ID */}
               <View className="flex-row justify-between items-start mb-4">
-                <View className={`${chamado.status === 'aberto' ? 'bg-amber-400' : 'bg-green-400'} px-3 py-1.5 rounded-full`}>
-                  <Text className={`${chamado.status === 'aberto' ? 'text-amber-900' : 'text-green-900'} font-bold text-xs uppercase tracking-wide`}>
-                    {chamado.status === 'aberto' ? 'Aberto' : 'Fechado'}
-                  </Text>
-                </View>
-                <Text className="text-gray-500 text-xs font-medium">#{chamado.chamado}</Text>
+                <Badge 
+                  label={chamado.status === 'aberto' ? 'Aberto' : 'Fechado'}
+                  color={chamado.status === 'aberto' ? 'orange' : 'green'}
+                  variant="solid"
+                />
+                <Text className="text-xs font-medium" style={{ color: colors.cardTextSecondary }}>#{chamado.chamado}</Text>
               </View>
 
               {/* Cliente - Destaque Principal */}
@@ -143,34 +145,34 @@ export default function ChamadoDetalhesScreen() {
                 onPress={() => setSearchModalVisible(true)}
                 className="mb-4 active:opacity-80"
               >
-                <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1">CLIENTE</Text>
+                <Text className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: colors.cardTextSecondary }}>CLIENTE</Text>
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1">
-                    <Text className="text-gray-900 text-base font-bold mb-1" numberOfLines={2}>{chamado.nome || 'Cliente não informado'}</Text>
+                    <Text className="text-base font-bold mb-1" numberOfLines={2} style={{ color: colors.cardTextPrimary }}>{chamado.nome || 'Cliente não informado'}</Text>
                     {chamado.login && (
-                      <Text className="text-gray-500 text-sm">{chamado.login}</Text>
+                      <Text className="text-sm" style={{ color: colors.cardTextSecondary }}>{chamado.login}</Text>
                     )}
                   </View>
-                  <View className="bg-gray-100 p-2 rounded-full ml-2">
-                    <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+                  <View className="p-2 rounded-full ml-2" style={{ backgroundColor: colors.filterPillInactive }}>
+                    <Ionicons name="chevron-forward" size={20} color={colors.cardTextSecondary} />
                   </View>
                 </View>
               </TouchableOpacity>
 
               {/* Problema */}
               <View className="mb-4">
-                <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1">PROBLEMA</Text>
-                <Text className="text-gray-900 text-sm font-medium">
+                <Text className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: colors.cardTextSecondary }}>PROBLEMA</Text>
+                <Text className="text-sm font-medium" style={{ color: colors.cardTextPrimary }}>
                   {chamado.assunto || 'Não informado'}
                 </Text>
               </View>
 
               {/* Informações Principais - Técnico e Visita */}
-              <View className="bg-gray-50 rounded-xl p-3 border border-gray-200 mb-4">
+              <View className="rounded-xl p-3 mb-4" style={{ backgroundColor: colors.searchInputBackground, borderWidth: 1, borderColor: colors.cardBorder }}>
                 {/* Técnico */}
                 <View className="mb-2">
-                  <Text className="text-gray-500 text-xs font-medium mb-1">Técnico</Text>
-                  <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
+                  <Text className="text-xs font-medium mb-1" style={{ color: colors.cardTextSecondary }}>Técnico</Text>
+                  <Text className="text-sm font-semibold" numberOfLines={1} style={{ color: colors.cardTextPrimary }}>
                     {chamado.tecnico 
                       ? (getNomeTecnico(chamado.tecnico) || `ID #${chamado.tecnico}`)
                       : 'Não atribuído'
@@ -180,12 +182,12 @@ export default function ChamadoDetalhesScreen() {
 
                 {chamado.visita && (
                   <>
-                    <View className="h-px bg-gray-200 my-2" />
+                    <View className="h-px my-2" style={{ backgroundColor: colors.infoRowBorder }} />
                     
                     {/* Visita Agendada */}
                     <View className="mb-2">
-                      <Text className="text-gray-500 text-xs font-medium mb-1">Visita Agendada</Text>
-                      <Text className="text-gray-900 text-sm font-semibold">
+                      <Text className="text-xs font-medium mb-1" style={{ color: colors.cardTextSecondary }}>Visita Agendada</Text>
+                      <Text className="text-sm font-semibold" style={{ color: colors.cardTextPrimary }}>
                         {formatarDataCompleta(chamado.visita)}
                       </Text>
                     </View>
@@ -195,98 +197,90 @@ export default function ChamadoDetalhesScreen() {
             </View>
 
             {/* INFORMAÇÕES ADMINISTRATIVAS */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-              <View className="flex-row items-center mb-4">
-                <View className="bg-sky-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                  <Ionicons name="document-text-outline" size={20} color="#0284c7" />
-                </View>
-                <Text className="text-sm text-gray-900 font-bold flex-1">Informações do Chamado</Text>
-              </View>
+            <InfoSection title="Informações do Chamado" icon="document-text-outline" color="blue">
+              <InfoRow 
+                label="Aberto em" 
+                value={formatarDataCompleta(chamado.abertura)} 
+              />
 
-              <View className="gap-2">
-                <InfoRow 
-                  label="Aberto em" 
-                  value={formatarDataCompleta(chamado.abertura)} 
-                />
+              <InfoRow 
+                label="Prioridade" 
+                value={chamado.prioridade} 
+              />
 
-                <InfoRow 
-                  label="Prioridade" 
-                  value={chamado.prioridade} 
-                />
+              {chamado.atendente && (
+                <InfoRow label="Atendente" value={chamado.atendente} />
+              )}
 
-                {chamado.atendente && (
-                  <InfoRow label="Atendente" value={chamado.atendente} />
-                )}
+              {chamado.login_atend && (
+                <InfoRow label="Login Atendente" value={chamado.login_atend} />
+              )}
 
-                {chamado.login_atend && (
-                  <InfoRow label="Login Atendente" value={chamado.login_atend} />
-                )}
+              {chamado.email && (
+                <InfoRow label="E-mail" value={chamado.email} />
+              )}
 
-                {chamado.email && (
-                  <InfoRow label="E-mail" value={chamado.email} />
-                )}
+              {chamado.ramal && (
+                <InfoRow label="Ramal" value={chamado.ramal} />
+              )}
 
-                {chamado.ramal && (
-                  <InfoRow label="Ramal" value={chamado.ramal} />
-                )}
-
-                {chamado.reply && (
-                  <InfoRow label="Reply" value={chamado.reply} />
-                )}
-              </View>
-            </View>
+              {chamado.reply && (
+                <InfoRow label="Reply" value={chamado.reply} />
+              )}
+            </InfoSection>
 
             {/* Histórico de Atualizações */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-              <View className="flex-row items-center mb-4">
-                <View className="bg-purple-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                  <Ionicons name="time-outline" size={20} color="#9333ea" />
-                </View>
-                <Text className="text-sm text-gray-900 font-bold flex-1">Histórico de Atualizações</Text>
-              </View>
-
+            <InfoSection title="Histórico de Atualizações" icon="time-outline" color="purple" noContentWrapper>
               {!chamado.relatos && isFetching ? (
                 // Loading skeleton enquanto relatos carregam
                 <View className="py-8 items-center">
-                  <ActivityIndicator size="small" color="#0284c7" />
-                  <Text className="text-gray-500 text-sm text-center mt-2">Carregando histórico...</Text>
+                  <ActivityIndicator size="small" color={colors.tabBarActiveTint} />
+                  <Text className="text-sm text-center mt-2" style={{ color: colors.cardTextSecondary }}>Carregando histórico...</Text>
                 </View>
               ) : !chamado.relatos || chamado.relatos.length === 0 ? (
                 // Nenhum relato
                 <View className="py-8 items-center">
                   <Text className="text-4xl mb-2">📭</Text>
-                  <Text className="text-gray-500 text-center">Nenhuma atualização registrada</Text>
+                  <Text className="text-center" style={{ color: colors.cardTextSecondary }}>Nenhuma atualização registrada</Text>
                 </View>
               ) : (
                 // Lista de relatos com timeline
                 <View className="relative">
                   {/* Linha vertical da timeline */}
-                  <View className="absolute left-4 top-6 bottom-6 w-0.5 bg-gray-200" />
+                  <View className="absolute left-4 top-6 bottom-6 w-0.5" style={{ backgroundColor: colors.cardBorder }} />
 
                   {/* Evento de Abertura - aparece no início do histórico */}
                   <View className="relative mb-4">
                     {/* Círculo da timeline - azul para abertura */}
-                    <View className="absolute left-0 w-8 h-8 rounded-full bg-blue-500 items-center justify-center border-2 border-white z-10">
+                    <View className="absolute left-0 w-8 h-8 rounded-full bg-blue-500 items-center justify-center border-2 z-10" style={{ borderColor: colors.cardBackground }}>
                       <Text className="text-sm">📋</Text>
                     </View>
 
                     {/* Conteúdo da abertura */}
-                    <View className="ml-12 bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <View 
+                      className="ml-12 rounded-lg p-3" 
+                      style={{ 
+                        backgroundColor: colors.searchInputBackground, 
+                        borderWidth: 1, 
+                        borderColor: colors.tabBarActiveTint,
+                        borderLeftWidth: 3,
+                      }}
+                    >
                       <View className="flex-row justify-between items-start mb-2">
                         <View className="flex-1">
-                          <Text className="text-blue-900 font-bold text-sm">Chamado Aberto</Text>
-                          <Text className="text-blue-600 text-xs mt-0.5">
+                          <Text className="font-bold text-sm" style={{ color: colors.tabBarActiveTint }}>Chamado Aberto</Text>
+                          <Text className="text-xs mt-0.5" style={{ color: colors.cardTextSecondary }}>
                             {formatarDataRelativa(chamado.abertura)}
                           </Text>
                         </View>
                       </View>
                       {chamado.atendente && (
-                        <Text className="text-blue-900 text-xs mb-1">
+                        <Text className="text-xs mb-1" style={{ color: colors.cardTextPrimary }}>
                           por <Text className="font-semibold">{chamado.atendente}</Text>
                         </Text>
                       )}
                       {chamado.assunto && (
-                        <Text className="text-blue-900 text-sm leading-5">
+                        <Text className="text-sm leading-5" style={{ color: colors.cardTextPrimary }}>
                           {chamado.assunto}
                         </Text>
                       )}
@@ -302,21 +296,21 @@ export default function ChamadoDetalhesScreen() {
                         className={`relative ${!isUltimo ? 'mb-4' : ''}`}
                       >
                         {/* Círculo da timeline */}
-                        <View className="absolute left-0 w-8 h-8 rounded-full bg-blue-100 items-center justify-center border-2 border-white z-10">
+                        <View className="absolute left-0 w-8 h-8 rounded-full bg-blue-100 items-center justify-center border-2 z-10" style={{ borderColor: colors.cardBackground }}>
                           <Text className="text-sm">💬</Text>
                         </View>
 
                         {/* Conteúdo do relato */}
-                        <View className="ml-12 bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <View className="ml-12 rounded-lg p-3" style={{ backgroundColor: colors.searchInputBackground, borderWidth: 1, borderColor: colors.cardBorder }}>
                           <View className="flex-row justify-between items-start mb-2">
                             <View className="flex-1">
-                              <Text className="text-gray-900 font-bold text-sm">{relato.atendente}</Text>
-                              <Text className="text-gray-500 text-xs mt-0.5">
+                              <Text className="font-bold text-sm" style={{ color: colors.cardTextPrimary }}>{relato.atendente}</Text>
+                              <Text className="text-xs mt-0.5" style={{ color: colors.cardTextSecondary }}>
                                 {formatarDataRelativa(relato.msg_data)}
                               </Text>
                             </View>
                           </View>
-                          <Text className="text-gray-800 text-sm leading-5">{relato.msg}</Text>
+                          <Text className="text-sm leading-5" style={{ color: colors.cardTextPrimary }}>{relato.msg}</Text>
                         </View>
                       </View>
                     );
@@ -326,22 +320,30 @@ export default function ChamadoDetalhesScreen() {
                   {chamado.status === 'fechado' && chamado.fechamento && chamado.fechamento !== '0000-00-00' && chamado.fechamento !== '0000-00-00 00:00:00' && (
                     <View className={`relative ${chamado.relatos && chamado.relatos.length > 0 ? 'mt-4' : ''}`}>
                       {/* Círculo da timeline - verde para fechamento */}
-                      <View className="absolute left-0 w-8 h-8 rounded-full bg-green-100 items-center justify-center border-2 border-white z-10">
+                      <View className="absolute left-0 w-8 h-8 rounded-full bg-green-500 items-center justify-center border-2 z-10" style={{ borderColor: colors.cardBackground }}>
                         <Text className="text-sm">✅</Text>
                       </View>
 
                       {/* Conteúdo do fechamento */}
-                      <View className="ml-12 bg-green-50 rounded-lg p-3 border border-green-200">
+                      <View 
+                        className="ml-12 rounded-lg p-3" 
+                        style={{ 
+                          backgroundColor: colors.searchInputBackground, 
+                          borderWidth: 1, 
+                          borderColor: '#10b981',
+                          borderLeftWidth: 3,
+                        }}
+                      >
                         <View className="flex-row justify-between items-start mb-2">
                           <View className="flex-1">
-                            <Text className="text-green-900 font-bold text-sm">Chamado Fechado</Text>
-                            <Text className="text-green-600 text-xs mt-0.5">
+                            <Text className="font-bold text-sm" style={{ color: '#10b981' }}>Chamado Fechado</Text>
+                            <Text className="text-xs mt-0.5" style={{ color: colors.cardTextSecondary }}>
                               {formatarDataRelativa(chamado.fechamento)}
                             </Text>
                           </View>
                         </View>
                         {chamado.motivo_fechar && (
-                          <Text className="text-green-900 text-sm leading-5">
+                          <Text className="text-sm leading-5" style={{ color: colors.cardTextPrimary }}>
                             {chamado.motivo_fechar}
                           </Text>
                         )}
@@ -350,7 +352,7 @@ export default function ChamadoDetalhesScreen() {
                   )}
                 </View>
               )}
-            </View>
+            </InfoSection>
 
             {/* Botão de Ação Principal */}
             {chamado.status === 'aberto' && (

@@ -1,14 +1,18 @@
 import { CoordinatesMapModal } from '@/components/CoordinatesMapModal';
+import { EditableInfoRow } from '@/components/ui/info-row';
+import { InfoSection } from '@/components/ui/info-section';
+import { ThemedView } from '@/components/ui/themed-view';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useUpdateClient } from '@/hooks/cliente';
 import { useClienteContext } from '@/lib/cliente/ClienteContext';
-import { EditableInfoRow } from '@/lib/cliente/SharedComponents';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 function EnderecosTab() {
-    const { cliente, refetch, isFetching } = useClienteContext();
+    const { cliente, openEditModal, refetch, isFetching } = useClienteContext();
+    const { colors } = useTheme();
     const [mapModalVisible, setMapModalVisible] = useState(false);
     const updateClientMutation = useUpdateClient();
 
@@ -42,85 +46,68 @@ function EnderecosTab() {
     };
 
     return (
+        <ThemedView variant="screen" className="flex-1">
         <ScrollView 
-            className="flex-1 bg-gray-50" 
+            className="flex-1" 
             showsVerticalScrollIndicator={false}
+            style={{ backgroundColor: colors.screenBackground }}
             refreshControl={
                 <RefreshControl refreshing={isFetching} onRefresh={refetch} />
             }
         >
             <View className="p-4">
                 {/* Endereço de Instalação */}
-                <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-                    <View className="flex-row items-center mb-4">
-                        <View className="bg-green-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                            <Ionicons name="home-outline" size={20} color="#10b981" />
-                        </View>
-                        <Text className="text-base text-gray-900 font-bold flex-1">Endereço de Instalação</Text>
-                    </View>
-
-                    <View className="bg-gray-50 rounded-xl p-3">
-                        {cliente.endereco && (
-                            <EditableInfoRow
-                                label="Endereço"
-                                value={cliente.endereco}
-                                field="endereco"
-                            />
-                        )}
-                        {cliente.numero && <EditableInfoRow label="Número" value={cliente.numero} field="numero" />}
-                        {cliente.complemento && <EditableInfoRow label="Complemento" value={cliente.complemento} field="complemento" />}
-                        {cliente.bairro && <EditableInfoRow label="Bairro" value={cliente.bairro} field="bairro" />}
-                        {cliente.cidade && <EditableInfoRow label="Cidade" value={cliente.cidade} field="cidade" />}
-                        {cliente.estado && <EditableInfoRow label="Estado" value={cliente.estado} field="estado" />}
-                        {cliente.cep && <EditableInfoRow label="CEP" value={cliente.cep} field="cep" />}
-                        {cliente.coordenadas && cliente.coordenadas !== '-38.5748,-3.741162,0' && (
-                            <TouchableOpacity
-                                onPress={() => setMapModalVisible(true)}
-                                className="flex-row justify-between items-center py-3 px-3 -mx-3 rounded-lg bg-blue-50 border border-blue-100 active:bg-blue-100"
-                            >
-                                <View className="flex-row items-center gap-2">
-                                    <Ionicons name="location" size={16} color="#3b82f6" />
-                                    <Text className="text-gray-600 text-sm font-medium">Localização</Text>
-                                </View>
-                                <View className="flex-row items-center gap-2">
-                                    <Text className="text-gray-900 text-sm font-medium">
-                                        {cliente.coordenadas}
-                                    </Text>
-                                    <Ionicons name="map" size={18} color="#3b82f6" />
-                                </View>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                </View>
+                <InfoSection title="Endereço de Instalação" icon="home-outline" color="green">
+                    {cliente.endereco && (
+                        <EditableInfoRow
+                            label="Endereço"
+                            value={cliente.endereco}
+                            onEdit={() => openEditModal('endereco', cliente.endereco || '', 'Endereço')}
+                        />
+                    )}
+                    {cliente.numero && <EditableInfoRow label="Número" value={cliente.numero} onEdit={() => openEditModal('numero', cliente.numero || '', 'Número')} />}
+                    {cliente.complemento && <EditableInfoRow label="Complemento" value={cliente.complemento} onEdit={() => openEditModal('complemento', cliente.complemento || '', 'Complemento')} />}
+                    {cliente.bairro && <EditableInfoRow label="Bairro" value={cliente.bairro} onEdit={() => openEditModal('bairro', cliente.bairro || '', 'Bairro')} />}
+                    {cliente.cidade && <EditableInfoRow label="Cidade" value={cliente.cidade} onEdit={() => openEditModal('cidade', cliente.cidade || '', 'Cidade')} />}
+                    {cliente.estado && <EditableInfoRow label="Estado" value={cliente.estado} onEdit={() => openEditModal('estado', cliente.estado || '', 'Estado')} />}
+                    {cliente.cep && <EditableInfoRow label="CEP" value={cliente.cep} onEdit={() => openEditModal('cep', cliente.cep || '', 'CEP')} />}
+                    {cliente.coordenadas && cliente.coordenadas !== '-38.5748,-3.741162,0' && (
+                        <TouchableOpacity
+                            onPress={() => setMapModalVisible(true)}
+                            className="flex-row justify-between items-center py-3 px-3 -mx-3 rounded-lg bg-blue-50 border border-blue-100 active:bg-blue-100"
+                        >
+                            <View className="flex-row items-center gap-2">
+                                <Ionicons name="location" size={16} color="#3b82f6" />
+                                <Text className="text-gray-600 text-sm font-medium">Localização</Text>
+                            </View>
+                            <View className="flex-row items-center gap-2">
+                                <Text className="text-gray-900 text-sm font-medium">
+                                    {cliente.coordenadas}
+                                </Text>
+                                <Ionicons name="map" size={18} color="#3b82f6" />
+                            </View>
+                        </TouchableOpacity>
+                    )}
+                </InfoSection>
 
                 {/* Endereço de Cobrança */}
                 {(cliente.endereco_res || cliente.nome_res) && (
-                    <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-                        <View className="flex-row items-center mb-4">
-                            <View className="bg-teal-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                                <Ionicons name="mail-outline" size={20} color="#14b8a6" />
-                            </View>
-                            <Text className="text-base text-gray-900 font-bold flex-1">Endereço de Cobrança</Text>
-                        </View>
-
-                        <View className="bg-gray-50 rounded-xl p-3">
-                            {cliente.nome_res && <EditableInfoRow label="Nome" value={cliente.nome_res} field="nome_res" editable={false} />}
-                            {cliente.endereco_res && (
-                                <EditableInfoRow
-                                    label="Endereço"
-                                    value={cliente.endereco_res}
-                                    field="endereco_res"
-                                    editable={false}
-                                />
-                            )}
-                            {cliente.numero_res && <EditableInfoRow label="Número" value={cliente.numero_res} field="numero_res" editable={false} />}
-                            {cliente.complemento_res && <EditableInfoRow label="Complemento" value={cliente.complemento_res} field="complemento_res" editable={false} />}
-                            {cliente.bairro_res && <EditableInfoRow label="Bairro" value={cliente.bairro_res} field="bairro_res" editable={false} />}
-                            {cliente.cidade_res && <EditableInfoRow label="Cidade" value={cliente.cidade_res} field="cidade_res" editable={false} />}
-                            {cliente.estado_res && <EditableInfoRow label="Estado" value={cliente.estado_res} field="estado_res" editable={false} />}
-                            {cliente.cep_res && <EditableInfoRow label="CEP" value={cliente.cep_res} field="cep_res" editable={false} />}
-                        </View>
-                    </View>
+                    <InfoSection title="Endereço de Cobrança" icon="mail-outline" color="teal">
+                        {cliente.nome_res && <EditableInfoRow label="Nome" value={cliente.nome_res} editable={false} />}
+                        {cliente.endereco_res && (
+                            <EditableInfoRow
+                                label="Endereço"
+                                value={cliente.endereco_res}
+                                editable={false}
+                            />
+                        )}
+                        {cliente.numero_res && <EditableInfoRow label="Número" value={cliente.numero_res} editable={false} />}
+                        {cliente.complemento_res && <EditableInfoRow label="Complemento" value={cliente.complemento_res} editable={false} />}
+                        {cliente.bairro_res && <EditableInfoRow label="Bairro" value={cliente.bairro_res} editable={false} />}
+                        {cliente.cidade_res && <EditableInfoRow label="Cidade" value={cliente.cidade_res} editable={false} />}
+                        {cliente.estado_res && <EditableInfoRow label="Estado" value={cliente.estado_res} editable={false} />}
+                        {cliente.cep_res && <EditableInfoRow label="CEP" value={cliente.cep_res} editable={false} />}
+                    </InfoSection>
                 )}
             </View>
 
@@ -132,6 +119,7 @@ function EnderecosTab() {
                 isSaving={updateClientMutation.isPending}
             />
         </ScrollView>
+        </ThemedView>
     );
 }
 

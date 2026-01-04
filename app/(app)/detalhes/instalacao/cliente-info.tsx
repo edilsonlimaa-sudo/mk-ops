@@ -1,9 +1,10 @@
 import { EditModal } from '@/components/instalacao/EditModal';
-import { EditableInfoRow, InfoRow } from '@/components/instalacao/InfoRows';
+import { EditableInfoRow, InfoRow } from '@/components/ui/info-row';
+import { InfoSection } from '@/components/ui/info-section';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useEditaInstalacao, useInstalacaoDetail } from '@/hooks/instalacao';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,12 +12,35 @@ import Toast from 'react-native-toast-message';
 
 export default function ClienteInstalacaoScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
+  const { colors, theme } = useTheme();
   const editaInstalacaoMutation = useEditaInstalacao();
 
   // Estados para modais de edição
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editField, setEditField] = useState<'email' | 'telefone' | 'celular' | 'endereco' | 'numero' | 'complemento' | 'bairro' | 'cidade' | 'estado' | 'cep' | 'coordenadas' | 'vencimento' | 'endereco_res' | 'numero_res' | 'complemento_res' | 'bairro_res' | 'cidade_res' | 'estado_res' | 'cep_res' | 'cpf' | 'rg' | null>(null);
+  const [editField, setEditField] = useState<
+    | 'email'
+    | 'telefone'
+    | 'celular'
+    | 'endereco'
+    | 'numero'
+    | 'complemento'
+    | 'bairro'
+    | 'cidade'
+    | 'estado'
+    | 'cep'
+    | 'coordenadas'
+    | 'vencimento'
+    | 'endereco_res'
+    | 'numero_res'
+    | 'complemento_res'
+    | 'bairro_res'
+    | 'cidade_res'
+    | 'estado_res'
+    | 'cep_res'
+    | 'cpf'
+    | 'rg'
+    | null
+  >(null);
   const [editValue, setEditValue] = useState('');
 
   const { data: instalacao, isLoading, error } = useInstalacaoDetail(id || '');
@@ -72,11 +96,11 @@ export default function ClienteInstalacaoScreen() {
             topOffset: 60,
           });
         },
-        onError: (error) => {
+        onError: (err) => {
           Toast.show({
             type: 'error',
             text1: 'Erro ao salvar',
-            text2: error instanceof Error ? error.message : 'Tente novamente',
+            text2: err instanceof Error ? err.message : 'Tente novamente',
             position: 'top',
             topOffset: 60,
           });
@@ -89,26 +113,37 @@ export default function ClienteInstalacaoScreen() {
 
   if (!id) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <Text className="text-gray-500">ID da instalação não fornecido</Text>
+      <View
+        style={{ backgroundColor: colors.screenBackground }}
+        className="flex-1 items-center justify-center"
+      >
+        <Text style={{ color: colors.cardTextSecondary }}>ID da instalação não fornecido</Text>
       </View>
     );
   }
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#0284c7" />
-        <Text className="mt-4 text-gray-600">Carregando dados do cliente...</Text>
+      <View
+        style={{ backgroundColor: colors.screenBackground }}
+        className="flex-1 items-center justify-center"
+      >
+        <ActivityIndicator size="large" color={colors.tabBarActiveTint} />
+        <Text style={{ color: colors.cardTextSecondary }} className="mt-4">
+          Carregando dados do cliente...
+        </Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50 p-4">
+      <View
+        style={{ backgroundColor: colors.screenBackground }}
+        className="flex-1 items-center justify-center p-4"
+      >
         <Text className="text-red-600 text-lg font-semibold mb-2">Erro ao carregar dados</Text>
-        <Text className="text-gray-600 text-center">
+        <Text style={{ color: colors.cardTextSecondary }} className="text-center">
           {error instanceof Error ? error.message : 'Erro desconhecido'}
         </Text>
       </View>
@@ -117,8 +152,11 @@ export default function ClienteInstalacaoScreen() {
 
   if (!instalacao) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <Text className="text-gray-500">Dados não encontrados</Text>
+      <View
+        style={{ backgroundColor: colors.screenBackground }}
+        className="flex-1 items-center justify-center"
+      >
+        <Text style={{ color: colors.cardTextSecondary }}>Dados não encontrados</Text>
       </View>
     );
   }
@@ -130,356 +168,254 @@ export default function ClienteInstalacaoScreen() {
       .replace(/\s+/g, ' ')
       .toLowerCase()
       .split(' ')
-      .map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1))
+      .map((palavra) => palavra.charAt(0).toUpperCase() + palavra.slice(1))
       .join(' ');
   };
 
   return (
-    <>
-      <StatusBar style="light" />
-      <Stack.Screen
-        options={{
-          title: 'Dados do Cliente',
-          headerBackTitle: 'Voltar',
-          headerStyle: {
-            backgroundColor: '#9333ea',
-          },
-          headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }}
-      />
-      <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+    <SafeAreaView
+        style={{ backgroundColor: colors.screenBackground }}
+        className="flex-1"
+        edges={['bottom']}
+      >
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="p-4">
             {/* HERO SECTION - Nome do Cliente */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
+            <View
+              style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }}
+              className="rounded-2xl p-5 mb-4 shadow-sm border"
+            >
               <View className="flex-row items-center mb-3">
-                <View className="bg-blue-100 w-12 h-12 rounded-full items-center justify-center mr-3">
+                <View
+                  style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe' }}
+                  className="w-12 h-12 rounded-full items-center justify-center mr-3"
+                >
                   <Ionicons name="person" size={24} color="#3b82f6" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1">Cliente</Text>
-                  <Text className="text-gray-900 text-base font-bold" numberOfLines={2}>
+                  <Text
+                    style={{ color: colors.cardTextSecondary }}
+                    className="text-xs font-semibold uppercase tracking-wide mb-1"
+                  >
+                    Cliente
+                  </Text>
+                  <Text
+                    style={{ color: colors.cardTextPrimary }}
+                    className="text-base font-bold"
+                    numberOfLines={2}
+                  >
                     {formatarNome(instalacao.nome)}
                   </Text>
                 </View>
               </View>
 
               {instalacao.codigo && (
-                <View className="bg-gray-50 rounded-xl px-3 py-2 mt-2">
-                  <Text className="text-xs text-gray-500 font-medium">Código do Cliente</Text>
-                  <Text className="text-gray-900 text-sm font-semibold mt-0.5">#{instalacao.codigo}</Text>
+                <View
+                  style={{ backgroundColor: colors.searchInputBackground }}
+                  className="rounded-xl px-3 py-2 mt-2"
+                >
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-medium">
+                    Código do Cliente
+                  </Text>
+                  <Text
+                    style={{ color: colors.cardTextPrimary }}
+                    className="text-sm font-semibold mt-0.5"
+                  >
+                    #{instalacao.codigo}
+                  </Text>
                 </View>
               )}
             </View>
 
             {/* DADOS PESSOAIS */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-              <View className="flex-row items-center mb-4">
-                <View className="bg-purple-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                  <Ionicons name="id-card-outline" size={20} color="#9333ea" />
-                </View>
-                <Text className="text-base text-gray-900 font-bold flex-1">Dados Pessoais</Text>
-              </View>
+            <InfoSection title="Dados Pessoais" icon="id-card-outline" color="blue">
+              {instalacao.cpf && (
+                <EditableInfoRow
+                  label="CPF"
+                  value={instalacao.cpf}
+                  onEdit={() => abrirEdicao('cpf', instalacao.cpf || '')}
+                  editable={isEditable}
+                />
+              )}
+              {instalacao.rg && (
+                <EditableInfoRow
+                  label="RG"
+                  value={instalacao.rg}
+                  onEdit={() => abrirEdicao('rg', instalacao.rg || '')}
+                  editable={isEditable}
+                />
+              )}
+              {instalacao.naturalidade && (
+                <InfoRow label="Naturalidade" value={instalacao.naturalidade} />
+              )}
+              {instalacao.data_nasc && (
+                <InfoRow
+                  label="Data de Nascimento"
+                  value={new Date(instalacao.data_nasc).toLocaleDateString('pt-BR')}
+                />
+              )}
+            </InfoSection>
 
-              <View className="gap-3">
-                {/* Documentos */}
-                {(instalacao.cpf || instalacao.rg) && (
-                  <View className="bg-gray-50 rounded-xl p-3">
-                    <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Documentos</Text>
-                    {instalacao.cpf && (
-                      <EditableInfoRow
-                        label="CPF"
-                        value={instalacao.cpf}
-                        onEdit={() => abrirEdicao('cpf', instalacao.cpf || '')}
-                        editable={isEditable}
-                      />
-                    )}
-                    {instalacao.rg && (
-                      <View className="pt-2">
-                        <EditableInfoRow
-                          label="RG"
-                          value={instalacao.rg}
-                          onEdit={() => abrirEdicao('rg', instalacao.rg || '')}
-                          editable={isEditable}
-                        />
-                      </View>
-                    )}
-                  </View>
-                )}
+            {/* CONTATO */}
+            <InfoSection title="Contato" icon="call-outline" color="cyan">
+              <EditableInfoRow
+                label="E-mail"
+                value={instalacao.email || 'Não informado'}
+                onEdit={() => abrirEdicao('email', instalacao.email || '')}
+                editable={isEditable}
+              />
+              <EditableInfoRow
+                label="Telefone"
+                value={instalacao.telefone || 'Não informado'}
+                onEdit={() => abrirEdicao('telefone', instalacao.telefone || '')}
+                editable={isEditable}
+              />
+              <EditableInfoRow
+                label="Celular"
+                value={instalacao.celular || 'Não informado'}
+                onEdit={() => abrirEdicao('celular', instalacao.celular || '')}
+                editable={isEditable}
+              />
+              {instalacao.celular2 && <InfoRow label="Celular 2" value={instalacao.celular2} />}
+            </InfoSection>
 
-                {/* Dados Pessoais */}
-                {(instalacao.naturalidade || instalacao.data_nasc) && (
-                  <View className="bg-gray-50 rounded-xl p-3">
-                    <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Informações Pessoais</Text>
-                    {instalacao.naturalidade && (
-                      <InfoRow label="Naturalidade" value={instalacao.naturalidade} />
-                    )}
-                    {instalacao.data_nasc && (
-                      <View className={instalacao.naturalidade ? "pt-2" : ""}>
-                        <InfoRow label="Data de Nascimento" value={new Date(instalacao.data_nasc).toLocaleDateString('pt-BR')} />
-                      </View>
-                    )}
-                  </View>
-                )}
-
-                {/* Contato */}
-                <View className="bg-gray-50 rounded-xl p-3">
-                  <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Contato</Text>
-
-                  <EditableInfoRow
-                    label="E-mail"
-                    value={instalacao.email || 'Não informado'}
-                    onEdit={() => abrirEdicao('email', instalacao.email || '')}
-                    editable={isEditable}
-                  />
-
-                  <View className="pt-2">
-                    <EditableInfoRow
-                      label="Telefone"
-                      value={instalacao.telefone || 'Não informado'}
-                      onEdit={() => abrirEdicao('telefone', instalacao.telefone || '')}
-                      editable={isEditable}
-                    />
-                  </View>
-
-                  <View className="pt-2">
-                    <EditableInfoRow
-                      label="Celular"
-                      value={instalacao.celular || 'Não informado'}
-                      onEdit={() => abrirEdicao('celular', instalacao.celular || '')}
-                      editable={isEditable}
-                    />
-                  </View>
-
-                  {instalacao.celular2 && (
-                    <View className="pt-2">
-                      <InfoRow label="Celular 2" value={instalacao.celular2} />
-                    </View>
-                  )}
-                </View>
-              </View>
-            </View>
-
-            {/* ENDEREÇO RESIDENCIAL E Instalação */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-              <View className="flex-row items-center mb-4">
-                <View className="bg-green-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                  <Ionicons name="home-outline" size={20} color="#10b981" />
-                </View>
-                <Text className="text-base text-gray-900 font-bold flex-1">Endereço Residencial e Instalação</Text>
-              </View>
-
-              <View className="gap-3">
-                <View className="bg-gray-50 rounded-xl p-3">
-                  <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Localização</Text>
-
-                  <EditableInfoRow
-                    label="CEP"
-                    value={instalacao.cep || 'Não informado'}
-                    onEdit={() => abrirEdicao('cep', instalacao.cep || '')}
-                    editable={isEditable}
-                  />
-
-                  <View className="pt-2">
-                    <EditableInfoRow
-                      label="Endereço"
-                      value={instalacao.endereco || 'Não informado'}
-                      onEdit={() => abrirEdicao('endereco', instalacao.endereco || '')}
-                      editable={isEditable}
-                    />
-                  </View>
-
-                  <View className="pt-2">
-                    <EditableInfoRow
-                      label="Número"
-                      value={instalacao.numero || 'Não informado'}
-                      onEdit={() => abrirEdicao('numero', instalacao.numero || '')}
-                      editable={isEditable}
-                    />
-                  </View>
-
-                  <View className="pt-2">
-                    <EditableInfoRow
-                      label="Bairro"
-                      value={instalacao.bairro || 'Não informado'}
-                      onEdit={() => abrirEdicao('bairro', instalacao.bairro || '')}
-                      editable={isEditable}
-                    />
-                  </View>
-
-                  <View className="pt-2">
-                    <EditableInfoRow
-                      label="Complemento"
-                      value={instalacao.complemento || 'Não informado'}
-                      onEdit={() => abrirEdicao('complemento', instalacao.complemento || '')}
-                      editable={isEditable}
-                    />
-                  </View>
-
-                  <View className="pt-2">
-                    <EditableInfoRow
-                      label="Cidade"
-                      value={instalacao.cidade || 'Não informado'}
-                      onEdit={() => abrirEdicao('cidade', instalacao.cidade || '')}
-                      editable={isEditable}
-                    />
-                  </View>
-
-                  <View className="pt-2">
-                    <EditableInfoRow
-                      label="Estado"
-                      value={instalacao.estado || 'Não informado'}
-                      onEdit={() => abrirEdicao('estado', instalacao.estado || '')}
-                      editable={isEditable}
-                    />
-                  </View>
-                </View>
-
-                {(instalacao.coordenadas || instalacao.dot_ref) && (
-                  <View className="bg-gray-50 rounded-xl p-3">
-                    <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Referências</Text>
-
-                    {instalacao.coordenadas && (
-                      <EditableInfoRow
-                        label="Coordenadas GPS"
-                        value={instalacao.coordenadas}
-                        onEdit={() => abrirEdicao('coordenadas', instalacao.coordenadas || '')}
-                        editable={isEditable}
-                      />
-                    )}
-
-                    {instalacao.dot_ref && (
-                      <View className={instalacao.coordenadas ? "pt-2" : ""}>
-                        <InfoRow label="Ponto de Referência" value={instalacao.dot_ref} />
-                      </View>
-                    )}
-                  </View>
-                )}
-              </View>
-            </View>
+            {/* ENDEREÇO RESIDENCIAL E INSTALAÇÃO */}
+            <InfoSection title="Endereço Residencial e Instalação" icon="home-outline" color="green">
+              <EditableInfoRow
+                label="CEP"
+                value={instalacao.cep || 'Não informado'}
+                onEdit={() => abrirEdicao('cep', instalacao.cep || '')}
+                editable={isEditable}
+              />
+              <EditableInfoRow
+                label="Endereço"
+                value={instalacao.endereco || 'Não informado'}
+                onEdit={() => abrirEdicao('endereco', instalacao.endereco || '')}
+                editable={isEditable}
+              />
+              <EditableInfoRow
+                label="Número"
+                value={instalacao.numero || 'Não informado'}
+                onEdit={() => abrirEdicao('numero', instalacao.numero || '')}
+                editable={isEditable}
+              />
+              <EditableInfoRow
+                label="Bairro"
+                value={instalacao.bairro || 'Não informado'}
+                onEdit={() => abrirEdicao('bairro', instalacao.bairro || '')}
+                editable={isEditable}
+              />
+              <EditableInfoRow
+                label="Complemento"
+                value={instalacao.complemento || 'Não informado'}
+                onEdit={() => abrirEdicao('complemento', instalacao.complemento || '')}
+                editable={isEditable}
+              />
+              <EditableInfoRow
+                label="Cidade"
+                value={instalacao.cidade || 'Não informado'}
+                onEdit={() => abrirEdicao('cidade', instalacao.cidade || '')}
+                editable={isEditable}
+              />
+              <EditableInfoRow
+                label="Estado"
+                value={instalacao.estado || 'Não informado'}
+                onEdit={() => abrirEdicao('estado', instalacao.estado || '')}
+                editable={isEditable}
+              />
+              {instalacao.coordenadas && (
+                <EditableInfoRow
+                  label="Coordenadas GPS"
+                  value={instalacao.coordenadas}
+                  onEdit={() => abrirEdicao('coordenadas', instalacao.coordenadas || '')}
+                  editable={isEditable}
+                />
+              )}
+              {instalacao.dot_ref && (
+                <InfoRow label="Ponto de Referência" value={instalacao.dot_ref} />
+              )}
+            </InfoSection>
 
             {/* ENDEREÇO DE CORRESPONDÊNCIA */}
-            {(instalacao.endereco_res || instalacao.cep_res || instalacao.bairro_res || instalacao.cidade_res) && (
-              <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-                <View className="flex-row items-center mb-4">
-                  <View className="bg-orange-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                    <Ionicons name="mail-outline" size={20} color="#f97316" />
-                  </View>
-                  <Text className="text-base text-gray-900 font-bold flex-1">Endereço de Correspondência</Text>
-                </View>
-
-                <View className="bg-gray-50 rounded-xl p-3">
-                  {instalacao.cep_res && (
-                    <EditableInfoRow
-                      label="CEP"
-                      value={instalacao.cep_res}
-                      onEdit={() => abrirEdicao('cep_res', instalacao.cep_res || '')}
-                      editable={isEditable}
-                    />
-                  )}
-
-                  {instalacao.endereco_res && (
-                    <View className={instalacao.cep_res ? "pt-2" : ""}>
-                      <EditableInfoRow
-                        label="Endereço"
-                        value={instalacao.endereco_res}
-                        onEdit={() => abrirEdicao('endereco_res', instalacao.endereco_res || '')}
-                        editable={isEditable}
-                      />
-                    </View>
-                  )}
-
-                  {instalacao.numero_res && (
-                    <View className="pt-2">
-                      <EditableInfoRow
-                        label="Número"
-                        value={instalacao.numero_res}
-                        onEdit={() => abrirEdicao('numero_res', instalacao.numero_res || '')}
-                        editable={isEditable}
-                      />
-                    </View>
-                  )}
-
-                  {instalacao.bairro_res && (
-                    <View className="pt-2">
-                      <EditableInfoRow
-                        label="Bairro"
-                        value={instalacao.bairro_res}
-                        onEdit={() => abrirEdicao('bairro_res', instalacao.bairro_res || '')}
-                        editable={isEditable}
-                      />
-                    </View>
-                  )}
-
-                  {instalacao.complemento_res && (
-                    <View className="pt-2">
-                      <EditableInfoRow
-                        label="Complemento"
-                        value={instalacao.complemento_res}
-                        onEdit={() => abrirEdicao('complemento_res', instalacao.complemento_res || '')}
-                        editable={isEditable}
-                      />
-                    </View>
-                  )}
-
-                  {instalacao.cidade_res && (
-                    <View className="pt-2">
-                      <EditableInfoRow
-                        label="Cidade"
-                        value={instalacao.cidade_res}
-                        onEdit={() => abrirEdicao('cidade_res', instalacao.cidade_res || '')}
-                        editable={isEditable}
-                      />
-                    </View>
-                  )}
-
-                  {instalacao.estado_res && (
-                    <View className="pt-2">
-                      <EditableInfoRow
-                        label="Estado"
-                        value={instalacao.estado_res}
-                        onEdit={() => abrirEdicao('estado_res', instalacao.estado_res || '')}
-                        editable={isEditable}
-                      />
-                    </View>
-                  )}
-                </View>
-              </View>
+            {(instalacao.endereco_res ||
+              instalacao.cep_res ||
+              instalacao.bairro_res ||
+              instalacao.cidade_res) && (
+              <InfoSection
+                title="Endereço de Correspondência"
+                icon="mail-outline"
+                color="orange"
+              >
+                {instalacao.cep_res && (
+                  <EditableInfoRow
+                    label="CEP"
+                    value={instalacao.cep_res}
+                    onEdit={() => abrirEdicao('cep_res', instalacao.cep_res || '')}
+                    editable={isEditable}
+                  />
+                )}
+                {instalacao.endereco_res && (
+                  <EditableInfoRow
+                    label="Endereço"
+                    value={instalacao.endereco_res}
+                    onEdit={() => abrirEdicao('endereco_res', instalacao.endereco_res || '')}
+                    editable={isEditable}
+                  />
+                )}
+                {instalacao.numero_res && (
+                  <EditableInfoRow
+                    label="Número"
+                    value={instalacao.numero_res}
+                    onEdit={() => abrirEdicao('numero_res', instalacao.numero_res || '')}
+                    editable={isEditable}
+                  />
+                )}
+                {instalacao.bairro_res && (
+                  <EditableInfoRow
+                    label="Bairro"
+                    value={instalacao.bairro_res}
+                    onEdit={() => abrirEdicao('bairro_res', instalacao.bairro_res || '')}
+                    editable={isEditable}
+                  />
+                )}
+                {instalacao.complemento_res && (
+                  <EditableInfoRow
+                    label="Complemento"
+                    value={instalacao.complemento_res}
+                    onEdit={() => abrirEdicao('complemento_res', instalacao.complemento_res || '')}
+                    editable={isEditable}
+                  />
+                )}
+                {instalacao.cidade_res && (
+                  <EditableInfoRow
+                    label="Cidade"
+                    value={instalacao.cidade_res}
+                    onEdit={() => abrirEdicao('cidade_res', instalacao.cidade_res || '')}
+                    editable={isEditable}
+                  />
+                )}
+                {instalacao.estado_res && (
+                  <EditableInfoRow
+                    label="Estado"
+                    value={instalacao.estado_res}
+                    onEdit={() => abrirEdicao('estado_res', instalacao.estado_res || '')}
+                    editable={isEditable}
+                  />
+                )}
+              </InfoSection>
             )}
 
             {/* FINANCEIRO DO CLIENTE */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-              <View className="flex-row items-center mb-4">
-                <View className="bg-amber-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                  <Ionicons name="wallet-outline" size={20} color="#f59e0b" />
-                </View>
-                <Text className="text-base text-gray-900 font-bold flex-1">Financeiro do Cliente</Text>
-              </View>
-
-              <View className="bg-gray-50 rounded-xl p-3">
-                {instalacao.vendedor && (
-                  <InfoRow label="Vendedor" value={instalacao.vendedor} />
-                )}
-
-                <View className={instalacao.vendedor ? "pt-2" : ""}>
-                  <EditableInfoRow
-                    label="Vencimento"
-                    value={instalacao.vencimento || 'Não informado'}
-                    onEdit={() => abrirEdicao('vencimento', instalacao.vencimento || '')}
-                    editable={isEditable}
-                  />
-                </View>
-
-                {instalacao.contrato && (
-                  <View className="pt-2">
-                    <InfoRow label="Contrato" value={instalacao.contrato} />
-                  </View>
-                )}
-              </View>
-            </View>
+            <InfoSection title="Financeiro do Cliente" icon="wallet-outline" color="yellow">
+              {instalacao.vendedor && <InfoRow label="Vendedor" value={instalacao.vendedor} />}
+              <EditableInfoRow
+                label="Vencimento"
+                value={instalacao.vencimento || 'Não informado'}
+                onEdit={() => abrirEdicao('vencimento', instalacao.vencimento || '')}
+                editable={isEditable}
+              />
+              {instalacao.contrato && <InfoRow label="Contrato" value={instalacao.contrato} />}
+            </InfoSection>
           </View>
         </ScrollView>
 
@@ -492,11 +428,16 @@ export default function ClienteInstalacaoScreen() {
           onChange={setEditValue}
           onSave={salvarEdicao}
           placeholder={`Digite ${getFieldLabel().toLowerCase()}`}
-          keyboardType={editField === 'email' ? 'email-address' : editField === 'telefone' || editField === 'celular' ? 'phone-pad' : 'default'}
+          keyboardType={
+            editField === 'email'
+              ? 'email-address'
+              : editField === 'telefone' || editField === 'celular'
+                ? 'phone-pad'
+                : 'default'
+          }
           isPending={editaInstalacaoMutation.isPending}
-          saveButtonColor="bg-purple-600"
+          saveButtonColor="bg-blue-600"
         />
       </SafeAreaView>
-    </>
   );
 }

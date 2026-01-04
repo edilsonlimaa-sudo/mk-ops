@@ -1,13 +1,17 @@
 import { EditModal } from '@/components/instalacao/EditModal';
 import { EditableInfoRow, InfoRow } from '@/components/instalacao/InfoRows';
 import {
-  ComodatoModal,
-  DatePickerModal,
-  FuncionarioSelectionModal,
-  PlanoSelectionModal,
-  QuickActionModal
+    ComodatoModal,
+    DatePickerModal,
+    FuncionarioSelectionModal,
+    PlanoSelectionModal,
+    QuickActionModal,
 } from '@/components/instalacao/modals';
 import { FinalizacaoModal } from '@/components/instalacao/modals/FinalizacaoModal';
+import { Badge } from '@/components/ui/badge';
+import { InfoSection } from '@/components/ui/info-section';
+import { QuickActionButton } from '@/components/ui/quick-action-button';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useFuncionarios } from '@/hooks/funcionario';
 import { useEditaInstalacao, useFechaInstalacao, useInstalacaoDetail } from '@/hooks/instalacao';
 import { usePlanos } from '@/hooks/plano';
@@ -15,7 +19,6 @@ import { formatarDataCompleta, formatarNome } from '@/utils/instalacao';
 import { Ionicons } from '@expo/vector-icons';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,6 +27,7 @@ import Toast from 'react-native-toast-message';
 export default function InstalacaoDetalhesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { colors, theme } = useTheme();
   const [planoModalVisible, setPlanoModalVisible] = useState(false);
   const [funcionarioModalVisible, setFuncionarioModalVisible] = useState(false);
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
@@ -52,8 +56,8 @@ export default function InstalacaoDetalhesScreen() {
 
   if (!id) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <Text className="text-gray-500">ID da instalação não fornecido</Text>
+      <View style={{ backgroundColor: colors.screenBackground }} className="flex-1 items-center justify-center">
+        <Text style={{ color: colors.cardTextSecondary }}>ID da instalação não fornecido</Text>
       </View>
     );
   }
@@ -62,18 +66,18 @@ export default function InstalacaoDetalhesScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#0284c7" />
-        <Text className="mt-4 text-gray-600">Carregando instalação...</Text>
+      <View style={{ backgroundColor: colors.screenBackground }} className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text style={{ color: colors.cardTextSecondary }} className="mt-4">Carregando instalação...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50 p-4">
+      <View style={{ backgroundColor: colors.screenBackground }} className="flex-1 items-center justify-center p-4">
         <Text className="text-red-600 text-lg font-semibold mb-2">Erro ao carregar instalação</Text>
-        <Text className="text-gray-600 text-center">
+        <Text style={{ color: colors.cardTextSecondary }} className="text-center">
           {error instanceof Error ? error.message : 'Erro desconhecido'}
         </Text>
       </View>
@@ -82,8 +86,8 @@ export default function InstalacaoDetalhesScreen() {
 
   if (!instalacao) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <Text className="text-gray-500">Instalação não encontrada</Text>
+      <View style={{ backgroundColor: colors.screenBackground }} className="flex-1 items-center justify-center">
+        <Text style={{ color: colors.cardTextSecondary }}>Instalação não encontrada</Text>
       </View>
     );
   }
@@ -258,33 +262,27 @@ export default function InstalacaoDetalhesScreen() {
 
   return (
     <>
-      <StatusBar style="light" />
       <Stack.Screen
         options={{
           title: `Instalação #${instalacao.id}`,
-          headerBackTitle: 'Voltar',
-          headerStyle: {
-            backgroundColor: '#9333ea',
-          },
-          headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
         }}
       />
-      <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+      <SafeAreaView style={{ backgroundColor: colors.screenBackground }} className="flex-1" edges={['bottom']}>
         <ScrollView ref={mainScrollRef} className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="p-4">
             {/* HERO SECTION - Informações Críticas */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
+            <View 
+              style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} 
+              className="rounded-2xl p-5 mb-4 shadow-sm border"
+            >
               {/* Status Badge */}
               <View className="flex-row justify-between items-start mb-4">
-                <View className={`${instalacao.status === 'aberto' ? 'bg-amber-400' : 'bg-green-400'} px-3 py-1.5 rounded-full`}>
-                  <Text className={`${instalacao.status === 'aberto' ? 'text-amber-900' : 'text-green-900'} font-bold text-xs uppercase tracking-wide`}>
-                    {instalacao.status === 'aberto' ? 'Aberto' : instalacao.status === 'concluido' ? 'Concluído' : instalacao.status}
-                  </Text>
-                </View>
-                <Text className="text-gray-500 text-xs font-medium">#{instalacao.id}</Text>
+                <Badge 
+                  label={instalacao.status === 'aberto' ? 'Aberto' : instalacao.status === 'concluido' ? 'Concluído' : instalacao.status}
+                  color={instalacao.status === 'aberto' ? 'orange' : 'green'}
+                  variant="solid"
+                />
+                <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-medium">#{instalacao.id}</Text>
               </View>
 
               {/* Cliente - Destaque Principal */}
@@ -292,25 +290,31 @@ export default function InstalacaoDetalhesScreen() {
                 onPress={() => router.push(`/detalhes/instalacao/cliente-info?id=${instalacao.uuid_solic}`)}
                 className="mb-4 active:opacity-80"
               >
-                <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-1">Cliente</Text>
+                <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-1">Cliente</Text>
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-gray-900 text-base font-bold flex-1" numberOfLines={2}>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold flex-1" numberOfLines={2}>
                     {formatarNome(instalacao.nome)}
                   </Text>
-                  <View className="bg-gray-100 p-2 rounded-full ml-2">
-                    <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+                  <View 
+                    style={{ backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6' }} 
+                    className="p-2 rounded-full ml-2"
+                  >
+                    <Ionicons name="chevron-forward" size={20} color={colors.cardTextSecondary} />
                   </View>
                 </View>
               </TouchableOpacity>
 
               {/* DADOS DE FINALIZAÇÃO (somente se concluído) */}
               {instalacao.status === 'concluido' && (
-                <View className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 mb-4 border border-green-200">
+                <View 
+                  style={{ backgroundColor: colors.searchInputBackground, borderColor: '#16a34a' }} 
+                  className="rounded-xl p-4 mb-4 border-l-4"
+                >
                   <View className="flex-row items-center mb-3">
                     <View className="bg-green-600 w-8 h-8 rounded-full items-center justify-center mr-3">
                       <Ionicons name="checkmark-done-outline" size={16} color="white" />
                     </View>
-                    <Text className="text-green-900 font-bold text-sm flex-1">Finalização</Text>
+                    <Text style={{ color: colors.cardTextPrimary }} className="font-bold text-sm flex-1">Finalização</Text>
                   </View>
 
                   <View className="gap-2">
@@ -349,40 +353,43 @@ export default function InstalacaoDetalhesScreen() {
 
               {/* Informações Principais em Grid - apenas se aberto */}
               {instalacao.status === 'aberto' && (
-                <View className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                <View 
+                  style={{ backgroundColor: colors.searchInputBackground, borderColor: colors.cardBorder }} 
+                  className="rounded-xl p-3 border"
+                >
                   <TouchableOpacity
                     onPress={() => abrirEdicao('tecnico', instalacao.tecnico || '')}
                     disabled={instalacao.status !== 'aberto'}
-                    className="flex-row items-center justify-between mb-2 active:bg-white rounded-lg px-2 py-1"
+                    className="flex-row items-center justify-between mb-2 active:opacity-80 rounded-lg px-2 py-1"
                   >
                     <View className="flex-1 justify-center">
-                      <Text className="text-gray-500 text-xs font-medium">Técnico</Text>
-                      <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
+                      <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-medium">Técnico</Text>
+                      <Text style={{ color: colors.cardTextPrimary }} className="text-sm font-semibold" numberOfLines={1}>
                         {instalacao.tecnico || 'Não atribuído'}
                       </Text>
                     </View>
                     {instalacao.status === 'aberto' && (
-                      <View className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
+                      <View className="bg-blue-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
                         <Ionicons name="pencil" size={14} color="white" />
                       </View>
                     )}
                   </TouchableOpacity>
 
-                  <View className="h-px bg-gray-200 my-2" />
+                  <View style={{ backgroundColor: colors.infoRowBorder }} className="h-px my-2" />
 
                   <TouchableOpacity
                     onPress={() => abrirEdicao('visita', instalacao.visita || '')}
                     disabled={instalacao.status !== 'aberto'}
-                    className="flex-row items-center justify-between mb-2 active:bg-white rounded-lg px-2 py-1"
+                    className="flex-row items-center justify-between mb-2 active:opacity-80 rounded-lg px-2 py-1"
                   >
                     <View className="flex-1 justify-center">
-                      <Text className="text-gray-500 text-xs font-medium">Visita Agendada</Text>
-                      <Text className="text-gray-900 text-sm font-semibold" numberOfLines={1}>
+                      <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-medium">Visita Agendada</Text>
+                      <Text style={{ color: colors.cardTextPrimary }} className="text-sm font-semibold" numberOfLines={1}>
                         {instalacao.visita ? formatarDataCompleta(instalacao.visita) : 'Não agendada'}
                       </Text>
                     </View>
                     {instalacao.status === 'aberto' && (
-                      <View className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
+                      <View className="bg-blue-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
                         <Ionicons name="calendar-outline" size={14} color="white" />
                       </View>
                     )}
@@ -395,7 +402,10 @@ export default function InstalacaoDetalhesScreen() {
             <View className="flex-row mb-4 gap-2">
               {/* Ligar */}
               {(instalacao.celular || instalacao.telefone) && (
-                <TouchableOpacity
+                <QuickActionButton
+                  icon="call"
+                  label="Ligar"
+                  color="green"
                   onPress={() => {
                     const telefones = [
                       instalacao.celular && { label: 'Celular', numero: instalacao.celular },
@@ -439,21 +449,15 @@ export default function InstalacaoDetalhesScreen() {
                       setQuickActionModalVisible(true);
                     }
                   }}
-                  className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-green-100 active:scale-95"
-                  style={{ transform: [{ scale: 1 }] }}
-                >
-                  <View className="items-center">
-                    <View className="bg-green-500 w-10 h-10 rounded-full items-center justify-center mb-2">
-                      <Ionicons name="call" size={18} color="white" />
-                    </View>
-                    <Text className="text-green-700 font-bold text-xs">Ligar</Text>
-                  </View>
-                </TouchableOpacity>
+                />
               )}
 
               {/* WhatsApp */}
               {(instalacao.celular || instalacao.telefone || instalacao.celular2) && (
-                <TouchableOpacity
+                <QuickActionButton
+                  icon="logo-whatsapp"
+                  label="WhatsApp"
+                  color="emerald"
                   onPress={() => {
                     const celulares = [
                       instalacao.celular && { label: 'Celular', numero: instalacao.celular },
@@ -499,21 +503,15 @@ export default function InstalacaoDetalhesScreen() {
                       setQuickActionModalVisible(true);
                     }
                   }}
-                  className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-emerald-100 active:scale-95"
-                  style={{ transform: [{ scale: 1 }] }}
-                >
-                  <View className="items-center">
-                    <View className="bg-emerald-500 w-10 h-10 rounded-full items-center justify-center mb-2">
-                      <Ionicons name="logo-whatsapp" size={18} color="white" />
-                    </View>
-                    <Text className="text-emerald-700 font-bold text-xs">WhatsApp</Text>
-                  </View>
-                </TouchableOpacity>
+                />
               )}
 
               {/* Navegar */}
               {(instalacao.coordenadas || instalacao.endereco) && (
-                <TouchableOpacity
+                <QuickActionButton
+                  icon="navigate"
+                  label="Navegar"
+                  color="purple"
                   onPress={() => {
                     const temCoordenadas = instalacao.coordenadas && instalacao.coordenadas !== '-38.5748,-3.741162,0';
                     const temEndereco = instalacao.endereco;
@@ -617,43 +615,36 @@ export default function InstalacaoDetalhesScreen() {
                       navegarPorEndereco();
                     }
                   }}
-                  className="flex-1 bg-white rounded-xl p-4 shadow-sm border border-purple-100 active:scale-95"
-                  style={{ transform: [{ scale: 1 }] }}
-                >
-                  <View className="items-center">
-                    <View className="bg-purple-500 w-10 h-10 rounded-full items-center justify-center mb-2">
-                      <Ionicons name="navigate" size={18} color="white" />
-                    </View>
-                    <Text className="text-purple-700 font-bold text-xs">Navegar</Text>
-                  </View>
-                </TouchableOpacity>
+                />
               )}
             </View>
 
             {/* SEÇÃO TÉCNICA PRIORITÁRIA */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md border border-purple-50">
-              <View className="flex-row items-center mb-4">
-                <View className="bg-purple-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                  <Ionicons name="settings-outline" size={20} color="#9333ea" />
-                </View>
-                <Text className="text-base text-gray-900 font-bold flex-1">Configuração Técnica</Text>
-              </View>
-
+            <InfoSection title="Configuração Técnica" icon="settings-outline" color="blue" noContentWrapper>
               {/* Plano - Destaque */}
               <TouchableOpacity
                 onPress={() => instalacao.status === 'aberto' && setPlanoModalVisible(true)}
                 disabled={instalacao.status !== 'aberto'}
-                className="bg-purple-50 rounded-xl p-4 mb-4 border-2 border-purple-200"
+                style={{ 
+                  backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff',
+                  borderColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.4)' : '#bfdbfe'
+                }}
+                className="rounded-xl p-4 mb-4 border-2"
               >
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1">
-                    <Text className="text-xs text-purple-600 font-bold uppercase tracking-wide mb-1">Plano Contratado</Text>
-                    <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
+                    <Text 
+                      style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }} 
+                      className="text-xs font-bold uppercase tracking-wide mb-1"
+                    >
+                      Plano Contratado
+                    </Text>
+                    <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold" numberOfLines={1}>
                       {instalacao.plano || 'Não informado'}
                     </Text>
                   </View>
                   {instalacao.status === 'aberto' && (
-                    <View className="bg-purple-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
+                    <View className="bg-blue-600 w-8 h-8 rounded-lg ml-2 items-center justify-center">
                       <Ionicons name="pencil" size={14} color="white" />
                     </View>
                   )}
@@ -662,8 +653,11 @@ export default function InstalacaoDetalhesScreen() {
 
               {/* Grid de Informações Técnicas */}
               <View className="gap-3">
-                <View className="bg-gray-50 rounded-xl p-3">
-                  <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Credenciais de Acesso</Text>
+                <View 
+                  style={{ backgroundColor: colors.searchInputBackground, borderColor: colors.cardBorder }} 
+                  className="rounded-xl p-3 border"
+                >
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-2">Credenciais de Acesso</Text>
 
                   <EditableInfoRow
                     label="Login"
@@ -685,12 +679,13 @@ export default function InstalacaoDetalhesScreen() {
                         </View>
                         <TouchableOpacity
                           onPress={() => setSenhaVisivel(!senhaVisivel)}
-                          className="ml-3 p-2 bg-gray-100 rounded-lg"
+                          style={{ backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6' }}
+                          className="ml-3 p-2 rounded-lg"
                         >
                           <Ionicons 
                             name={senhaVisivel ? "eye-off" : "eye"} 
                             size={16} 
-                            color="#6b7280" 
+                            color={colors.cardTextSecondary}
                           />
                         </TouchableOpacity>
                       </View>
@@ -698,8 +693,11 @@ export default function InstalacaoDetalhesScreen() {
                   )}
                 </View>
 
-                <View className="bg-gray-50 rounded-xl p-3">
-                  <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Rede e Conectividade</Text>
+                <View 
+                  style={{ backgroundColor: colors.searchInputBackground, borderColor: colors.cardBorder }} 
+                  className="rounded-xl p-3 border"
+                >
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-2">Rede e Conectividade</Text>
 
                   <EditableInfoRow
                     label="IP"
@@ -730,8 +728,11 @@ export default function InstalacaoDetalhesScreen() {
                   )}
                 </View>
 
-                <View className="bg-gray-50 rounded-xl p-3">
-                  <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Equipamento</Text>
+                <View 
+                  style={{ backgroundColor: colors.searchInputBackground, borderColor: colors.cardBorder }} 
+                  className="rounded-xl p-3 border"
+                >
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-2">Equipamento</Text>
 
                   <EditableInfoRow
                     label="Comodato"
@@ -750,92 +751,81 @@ export default function InstalacaoDetalhesScreen() {
                   </View>
                 </View>
               </View>
-            </View>
+            </InfoSection>
 
             {/* INFORMAÇÕES ADMINISTRATIVAS */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-              <View className="flex-row items-center mb-4">
-                <View className="bg-purple-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                  <Ionicons name="document-text-outline" size={20} color="#9333ea" />
-                </View>
-                <Text className="text-base text-gray-900 font-bold flex-1">Informações Administrativas</Text>
-              </View>
+            <InfoSection title="Informações Administrativas" icon="document-text-outline" color="blue">
+              {instalacao.termo && (
+                <InfoRow label="Termo" value={`#${instalacao.termo}`} />
+              )}
 
-              <View className="gap-2">
-                {instalacao.termo && (
-                  <InfoRow label="Termo" value={`#${instalacao.termo}`} />
-                )}
+              <InfoRow
+                label="Processado em"
+                value={formatarDataCompleta(instalacao.processamento)}
+              />
 
-                <InfoRow
-                  label="Processado em"
-                  value={formatarDataCompleta(instalacao.processamento)}
-                />
+              {instalacao.login_atend && (
+                <InfoRow label="Atendente" value={instalacao.login_atend} />
+              )}
 
-                {instalacao.login_atend && (
-                  <InfoRow label="Atendente" value={instalacao.login_atend} />
-                )}
+              {instalacao.disp && (
+                <InfoRow label="Disponibilidade" value={instalacao.disp === 'sim' ? 'Sim' : 'Não'} />
+              )}
 
-                {instalacao.disp && (
-                  <InfoRow label="Disponibilidade" value={instalacao.disp === 'sim' ? 'Sim' : 'Não'} />
-                )}
+              {instalacao.visitado && (
+                <InfoRow label="Visitado" value={instalacao.visitado === 'sim' ? 'Sim' : 'Não'} />
+              )}
 
-                {instalacao.visitado && (
-                  <InfoRow label="Visitado" value={instalacao.visitado === 'sim' ? 'Sim' : 'Não'} />
-                )}
-
-                {instalacao.datainst && (
-                  <InfoRow label="Data de Instalação" value={formatarDataCompleta(instalacao.datainst)} />
-                )}
-              </View>
-            </View>
+              {instalacao.datainst && (
+                <InfoRow label="Data de Instalação" value={formatarDataCompleta(instalacao.datainst)} />
+              )}
+            </InfoSection>
 
             {/* VALORES E TAXAS */}
-            <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
-              <View className="flex-row items-center mb-4">
-                <View className="bg-green-100 w-10 h-10 rounded-full items-center justify-center mr-3">
-                  <Ionicons name="cash-outline" size={20} color="#10b981" />
+            <InfoSection title="Valores e Taxas" icon="cash-outline" color="green" noContentWrapper>
+              {instalacao.adesao && (
+                <View className="bg-green-50 rounded-xl p-3 mb-3 border border-green-200">
+                  <Text className="text-xs text-green-600 font-semibold mb-1">Taxa de Adesão</Text>
+                  <Text className="text-base font-bold text-green-700">R$ {instalacao.adesao}</Text>
                 </View>
-                <Text className="text-base text-gray-900 font-bold flex-1">Valores e Taxas</Text>
-              </View>
+              )}
 
-              <View className="gap-2">
-                {instalacao.adesao && (
-                  <View className="bg-green-50 rounded-xl p-3 mb-2">
-                    <Text className="text-xs text-green-600 font-semibold mb-1">Taxa de Adesão</Text>
-                    <Text className="text-base font-bold text-green-700">R$ {instalacao.adesao}</Text>
-                  </View>
-                )}
-
-                <EditableInfoRow
-                  label="Taxa de Ativação"
-                  value={instalacao.valor ? `R$ ${instalacao.valor}` : 'Não informado'}
-                  onEdit={() => abrirEdicao('valor', instalacao.valor || '')}
-                  editable={instalacao.status === 'aberto'}
-                />
-              </View>
-            </View>
+              <EditableInfoRow
+                label="Taxa de Ativação"
+                value={instalacao.valor ? `R$ ${instalacao.valor}` : 'Não informado'}
+                onEdit={() => abrirEdicao('valor', instalacao.valor || '')}
+                editable={instalacao.status === 'aberto'}
+              />
+            </InfoSection>
 
             {/* OBSERVAÇÕES */}
             {(instalacao.status === 'aberto' || instalacao.obs) && (
               <TouchableOpacity
                 onPress={() => abrirEdicao('obs', instalacao.obs || '')}
                 disabled={instalacao.status !== 'aberto'}
-                className="bg-white rounded-2xl p-5 mb-4 shadow-md"
+                style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }}
+                className="rounded-2xl p-5 mb-4 shadow-md border"
               >
                 <View className="flex-row items-start justify-between">
                   <View className="flex-row items-start flex-1">
-                    <View className={`${instalacao.obs ? 'bg-amber-100' : 'bg-gray-100'} w-10 h-10 rounded-full items-center justify-center mr-3 mt-0.5`}>
+                    <View 
+                      style={{ backgroundColor: instalacao.obs ? '#fef3c7' : colors.searchInputBackground }} 
+                      className="w-10 h-10 rounded-full items-center justify-center mr-3 mt-0.5"
+                    >
                       <Ionicons
                         name={instalacao.obs ? "chatbox-ellipses-outline" : "add-circle-outline"}
                         size={20}
-                        color={instalacao.obs ? "#f59e0b" : "#9ca3af"}
+                        color={instalacao.obs ? "#f59e0b" : colors.cardTextSecondary}
                       />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
+                      <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-2">
                         Observações
                       </Text>
-                      <Text className={`text-sm leading-5 ${instalacao.obs ? 'text-gray-800' : 'text-gray-400 italic'}`}>
+                      <Text 
+                        style={{ color: instalacao.obs ? colors.cardTextPrimary : colors.cardTextSecondary }} 
+                        className={`text-sm leading-5 ${!instalacao.obs && 'italic'}`}
+                      >
                         {instalacao.obs || 'Toque para adicionar observações sobre esta instalação'}
                       </Text>
                     </View>
@@ -845,7 +835,7 @@ export default function InstalacaoDetalhesScreen() {
                       <Ionicons
                         name="create-outline"
                         size={20}
-                        color="#6b7280"
+                        color={colors.cardTextSecondary}
                       />
                     </View>
                   )}
@@ -882,7 +872,7 @@ export default function InstalacaoDetalhesScreen() {
           keyboardType={editField === 'email' ? 'email-address' : editField === 'telefone' || editField === 'celular' ? 'phone-pad' : 'default'}
           secureTextEntry={editField === 'senha'}
           isPending={editaInstalacaoMutation.isPending}
-          saveButtonColor="bg-purple-600"
+          saveButtonColor="bg-blue-600"
         />
 
         {/* DateTimePicker para iOS */}
