@@ -3,6 +3,10 @@ import { Client, UpdateClientPayload } from '@/types/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { clienteKeys } from './keys';
 
+// 🎭 MOCK MODE para operações sensíveis (ex: reset de MAC)
+// Ative para testar sem modificar dados reais
+const MOCK_RESET_MAC = true;
+
 /**
  * Hook para atualizar dados de um cliente
  * 
@@ -31,6 +35,23 @@ export const useUpdateClient = () => {
 
   return useMutation({
     mutationFn: async (payload: UpdateClientPayload) => {
+      // 🎭 MOCK MODE: Intercepta reset de MAC para não modificar dados reais
+      if (MOCK_RESET_MAC && 'mac' in payload && payload.mac === null) {
+        console.log(`🎭 [MOCK] Simulando reset de MAC para cliente ${payload.uuid}`);
+        console.log(`🎭 [MOCK] API NÃO será chamada - dados não serão alterados`);
+        
+        // Simula latência de rede (500ms)
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        console.log(`✅ [MOCK] Reset de MAC simulado com sucesso`);
+        return {
+          status: 'sucesso',
+          mensagem: 'MAC resetado com sucesso (simulado)',
+          dados: payload,
+        };
+      }
+      
+      // Modo real: chama API
       return updateClient(payload);
     },
     

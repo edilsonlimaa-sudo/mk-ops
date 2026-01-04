@@ -1,4 +1,6 @@
+import { ResetMacModal } from '@/components/cliente/ResetMacModal';
 import QuickActionModal from '@/components/instalacao/modals/QuickActionModal';
+import { useUpdateClient } from '@/hooks/cliente';
 import { useClienteContext } from '@/lib/cliente/ClienteContext';
 import { EditableInfoRow } from '@/lib/cliente/SharedComponents';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +13,8 @@ function GeralTab() {
     const [quickActionModalVisible, setQuickActionModalVisible] = useState(false);
     const [quickActionOptions, setQuickActionOptions] = useState<Array<{ label: string; value: string; icon: string; action: () => void }>>([]);
     const [quickActionModalTitle, setQuickActionModalTitle] = useState('');
+    const [resetMacModalVisible, setResetMacModalVisible] = useState(false);
+    const updateClientMutation = useUpdateClient();
 
 
     return (
@@ -341,7 +345,36 @@ function GeralTab() {
                         {cliente.senha && <EditableInfoRow label="Senha" value={cliente.senha} field="senha" editable={false} />}
                         {cliente.tipo && <EditableInfoRow label="Tipo" value={cliente.tipo} field="tipo" editable={false} />}
                         {cliente.ip && <EditableInfoRow label="IP" value={cliente.ip} field="ip" editable={false} />}
-                        {cliente.mac && <EditableInfoRow label="MAC" value={cliente.mac} field="mac" editable={false} />}
+                        
+                        {/* MAC Address - Card destacado com botão de Reset */}
+                        <TouchableOpacity
+                            onPress={() => cliente.mac && setResetMacModalVisible(true)}
+                            disabled={!cliente.mac}
+                            className="flex-row justify-between items-center py-3 px-3 -mx-3 rounded-lg bg-blue-50 border border-blue-100 active:bg-blue-100"
+                        >
+                            <View className="flex-row items-center gap-2">
+                                <Ionicons name="wifi" size={16} color="#3b82f6" />
+                                <Text className="text-gray-600 text-sm font-medium">MAC Address</Text>
+                            </View>
+                            <View className="flex-row items-center gap-2">
+                                {cliente.mac ? (
+                                    <>
+                                        <Text className="text-gray-900 text-sm font-medium font-mono">
+                                            {cliente.mac}
+                                        </Text>
+                                        <Ionicons name="refresh" size={18} color="#3b82f6" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text className="text-gray-500 text-sm italic">
+                                            Não definido
+                                        </Text>
+                                        <Ionicons name="time-outline" size={18} color="#9ca3af" />
+                                    </>
+                                )}
+                            </View>
+                        </TouchableOpacity>
+                        
                         {cliente.pool_name && <EditableInfoRow label="Pool" value={cliente.pool_name} field="pool_name" editable={false} />}
                         {cliente.simultaneo && <EditableInfoRow label="Simultâneo" value={cliente.simultaneo} field="simultaneo" editable={false} />}
                     </View>
@@ -381,6 +414,19 @@ function GeralTab() {
                 title={quickActionModalTitle}
                 options={quickActionOptions}
                 onClose={() => setQuickActionModalVisible(false)}
+            />
+
+            {/* Modal de Reset MAC */}
+            <ResetMacModal
+                visible={resetMacModalVisible}
+                onClose={() => setResetMacModalVisible(false)}
+                clienteNome={cliente.nome}
+                macAtual={cliente.mac}
+                updateClientMutation={updateClientMutation}
+                clienteUuid={cliente.uuid_cliente}
+                onSuccess={() => {
+                    // Apenas fecha o modal - usuário fará pull-to-refresh manual quando quiser
+                }}
             />
         </ScrollView>
     );
