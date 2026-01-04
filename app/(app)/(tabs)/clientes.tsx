@@ -76,20 +76,20 @@ export default function ClientesScreen() {
 
   if (isLoading && !clients) {
     return (
-      <SafeAreaView className="flex-1 bg-white justify-center items-center">
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="text-gray-600 mt-4">Carregando clientes...</Text>
+        <Text style={{ color: colors.cardTextSecondary, marginTop: 16 }}>Carregando clientes...</Text>
       </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView className="flex-1 bg-white justify-center items-center p-6">
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
         <Text className="text-red-500 text-lg font-semibold mb-2">
           Erro ao carregar clientes
         </Text>
-        <Text className="text-gray-600 text-center mb-4">
+        <Text style={{ color: colors.cardTextSecondary }} className="text-center mb-4">
           {error.message}
         </Text>
         <TouchableOpacity

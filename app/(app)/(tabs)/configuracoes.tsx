@@ -1,4 +1,4 @@
-import { ThemedView } from '@/components/ui/themed-view';
+import { Colors } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemedHeader } from '@/hooks/ui/useThemedHeader';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -13,7 +13,7 @@ export default function ConfiguracoesScreen() {
   const router = useRouter();
   const { ipMkAuth, logout } = useAuthStore();
   const { currentUser, clearIdentification } = useUserStore();
-  const { mode, setMode } = useTheme();
+  const { mode, setMode, colors, theme } = useTheme();
   const headerOptions = useThemedHeader();
   const [showSobre, setShowSobre] = useState(false);
   const [showAjuda, setShowAjuda] = useState(false);
@@ -51,7 +51,7 @@ export default function ConfiguracoesScreen() {
         }}
       />
 
-      <ThemedView variant="screen" className="flex-1">
+      <View style={{ backgroundColor: colors.screenBackground }} className="flex-1">
       <ScrollView className="flex-1">
         {/* Perfil do Usuário */}
         {currentUser && (
@@ -94,22 +94,23 @@ export default function ConfiguracoesScreen() {
 
         {/* Configurações */}
         <View className="mt-6 mx-4">
-          <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 ml-1">
+          <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-3 ml-1">
             Aparência
           </Text>
           
           {/* Card de tema */}
-          <View className="bg-white rounded-2xl overflow-hidden shadow-sm mb-6">
+          <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="rounded-2xl overflow-hidden shadow-sm mb-6 border">
             {/* Tema Claro */}
             <TouchableOpacity
               onPress={() => setMode('light')}
-              className="flex-row items-center p-4 border-b border-gray-100 active:bg-gray-50"
+              style={{ borderBottomColor: colors.cardBorder }}
+              className="flex-row items-center p-4 border-b"
             >
-              <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${mode === 'light' ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                <Ionicons name="sunny" size={22} color={mode === 'light' ? '#3b82f6' : '#9ca3af'} />
+              <View style={{ backgroundColor: mode === 'light' ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe') : colors.searchInputBackground }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
+                <Ionicons name="sunny" size={22} color={mode === 'light' ? '#3b82f6' : colors.cardTextSecondary} />
               </View>
               <View className="flex-1">
-                <Text className={`text-base font-semibold ${mode === 'light' ? 'text-blue-600' : 'text-gray-800'}`}>
+                <Text style={{ color: mode === 'light' ? '#3b82f6' : colors.cardTextPrimary }} className="text-base font-semibold">
                   Modo Claro
                 </Text>
               </View>
@@ -119,13 +120,14 @@ export default function ConfiguracoesScreen() {
             {/* Tema Escuro */}
             <TouchableOpacity
               onPress={() => setMode('dark')}
-              className="flex-row items-center p-4 border-b border-gray-100 active:bg-gray-50"
+              style={{ borderBottomColor: colors.cardBorder }}
+              className="flex-row items-center p-4 border-b"
             >
-              <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${mode === 'dark' ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                <Ionicons name="moon" size={22} color={mode === 'dark' ? '#3b82f6' : '#9ca3af'} />
+              <View style={{ backgroundColor: mode === 'dark' ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe') : colors.searchInputBackground }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
+                <Ionicons name="moon" size={22} color={mode === 'dark' ? '#3b82f6' : colors.cardTextSecondary} />
               </View>
               <View className="flex-1">
-                <Text className={`text-base font-semibold ${mode === 'dark' ? 'text-blue-600' : 'text-gray-800'}`}>
+                <Text style={{ color: mode === 'dark' ? '#3b82f6' : colors.cardTextPrimary }} className="text-base font-semibold">
                   Modo Escuro
                 </Text>
               </View>
@@ -135,104 +137,105 @@ export default function ConfiguracoesScreen() {
             {/* Automático */}
             <TouchableOpacity
               onPress={() => setMode('auto')}
-              className="flex-row items-center p-4 active:bg-gray-50"
+              className="flex-row items-center p-4"
             >
-              <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${mode === 'auto' ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                <Ionicons name="phone-portrait" size={22} color={mode === 'auto' ? '#3b82f6' : '#9ca3af'} />
+              <View style={{ backgroundColor: mode === 'auto' ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe') : colors.searchInputBackground }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
+                <Ionicons name="phone-portrait" size={22} color={mode === 'auto' ? '#3b82f6' : colors.cardTextSecondary} />
               </View>
               <View className="flex-1">
-                <Text className={`text-base font-semibold ${mode === 'auto' ? 'text-blue-600' : 'text-gray-800'}`}>
+                <Text style={{ color: mode === 'auto' ? '#3b82f6' : colors.cardTextPrimary }} className="text-base font-semibold">
                   Padrão do Sistema
                 </Text>
-                <Text className="text-sm text-gray-500">Segue o tema do dispositivo</Text>
+                <Text style={{ color: colors.cardTextSecondary }} className="text-sm">Segue o tema do dispositivo</Text>
               </View>
               {mode === 'auto' && <Ionicons name="checkmark-circle" size={24} color="#3b82f6" />}
             </TouchableOpacity>
           </View>
 
-          <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 ml-1">
+          <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-3 ml-1">
             Informações
           </Text>
           
           {/* Card de opções */}
-          <View className="bg-white rounded-2xl overflow-hidden shadow-sm">
+          <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="rounded-2xl overflow-hidden shadow-sm border">
             {/* Sobre */}
             <TouchableOpacity
               onPress={() => setShowSobre(true)}
-              className="flex-row items-center p-4 border-b border-gray-100 active:bg-gray-50"
+              style={{ borderBottomColor: colors.cardBorder }}
+              className="flex-row items-center p-4 border-b"
             >
-              <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe' }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
                 <Ionicons name="information-circle" size={22} color="#3b82f6" />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-semibold text-gray-800">Sobre</Text>
-                <Text className="text-sm text-gray-500">Informações do aplicativo</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-base font-semibold">Sobre</Text>
+                <Text style={{ color: colors.cardTextSecondary }} className="text-sm">Informações do aplicativo</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+              <Ionicons name="chevron-forward" size={20} color={colors.cardTextSecondary} />
             </TouchableOpacity>
 
             {/* Ajuda */}
             <TouchableOpacity
               onPress={() => setShowAjuda(true)}
-              className="flex-row items-center p-4 border-b border-gray-100 active:bg-gray-50"
+              style={{ borderBottomColor: colors.cardBorder }}
+              className="flex-row items-center p-4 border-b"
             >
-              <View className="w-10 h-10 bg-green-100 rounded-full items-center justify-center mr-3">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(16, 185, 129, 0.2)' : '#d1fae5' }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
                 <Ionicons name="help-circle" size={22} color="#10b981" />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-semibold text-gray-800">Ajuda</Text>
-                <Text className="text-sm text-gray-500">Dúvidas e suporte</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-base font-semibold">Ajuda</Text>
+                <Text style={{ color: colors.cardTextSecondary }} className="text-sm">Dúvidas e suporte</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+              <Ionicons name="chevron-forward" size={20} color={colors.cardTextSecondary} />
             </TouchableOpacity>
 
             {/* Limitações da API */}
             <TouchableOpacity
               onPress={() => setShowLimitacoes(true)}
-              className="flex-row items-center p-4 active:bg-gray-50"
+              className="flex-row items-center p-4"
             >
-              <View className="w-10 h-10 bg-amber-100 rounded-full items-center justify-center mr-3">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(245, 158, 11, 0.2)' : '#fef3c7' }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
                 <Ionicons name="warning" size={22} color="#f59e0b" />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-semibold text-gray-800">Limitações da API</Text>
-                <Text className="text-sm text-gray-500">O que pode ou não ser editado</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-base font-semibold">Limitações da API</Text>
+                <Text style={{ color: colors.cardTextSecondary }} className="text-sm">O que pode ou não ser editado</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+              <Ionicons name="chevron-forward" size={20} color={colors.cardTextSecondary} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Servidor & Conta */}
         <View className="mt-6 mx-4">
-          <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 ml-1">
+          <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-3 ml-1">
             Servidor & Conta
           </Text>
           
-          <View className="bg-white rounded-2xl overflow-hidden shadow-sm">
+          <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="rounded-2xl overflow-hidden shadow-sm border">
             {/* Servidor MK-Auth */}
-            <View className="flex-row items-center p-4 border-b border-gray-100">
-              <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-3">
+            <View style={{ borderBottomColor: colors.cardBorder }} className="flex-row items-center p-4 border-b">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe' }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
                 <Ionicons name="server" size={22} color="#3b82f6" />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-semibold text-gray-800">Servidor MK-Auth</Text>
-                <Text className="text-sm text-gray-500">{ipMkAuth || 'Não conectado'}</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-base font-semibold">Servidor MK-Auth</Text>
+                <Text style={{ color: colors.cardTextSecondary }} className="text-sm">{ipMkAuth || 'Não conectado'}</Text>
               </View>
             </View>
 
             {/* Sair da Conta */}
             <TouchableOpacity
               onPress={handleLogout}
-              className="active:bg-gray-50"
             >
               <View className="flex-row items-center p-4">
-                <View className="w-10 h-10 bg-red-100 rounded-full items-center justify-center mr-3">
+                <View style={{ backgroundColor: theme === 'dark' ? 'rgba(220, 38, 38, 0.2)' : '#fee2e2' }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
                   <Ionicons name="log-out-outline" size={22} color="#dc2626" />
                 </View>
                 <View className="flex-1">
                   <Text className="text-base font-semibold text-red-600">Sair da Conta</Text>
-                  <Text className="text-sm text-gray-500">Desconectar deste servidor</Text>
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-sm">Desconectar deste servidor</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#dc2626" />
               </View>
@@ -242,18 +245,18 @@ export default function ConfiguracoesScreen() {
 
         {/* Versão */}
         <View className="mt-6 mx-4">
-          <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 ml-1">
+          <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-3 ml-1">
             Sistema
           </Text>
           
-          <View className="bg-white rounded-2xl overflow-hidden shadow-sm">
+          <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="rounded-2xl overflow-hidden shadow-sm border">
             <View className="flex-row items-center p-4">
-              <View className="w-10 h-10 bg-purple-100 rounded-full items-center justify-center mr-3">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : '#ede9fe' }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
                 <Ionicons name="code-slash" size={22} color="#8b5cf6" />
               </View>
               <View className="flex-1">
-                <Text className="text-base font-semibold text-gray-800">Versão do App</Text>
-                <Text className="text-sm text-gray-500">
+                <Text style={{ color: colors.cardTextPrimary }} className="text-base font-semibold">Versão do App</Text>
+                <Text style={{ color: colors.cardTextSecondary }} className="text-sm">
                   {appVersion} (Build {buildNumber})
                 </Text>
               </View>
@@ -264,7 +267,7 @@ export default function ConfiguracoesScreen() {
         {/* Espaçamento final */}
         <View className="h-8" />
       </ScrollView>
-      </ThemedView>
+      </View>
 
       {/* Modal Sobre */}
       <Modal
@@ -273,16 +276,16 @@ export default function ConfiguracoesScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowSobre(false)}
       >
-        <View className="flex-1 bg-white">
+        <View style={{ backgroundColor: colors.screenBackground }} className="flex-1">
           {/* Header do Modal */}
-          <View className="bg-blue-500 pt-14 pb-6 px-6">
+          <View style={{ backgroundColor: colors.headerBackground }} className="pt-14 pb-6 px-6">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-2xl font-bold text-white">Sobre</Text>
+              <Text style={{ color: colors.headerText }} className="text-2xl font-bold">Sobre</Text>
               <TouchableOpacity
                 onPress={() => setShowSobre(false)}
                 className="w-8 h-8 items-center justify-center"
               >
-                <Ionicons name="close" size={28} color="white" />
+                <Ionicons name="close" size={28} color={colors.headerText} />
               </TouchableOpacity>
             </View>
           </View>
@@ -290,18 +293,18 @@ export default function ConfiguracoesScreen() {
           <ScrollView className="flex-1 px-6 pt-6">
             {/* Logo/Ícone */}
             <View className="items-center mb-6">
-              <View className="w-24 h-24 bg-blue-100 rounded-3xl items-center justify-center mb-4">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe' }} className="w-24 h-24 rounded-3xl items-center justify-center mb-4">
                 <Ionicons name="phone-portrait" size={48} color="#3b82f6" />
               </View>
-              <Text className="text-2xl font-bold text-gray-800 mb-1">MK Auth Mobile</Text>
-              <Text className="text-base text-gray-500">
+              <Text style={{ color: colors.cardTextPrimary }} className="text-2xl font-bold mb-1">MK Auth Mobile</Text>
+              <Text style={{ color: colors.cardTextSecondary }} className="text-base">
                 v{appVersion} (Build {buildNumber})
               </Text>
             </View>
 
             {/* Descrição */}
-            <View className="bg-blue-50 rounded-2xl p-5 mb-6 border border-blue-100">
-              <Text className="text-base text-gray-700 leading-6">
+            <View style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff', borderColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe' }} className="rounded-2xl p-5 mb-6 border">
+              <Text style={{ color: colors.cardTextPrimary }} className="text-base leading-6">
                 Aplicativo móvel oficial para técnicos gerenciarem atendimentos, 
                 conectando-se diretamente ao servidor MK-Auth do seu provedor.
               </Text>
@@ -311,15 +314,15 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="link" size={24} color="#3b82f6" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Como Funciona</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Como Funciona</Text>
               </View>
               
-              <View className="bg-gray-50 rounded-2xl p-5">
-                <Text className="text-sm text-gray-700 leading-6 mb-3">
+              <View style={{ backgroundColor: colors.searchInputBackground }} className="rounded-2xl p-5">
+                <Text style={{ color: colors.cardTextPrimary }} className="text-sm leading-6 mb-3">
                   O aplicativo se conecta <Text className="font-bold">diretamente</Text> ao servidor 
                   MK-Auth do seu provedor usando as credenciais fornecidas no login.
                 </Text>
-                <Text className="text-sm text-gray-700 leading-6">
+                <Text style={{ color: colors.cardTextPrimary }} className="text-sm leading-6">
                   Todas as consultas e operações são feitas em <Text className="font-bold">tempo real</Text> através 
                   da API REST oficial do MK-Auth, sem intermediários.
                 </Text>
@@ -330,7 +333,7 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="shield-checkmark" size={24} color="#10b981" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Segurança & Privacidade</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Segurança & Privacidade</Text>
               </View>
               
               <View className="space-y-3">
@@ -361,20 +364,20 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="phone-portrait" size={24} color="#f59e0b" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">O Que Fica no Celular</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">O Que Fica no Celular</Text>
               </View>
               
-              <View className="bg-amber-50 rounded-2xl p-5 border border-amber-100">
-                <Text className="text-sm text-gray-700 leading-6 mb-3 font-semibold">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(245, 158, 11, 0.1)' : '#fffbeb', borderColor: theme === 'dark' ? 'rgba(245, 158, 11, 0.3)' : '#fde68a' }} className="rounded-2xl p-5 border">
+                <Text style={{ color: colors.cardTextPrimary }} className="text-sm leading-6 mb-3 font-semibold">
                   Armazenamento Local (no dispositivo):
                 </Text>
-                <Text className="text-sm text-gray-700 leading-6 mb-2">
+                <Text style={{ color: colors.cardTextPrimary }} className="text-sm leading-6 mb-2">
                   • Credenciais de login (criptografadas){'\n'}
                   • Token de autenticação (temporário){'\n'}
                   • Cache de dados consultados (para modo offline){'\n'}
                   • Identificação do usuário logado
                 </Text>
-                <Text className="text-sm text-gray-600 leading-6 mt-3 italic">
+                <Text style={{ color: colors.cardTextSecondary }} className="text-sm leading-6 mt-3 italic">
                   Ao fazer logout, todos esses dados são removidos do dispositivo.
                 </Text>
               </View>
@@ -384,7 +387,7 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="checkmark-circle" size={24} color="#8b5cf6" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Benefícios</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Benefícios</Text>
               </View>
               
               <View className="space-y-3">
@@ -411,26 +414,27 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="headset" size={24} color="#ec4899" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Suporte</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Suporte</Text>
               </View>
               
               <TouchableOpacity
                 onPress={() => Linking.openURL('mailto:suporte@mkauthmobile.com')}
-                className="bg-gray-50 rounded-2xl p-5 active:bg-gray-100"
+                style={{ backgroundColor: colors.searchInputBackground }}
+                className="rounded-2xl p-5"
               >
                 <View className="flex-row items-center">
-                  <Ionicons name="mail" size={20} color="#6b7280" />
-                  <Text className="text-sm text-gray-700 ml-3">suporte@mkauthmobile.com</Text>
+                  <Ionicons name="mail" size={20} color={colors.cardTextSecondary} />
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-sm ml-3">suporte@mkauthmobile.com</Text>
                 </View>
               </TouchableOpacity>
             </View>
 
             {/* Copyright */}
             <View className="items-center py-8 mb-4">
-              <Text className="text-sm text-gray-500 mb-2">
+              <Text style={{ color: colors.cardTextSecondary }} className="text-sm mb-2">
                 © 2025 MK Auth Mobile
               </Text>
-              <Text className="text-xs text-gray-400">
+              <Text style={{ color: colors.cardTextSecondary }} className="text-xs">
                 Integração segura e transparente
               </Text>
             </View>
@@ -445,16 +449,16 @@ export default function ConfiguracoesScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowAjuda(false)}
       >
-        <View className="flex-1 bg-white">
+        <View style={{ backgroundColor: colors.screenBackground }} className="flex-1">
           {/* Header do Modal */}
-          <View className="bg-green-500 pt-14 pb-6 px-6">
+          <View style={{ backgroundColor: colors.headerBackground }} className="pt-14 pb-6 px-6">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-2xl font-bold text-white">Ajuda</Text>
+              <Text style={{ color: colors.headerText }} className="text-2xl font-bold">Ajuda</Text>
               <TouchableOpacity
                 onPress={() => setShowAjuda(false)}
                 className="w-8 h-8 items-center justify-center"
               >
-                <Ionicons name="close" size={28} color="white" />
+                <Ionicons name="close" size={28} color={colors.headerText} />
               </TouchableOpacity>
             </View>
           </View>
@@ -464,7 +468,7 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="rocket" size={24} color="#10b981" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Guia Rápido</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Guia Rápido</Text>
               </View>
               
               <View className="space-y-3">
@@ -513,7 +517,7 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="construct" size={24} color="#f59e0b" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Problemas Comuns</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Problemas Comuns</Text>
               </View>
               
               <View className="space-y-3">
@@ -547,36 +551,36 @@ export default function ConfiguracoesScreen() {
 
             {/* Modo Offline */}
             <View className="mb-6">
-              <View className="bg-purple-50 rounded-2xl p-5 border border-purple-100">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(139, 92, 246, 0.1)' : '#faf5ff', borderColor: theme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : '#e9d5ff' }} className="rounded-2xl p-5 border">
                 <View className="flex-row items-center mb-3">
                   <Ionicons name="cloud-offline" size={24} color="#8b5cf6" />
-                  <Text className="text-lg font-bold text-gray-800 ml-2">Modo Offline</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Modo Offline</Text>
                 </View>
-                <Text className="text-sm text-gray-700 leading-6 mb-3">
+                <Text style={{ color: colors.cardTextPrimary }} className="text-sm leading-6 mb-3">
                   O app funciona parcialmente sem internet:
                 </Text>
                 <View className="space-y-2">
                   <View className="flex-row items-start">
                     <Ionicons name="checkmark-circle" size={18} color="#10b981" className="mt-0.5" />
-                    <Text className="text-sm text-gray-700 ml-2 flex-1">
+                    <Text style={{ color: colors.cardTextPrimary }} className="text-sm ml-2 flex-1">
                       Visualizar dados já consultados (cache local)
                     </Text>
                   </View>
                   <View className="flex-row items-start">
                     <Ionicons name="checkmark-circle" size={18} color="#10b981" className="mt-0.5" />
-                    <Text className="text-sm text-gray-700 ml-2 flex-1">
+                    <Text style={{ color: colors.cardTextPrimary }} className="text-sm ml-2 flex-1">
                       Navegar entre telas e ver detalhes
                     </Text>
                   </View>
                   <View className="flex-row items-start">
                     <Ionicons name="close-circle" size={18} color="#ef4444" className="mt-0.5" />
-                    <Text className="text-sm text-gray-700 ml-2 flex-1">
+                    <Text style={{ color: colors.cardTextPrimary }} className="text-sm ml-2 flex-1">
                       Buscar novos dados ou fazer atualizações
                     </Text>
                   </View>
                   <View className="flex-row items-start">
                     <Ionicons name="close-circle" size={18} color="#ef4444" className="mt-0.5" />
-                    <Text className="text-sm text-gray-700 ml-2 flex-1">
+                    <Text style={{ color: colors.cardTextPrimary }} className="text-sm ml-2 flex-1">
                       Fechar chamados ou instalações
                     </Text>
                   </View>
@@ -588,7 +592,7 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="bulb" size={24} color="#eab308" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Dicas de Produtividade</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Dicas de Produtividade</Text>
               </View>
               
               <View className="space-y-3">
@@ -621,12 +625,12 @@ export default function ConfiguracoesScreen() {
 
             {/* Suporte */}
             <View className="mb-6">
-              <View className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff', borderColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe' }} className="rounded-2xl p-5 border">
                 <View className="flex-row items-center mb-3">
                   <Ionicons name="help-buoy" size={24} color="#3b82f6" />
-                  <Text className="text-lg font-bold text-gray-800 ml-2">Precisa de Ajuda?</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Precisa de Ajuda?</Text>
                 </View>
-                <Text className="text-sm text-gray-700 leading-6 mb-4">
+                <Text style={{ color: colors.cardTextPrimary }} className="text-sm leading-6 mb-4">
                   Se não encontrou resposta aqui, nossa equipe está pronta para ajudar:
                 </Text>
                 
@@ -655,52 +659,61 @@ export default function ConfiguracoesScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowPerfil(false)}
       >
-        <View className="flex-1 bg-white">
+        <View style={{ backgroundColor: colors.screenBackground }} className="flex-1">
           {/* Header */}
-          <View className="bg-blue-600 pt-14 pb-6 px-6">
+          <View style={{ backgroundColor: colors.headerBackground }} className="pt-14 pb-6 px-6">
             <TouchableOpacity
               onPress={() => setShowPerfil(false)}
               className="absolute top-14 right-6 z-10"
             >
-              <Ionicons name="close" size={28} color="white" />
+              <Ionicons name="close" size={28} color={colors.headerText} />
             </TouchableOpacity>
             
             <View className="items-center">
-              <View style={styles.largeAvatarContainer}>
+              <View style={{
+                width: 120,
+                height: 120,
+                backgroundColor: '#3b82f6',
+                borderRadius: 60,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 3,
+                borderColor: theme === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(59, 130, 246, 0.3)',
+              }}>
                 <Text className="text-white text-5xl font-bold">
                   {currentUser?.nome.charAt(0).toUpperCase()}
                 </Text>
               </View>
-              <Text className="text-white text-2xl font-bold mt-4">
+              <Text style={{ color: colors.cardTextPrimary }} className="text-2xl font-bold mt-4">
                 {currentUser?.nome}
               </Text>
-              <Text style={{ color: 'rgba(255,255,255,0.8)' }} className="text-base mt-1">
+              <Text style={{ color: colors.cardTextSecondary }} className="text-base mt-1">
                 @{currentUser?.login}
               </Text>
             </View>
           </View>
 
           {/* Conteúdo */}
-          <ScrollView className="flex-1 bg-gray-50">
+          <ScrollView style={{ backgroundColor: colors.screenBackground }} className="flex-1">
             <View className="p-6">
               {/* Card de Resumo */}
-              <View className="bg-white rounded-2xl p-5 mb-6 shadow-sm border border-gray-100">
+              <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="rounded-2xl p-5 mb-6 shadow-sm border">
                 {/* Login */}
                 <View className="mb-4">
-                  <Text className="text-xs text-gray-500 mb-2">Usuário de Acesso</Text>
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs mb-2">Usuário de Acesso</Text>
                   <View className="flex-row items-center">
                     <Ionicons name="person-circle" size={18} color="#3b82f6" />
-                    <Text className="text-base font-semibold text-gray-800 ml-2">@{currentUser?.login}</Text>
+                    <Text style={{ color: colors.cardTextPrimary }} className="text-base font-semibold ml-2">@{currentUser?.login}</Text>
                   </View>
                 </View>
 
                 {/* Email */}
                 {currentUser?.email && (
                   <View className="mb-4">
-                    <Text className="text-xs text-gray-500 mb-2">Email</Text>
+                    <Text style={{ color: colors.cardTextSecondary }} className="text-xs mb-2">Email</Text>
                     <View className="flex-row items-center">
                       <Ionicons name="mail" size={18} color="#3b82f6" />
-                      <Text className="text-base text-gray-800 ml-2">{currentUser.email}</Text>
+                      <Text style={{ color: colors.cardTextPrimary }} className="text-base ml-2">{currentUser.email}</Text>
                     </View>
                   </View>
                 )}
@@ -708,17 +721,17 @@ export default function ConfiguracoesScreen() {
                 {/* Função */}
                 {currentUser?.func && (
                   <View className="mb-4">
-                    <Text className="text-xs text-gray-500 mb-2">Função</Text>
+                    <Text style={{ color: colors.cardTextSecondary }} className="text-xs mb-2">Função</Text>
                     <View className="flex-row items-center">
                       <Ionicons name="briefcase" size={18} color="#3b82f6" />
-                      <Text className="text-base text-gray-800 ml-2">{currentUser.func}</Text>
+                      <Text style={{ color: colors.cardTextPrimary }} className="text-base ml-2">{currentUser.func}</Text>
                     </View>
                   </View>
                 )}
                 
                 {/* Status */}
-                <View className="pt-4 border-t border-gray-100">
-                  <Text className="text-xs text-gray-500 mb-2">Status da Conta</Text>
+                <View style={{ borderTopColor: colors.cardBorder }} className="pt-4 border-t">
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs mb-2">Status da Conta</Text>
                   <View className="flex-row items-center">
                     <View className={`w-2.5 h-2.5 rounded-full mr-2 ${currentUser?.ativo === 'sim' ? 'bg-green-500' : 'bg-red-500'}`} />
                     <Text className={`text-base font-semibold ${currentUser?.ativo === 'sim' ? 'text-green-600' : 'text-red-600'}`}>
@@ -730,25 +743,28 @@ export default function ConfiguracoesScreen() {
 
               {/* Informações de Acesso */}
               <View className="mb-6">
-                <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-3 ml-1">
+                <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-3 ml-1">
                   Informações de Acesso
                 </Text>
-                <View className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="rounded-2xl shadow-sm border overflow-hidden">
                   <ProfileInfoItem 
                     icon="time" 
                     label="Último Acesso" 
                     value={currentUser?.ultacesso || 'Não disponível'}
+                    colors={colors}
                   />
                   <ProfileInfoItem 
                     icon="calendar" 
                     label="Validade da Conta" 
                     value={currentUser?.validade || 'Não definida'}
+                    colors={colors}
                   />
                   <ProfileInfoItem 
                     icon="alarm" 
                     label="Horário Permitido" 
                     value={currentUser?.horario || 'Sem restrições'}
                     showBorder={false}
+                    colors={colors}
                   />
                 </View>
               </View>
@@ -756,16 +772,16 @@ export default function ConfiguracoesScreen() {
               {/* Segurança */}
               {currentUser?.ga === 'S' && (
                 <View className="mb-6">
-                  <View className="bg-green-50 rounded-2xl p-5 border border-green-100">
+                  <View style={{ backgroundColor: theme === 'dark' ? 'rgba(16, 185, 129, 0.1)' : '#f0fdf4', borderColor: theme === 'dark' ? 'rgba(16, 185, 129, 0.3)' : '#bbf7d0' }} className="rounded-2xl p-5 border">
                     <View className="flex-row items-center">
                       <View className="bg-green-500 w-10 h-10 rounded-full items-center justify-center mr-3">
                         <Ionicons name="shield-checkmark" size={22} color="white" />
                       </View>
                       <View className="flex-1">
-                        <Text className="text-base font-semibold text-gray-800 mb-1">
+                        <Text style={{ color: colors.cardTextPrimary }} className="text-base font-semibold mb-1">
                           Autenticação em Duas Etapas
                         </Text>
-                        <Text className="text-sm text-gray-600">
+                        <Text style={{ color: colors.cardTextSecondary }} className="text-sm">
                           Google Authenticator está ativo
                         </Text>
                       </View>
@@ -776,15 +792,16 @@ export default function ConfiguracoesScreen() {
 
               {/* Identificadores */}
               <View className="mb-6">
-                <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-3 ml-1">
+                <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-3 ml-1">
                   Identificadores do Sistema
                 </Text>
-                <View className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="rounded-2xl shadow-sm border overflow-hidden">
                   <ProfileInfoItem 
                     icon="key" 
                     label="ID de Acesso" 
                     value={currentUser?.idacesso}
                     copyable
+                    colors={colors}
                   />
                   <ProfileInfoItem 
                     icon="finger-print" 
@@ -792,6 +809,7 @@ export default function ConfiguracoesScreen() {
                     value={currentUser?.uuid}
                     mono
                     copyable
+                    colors={colors}
                   />
                   <ProfileInfoItem 
                     icon="key-outline" 
@@ -800,6 +818,7 @@ export default function ConfiguracoesScreen() {
                     mono
                     copyable
                     showBorder={false}
+                    colors={colors}
                   />
                 </View>
               </View>
@@ -807,25 +826,26 @@ export default function ConfiguracoesScreen() {
               {/* Informação Adicional */}
               {currentUser?.cli_grupos && (
                 <View className="mb-6">
-                  <Text className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-3 ml-1">
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-3 ml-1">
                     Informações Adicionais
                   </Text>
-                  <View className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="rounded-2xl shadow-sm border overflow-hidden">
                     <ProfileInfoItem 
                       icon="people" 
                       label="Grupos" 
                       value={currentUser.cli_grupos}
                       showBorder={false}
+                      colors={colors}
                     />
                   </View>
                 </View>
               )}
 
               {/* Nota sobre Dados */}
-              <View className="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-100">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff', borderColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe' }} className="rounded-xl p-4 mb-6 border">
                 <View className="flex-row items-start">
                   <Ionicons name="information-circle" size={20} color="#3b82f6" className="mr-2 mt-0.5" />
-                  <Text className="flex-1 text-xs text-gray-600 leading-5">
+                  <Text style={{ color: colors.cardTextSecondary }} className="flex-1 text-xs leading-5">
                     Estas informações são provenientes do servidor MK-Auth e refletem suas permissões e configurações de acesso.
                   </Text>
                 </View>
@@ -842,31 +862,31 @@ export default function ConfiguracoesScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowLimitacoes(false)}
       >
-        <View className="flex-1 bg-white">
+        <View style={{ backgroundColor: colors.screenBackground }} className="flex-1">
           {/* Header do Modal */}
-          <View className="bg-amber-500 pt-14 pb-6 px-6">
+          <View style={{ backgroundColor: colors.headerBackground }} className="pt-14 pb-6 px-6">
             <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-2xl font-bold text-white">Limitações da API</Text>
+              <Text style={{ color: colors.headerText }} className="text-2xl font-bold">Limitações da API</Text>
               <TouchableOpacity
                 onPress={() => setShowLimitacoes(false)}
                 className="w-8 h-8 items-center justify-center"
               >
-                <Ionicons name="close" size={28} color="white" />
+                <Ionicons name="close" size={28} color={colors.headerText} />
               </TouchableOpacity>
             </View>
-            <Text className="text-white text-base opacity-90">
+            <Text style={{ color: theme === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.9)' }} className="text-base">
               Entenda o que pode ou não ser editado no aplicativo
             </Text>
           </View>
 
           <ScrollView className="flex-1 px-6 pt-6">
             {/* Introdução */}
-            <View className="bg-amber-50 rounded-2xl p-5 mb-6 border border-amber-200">
+            <View style={{ backgroundColor: theme === 'dark' ? 'rgba(245, 158, 11, 0.1)' : '#fffbeb', borderColor: theme === 'dark' ? 'rgba(245, 158, 11, 0.3)' : '#fde68a' }} className="rounded-2xl p-5 mb-6 border">
               <View className="flex-row items-start">
                 <Ionicons name="information-circle" size={24} color="#f59e0b" />
                 <View className="flex-1 ml-3">
-                  <Text className="text-base font-bold text-gray-800 mb-2">Por que essas limitações?</Text>
-                  <Text className="text-sm text-gray-700 leading-6">
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold mb-2">Por que essas limitações?</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-sm leading-6">
                     O aplicativo se conecta diretamente à API do MK-Auth instalada no seu servidor. 
                     As funcionalidades disponíveis dependem do que a API permite. Algumas operações 
                     estão restritas pela própria API do sistema.
@@ -879,14 +899,14 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="construct" size={24} color="#ef4444" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Chamados</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Chamados</Text>
               </View>
 
               {/* O que pode editar */}
-              <View className="bg-green-50 rounded-xl p-4 mb-3 border border-green-200">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(16, 185, 129, 0.1)' : '#f0fdf4', borderColor: theme === 'dark' ? 'rgba(16, 185, 129, 0.3)' : '#bbf7d0' }} className="rounded-xl p-4 mb-3 border">
                 <View className="flex-row items-center mb-3">
                   <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-                  <Text className="text-base font-bold text-gray-800 ml-2">Pode Editar:</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold ml-2">Pode Editar:</Text>
                 </View>
                 <View className="space-y-2">
                   <LimitationItem
@@ -908,10 +928,10 @@ export default function ConfiguracoesScreen() {
               </View>
 
               {/* O que NÃO pode editar */}
-              <View className="bg-red-50 rounded-xl p-4 border border-red-200">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2', borderColor: theme === 'dark' ? 'rgba(239, 68, 68, 0.3)' : '#fecaca' }} className="rounded-xl p-4 border">
                 <View className="flex-row items-center mb-3">
                   <Ionicons name="close-circle" size={20} color="#ef4444" />
-                  <Text className="text-base font-bold text-gray-800 ml-2">NÃO Pode Editar:</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold ml-2">NÃO Pode Editar:</Text>
                 </View>
                 <View className="space-y-2">
                   <LimitationItem
@@ -946,14 +966,14 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="home" size={24} color="#10b981" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Instalações</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Instalações</Text>
               </View>
 
               {/* O que pode editar */}
-              <View className="bg-green-50 rounded-xl p-4 mb-3 border border-green-200">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(16, 185, 129, 0.1)' : '#f0fdf4', borderColor: theme === 'dark' ? 'rgba(16, 185, 129, 0.3)' : '#bbf7d0' }} className="rounded-xl p-4 mb-3 border">
                 <View className="flex-row items-center mb-3">
                   <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-                  <Text className="text-base font-bold text-gray-800 ml-2">Pode Editar:</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold ml-2">Pode Editar:</Text>
                 </View>
                 <View className="space-y-2">
                   <LimitationItem
@@ -990,10 +1010,10 @@ export default function ConfiguracoesScreen() {
               </View>
 
               {/* O que NÃO pode editar */}
-              <View className="bg-red-50 rounded-xl p-4 mb-3 border border-red-200">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2', borderColor: theme === 'dark' ? 'rgba(239, 68, 68, 0.3)' : '#fecaca' }} className="rounded-xl p-4 mb-3 border">
                 <View className="flex-row items-center mb-3">
                   <Ionicons name="close-circle" size={20} color="#ef4444" />
-                  <Text className="text-base font-bold text-gray-800 ml-2">NÃO Pode Editar:</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold ml-2">NÃO Pode Editar:</Text>
                 </View>
                 <View className="space-y-2">
                   <LimitationItem
@@ -1006,14 +1026,14 @@ export default function ConfiguracoesScreen() {
               </View>
 
               {/* Nota sobre edição */}
-              <View className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff', borderColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe' }} className="rounded-xl p-4 border">
                 <View className="flex-row items-start">
                   <Ionicons name="information-circle" size={20} color="#3b82f6" className="mr-2 mt-0.5" />
                   <View className="flex-1">
-                    <Text className="text-sm font-semibold text-gray-800 mb-2">
+                    <Text style={{ color: colors.cardTextPrimary }} className="text-sm font-semibold mb-2">
                       API Flexível
                     </Text>
-                    <Text className="text-xs text-gray-600 leading-5">
+                    <Text style={{ color: colors.cardTextSecondary }} className="text-xs leading-5">
                       A API de instalações permite editar praticamente qualquer campo. 
                       No app, disponibilizamos edição dos campos mais usados no dia a dia. 
                       Para alterações complexas (endereço, dados cadastrais), use o painel web.
@@ -1027,20 +1047,20 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="people" size={24} color="#8b5cf6" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Clientes</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Clientes</Text>
               </View>
 
-              <View className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(139, 92, 246, 0.1)' : '#faf5ff', borderColor: theme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : '#e9d5ff' }} className="rounded-xl p-4 border">
                 <View className="flex-row items-center mb-3">
                   <Ionicons name="eye" size={20} color="#8b5cf6" />
-                  <Text className="text-base font-bold text-gray-800 ml-2">Modo Somente Leitura:</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold ml-2">Modo Somente Leitura:</Text>
                 </View>
-                <Text className="text-sm text-gray-700 leading-6 mb-3">
+                <Text style={{ color: colors.cardTextPrimary }} className="text-sm leading-6 mb-3">
                   Todos os dados de clientes são <Text className="font-bold">somente para consulta</Text>. 
                   O app não permite criar, editar ou excluir clientes.
                 </Text>
-                <View className="bg-white rounded-lg p-3 border border-purple-200">
-                  <Text className="text-xs text-gray-600">
+                <View style={{ backgroundColor: colors.cardBackground, borderColor: theme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : '#e9d5ff' }} className="rounded-lg p-3 border">
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs">
                     💡 <Text className="font-semibold">Dica:</Text> Use o app para consultar rapidamente 
                     informações durante atendimentos. Para alterações cadastrais, acesse o painel web.
                   </Text>
@@ -1052,15 +1072,15 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="person" size={24} color="#10b981" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Usuários/Funcionários</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Usuários/Funcionários</Text>
               </View>
 
-              <View className="bg-green-50 rounded-xl p-4 border border-green-200">
+              <View style={{ backgroundColor: theme === 'dark' ? 'rgba(16, 185, 129, 0.1)' : '#f0fdf4', borderColor: theme === 'dark' ? 'rgba(16, 185, 129, 0.3)' : '#bbf7d0' }} className="rounded-xl p-4 border">
                 <View className="flex-row items-center mb-3">
                   <Ionicons name="eye" size={20} color="#10b981" />
-                  <Text className="text-base font-bold text-gray-800 ml-2">Visualização Limitada:</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-bold ml-2">Visualização Limitada:</Text>
                 </View>
-                <Text className="text-sm text-gray-700 leading-6">
+                <Text style={{ color: colors.cardTextPrimary }} className="text-sm leading-6">
                   Você pode consultar informações básicas de usuários/funcionários, mas 
                   não pode criar, editar permissões ou gerenciar contas. Isso deve ser feito 
                   pelo administrador no painel do MK-Auth.
@@ -1072,7 +1092,7 @@ export default function ConfiguracoesScreen() {
             <View className="mb-6">
               <View className="flex-row items-center mb-4">
                 <Ionicons name="bulb" size={24} color="#f59e0b" />
-                <Text className="text-lg font-bold text-gray-800 ml-2">Como Contornar?</Text>
+                <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold ml-2">Como Contornar?</Text>
               </View>
 
               <View className="space-y-3">
@@ -1095,14 +1115,14 @@ export default function ConfiguracoesScreen() {
             </View>
 
             {/* Nota Final */}
-            <View className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
+            <View style={{ backgroundColor: colors.searchInputBackground, borderColor: colors.cardBorder }} className="rounded-xl p-4 mb-6 border">
               <View className="flex-row items-start">
-                <Ionicons name="shield-checkmark" size={20} color="#6b7280" className="mr-2 mt-0.5" />
+                <Ionicons name="shield-checkmark" size={20} color={colors.cardTextSecondary} className="mr-2 mt-0.5" />
                 <View className="flex-1">
-                  <Text className="text-sm font-semibold text-gray-800 mb-2">
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-sm font-semibold mb-2">
                     Essas limitações são por design
                   </Text>
-                  <Text className="text-xs text-gray-600 leading-5">
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs leading-5">
                     O aplicativo foi desenvolvido para operações de campo dos técnicos. Operações 
                     administrativas e alterações sensíveis permanecem restritas ao painel web por 
                     questões de segurança e controle.
@@ -1155,28 +1175,30 @@ const styles = StyleSheet.create({
 });
 
 // Componente para Info Row no modal de perfil
-function InfoRow({ 
+function LocalInfoRow({ 
   label, 
   value, 
   icon, 
   mono = false,
-  valueColor 
+  valueColor,
+  colors
 }: { 
   label: string; 
   value?: string; 
   icon: string; 
   mono?: boolean;
   valueColor?: string;
+  colors: typeof Colors.light;
 }) {
   return (
     <View className="flex-row items-center">
-      <Ionicons name={icon as any} size={18} color="#6b7280" />
+      <Ionicons name={icon as any} size={18} color={colors.cardTextSecondary} />
       <View className="flex-1 ml-3">
-        <Text className="text-xs text-gray-500 mb-0.5">{label}</Text>
+        <Text style={{ color: colors.cardTextSecondary }} className="text-xs mb-0.5">{label}</Text>
         <Text 
           style={{ 
             fontFamily: mono ? 'monospace' : undefined,
-            color: valueColor || '#1f2937',
+            color: valueColor || colors.cardTextPrimary,
             fontSize: 14,
           }}
           className="font-medium"
@@ -1304,7 +1326,8 @@ function ProfileInfoItem({
   value, 
   mono = false,
   copyable = false,
-  showBorder = true
+  showBorder = true,
+  colors
 }: { 
   icon: string; 
   label: string; 
@@ -1312,26 +1335,28 @@ function ProfileInfoItem({
   mono?: boolean;
   copyable?: boolean;
   showBorder?: boolean;
+  colors: typeof Colors.light;
 }) {
   return (
-    <View className={`p-4 ${showBorder ? 'border-b border-gray-100' : ''}`}>
+    <View style={showBorder ? { borderBottomWidth: 1, borderBottomColor: colors.cardBorder } : undefined} className="p-4">
       <View className="flex-row items-center">
-        <Ionicons name={icon as any} size={20} color="#6b7280" />
+        <Ionicons name={icon as any} size={20} color={colors.cardTextSecondary} />
         <View className="flex-1 ml-3">
-          <Text className="text-xs text-gray-500 mb-1">{label}</Text>
+          <Text style={{ color: colors.cardTextSecondary }} className="text-xs mb-1">{label}</Text>
           <Text 
             style={{ 
               fontFamily: mono ? 'monospace' : undefined,
               fontSize: 14,
+              color: colors.cardTextPrimary,
             }}
-            className="text-gray-800 font-medium"
+            className="font-medium"
           >
             {value || 'Não disponível'}
           </Text>
         </View>
         {copyable && value && (
           <TouchableOpacity className="ml-2">
-            <Ionicons name="copy-outline" size={18} color="#6b7280" />
+            <Ionicons name="copy-outline" size={18} color={colors.cardTextSecondary} />
           </TouchableOpacity>
         )}
       </View>

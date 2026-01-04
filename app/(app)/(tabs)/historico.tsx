@@ -2,6 +2,7 @@ import { ChamadoCard } from '@/components/chamado/ChamadoCard';
 import { InstalacaoCard } from '@/components/instalacao/InstalacaoCard';
 import { FilterPill, FilterPillOption } from '@/components/ui/filter-pill';
 import { ThemedView } from '@/components/ui/themed-view';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useHistorico, useInvalidateHistorico } from '@/hooks/historico';
 import { isChamado, isInstalacao } from '@/services/api/agenda';
 import { Chamado } from '@/types/chamado';
@@ -16,6 +17,7 @@ type FiltroFechado = 'hoje' | 'ontem' | 'ultimos_7_dias';
 export default function HistoricoScreen() {
   const { data: historico, isLoading, isFetching, error } = useHistorico();
   const { invalidate } = useInvalidateHistorico();
+  const { colors } = useTheme();
   const [filtroFechado, setFiltroFechado] = useState<FiltroFechado>('hoje');
   const router = useRouter();
 
@@ -65,20 +67,20 @@ export default function HistoricoScreen() {
 
   if (isLoading && !historico) {
     return (
-      <SafeAreaView className="flex-1 bg-white justify-center items-center">
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#16a34a" />
-        <Text className="text-gray-600 mt-4">Carregando histórico...</Text>
+        <Text style={{ color: colors.cardTextSecondary, marginTop: 16 }}>Carregando histórico...</Text>
       </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView className="flex-1 bg-white justify-center items-center p-6">
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
         <Text className="text-red-500 text-lg font-semibold mb-2">
           Erro ao carregar histórico
         </Text>
-        <Text className="text-gray-600 text-center mb-4">
+        <Text style={{ color: colors.cardTextSecondary }} className="text-center mb-4">
           {error.message}
         </Text>
         <TouchableOpacity

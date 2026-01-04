@@ -2,6 +2,7 @@ import { ChamadoCard } from '@/components/chamado/ChamadoCard';
 import { InstalacaoCard } from '@/components/instalacao/InstalacaoCard';
 import { FilterPill, FilterPillOption } from '@/components/ui/filter-pill';
 import { ThemedView } from '@/components/ui/themed-view';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useAgenda, useInvalidateAgenda } from '@/hooks/agenda';
 import { isChamado, isInstalacao } from '@/services/api/agenda';
 import { Chamado } from '@/types/chamado';
@@ -16,6 +17,7 @@ type FiltroCategoria = 'todos' | 'atrasado' | 'hoje' | 'amanha' | 'proximo' | 's
 export default function AgendaScreen() {
   const { data: servicos, isLoading, isFetching, error } = useAgenda();
   const { invalidate } = useInvalidateAgenda();
+  const { colors } = useTheme();
   const [filtroAtivo, setFiltroAtivo] = useState<FiltroCategoria>('todos');
   const router = useRouter();
 
@@ -115,20 +117,20 @@ export default function AgendaScreen() {
 
   if (isLoading && !servicos) {
     return (
-      <SafeAreaView className="flex-1 bg-white justify-center items-center">
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="text-gray-600 mt-4">Carregando agenda...</Text>
+        <Text style={{ color: colors.cardTextSecondary, marginTop: 16 }}>Carregando agenda...</Text>
       </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView className="flex-1 bg-white justify-center items-center p-6">
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
         <Text className="text-red-500 text-lg font-semibold mb-2">
           Erro ao carregar agenda
         </Text>
-        <Text className="text-gray-600 text-center mb-4">
+        <Text style={{ color: colors.cardTextSecondary }} className="text-center mb-4">
           {error.message}
         </Text>
         <TouchableOpacity

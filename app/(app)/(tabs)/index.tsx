@@ -1,4 +1,5 @@
 import { ThemedView } from '@/components/ui/themed-view';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +9,7 @@ import { Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { theme, colors } = useTheme();
   const { ipMkAuth } = useAuthStore();
   const { clearIdentification, currentUser } = useUserStore();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -58,75 +60,78 @@ export default function HomeScreen() {
           <View className="p-6">
           {/* Greeting Card */}
           {currentUser && (
-            <View className="bg-blue-600 rounded-2xl p-6 mb-4 shadow-lg">
-              <Text className="text-white text-3xl font-bold mb-2">
+            <View className="bg-blue-600 rounded-xl p-4 mb-4 shadow-lg">
+              <Text className="text-white text-xl font-bold mb-1">
                 {greeting}! 👋
               </Text>
-              <Text className="text-white text-base">
+              <Text className="text-white text-sm">
                 {currentUser.nome.split(' ')[0]}, pronto para começar?
               </Text>
             </View>
           )}
 
           {/* Connection Badge */}
-          <View className="bg-white rounded-xl p-4 mb-6 shadow-sm border border-gray-100 flex-row items-center justify-between">
+          <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="rounded-lg p-3 mb-4 shadow-sm border flex-row items-center justify-between">
             <View className="flex-row items-center">
-              <View className="w-2 h-2 bg-green-500 rounded-full mr-3" />
-              <Text className="text-gray-600 text-sm font-medium">Conectado</Text>
+              <View className="w-2 h-2 bg-green-500 rounded-full mr-2" />
+              <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-medium">Conectado</Text>
             </View>
-            <Text className="text-gray-900 font-semibold text-sm">{ipMkAuth}</Text>
+            <Text style={{ color: colors.cardTextPrimary }} className="font-medium text-xs">{ipMkAuth}</Text>
           </View>
 
           {/* Navigation Cards */}
-          <View className="gap-4 mb-6">
+          <View className="gap-3 mb-4">
             {/* Agenda Card */}
             <TouchableOpacity
               onPress={() => router.push('/(app)/(tabs)/agenda')}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 active:bg-gray-50"
+              style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }}
+              className="rounded-xl p-4 shadow-sm border"
             >
               <View className="flex-row items-center">
-                <View className="bg-blue-100 w-14 h-14 rounded-full items-center justify-center mr-4">
-                  <Ionicons name="calendar" size={28} color="#3b82f6" />
+                <View style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe' }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="calendar" size={20} color="#3b82f6" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-gray-900 text-xl font-bold mb-1">Minha Agenda</Text>
-                  <Text className="text-gray-500 text-sm">Veja seus agendamentos</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-semibold">Minha Agenda</Text>
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs">Veja seus agendamentos</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
+                <Ionicons name="chevron-forward" size={20} color={colors.cardTextSecondary} />
               </View>
             </TouchableOpacity>
 
             {/* Clientes Card */}
             <TouchableOpacity
               onPress={() => router.push('/(app)/(tabs)/clientes')}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 active:bg-gray-50"
+              style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }}
+              className="rounded-xl p-4 shadow-sm border"
             >
               <View className="flex-row items-center">
-                <View className="bg-green-100 w-14 h-14 rounded-full items-center justify-center mr-4">
-                  <Ionicons name="people" size={28} color="#10b981" />
+                <View style={{ backgroundColor: theme === 'dark' ? 'rgba(16, 185, 129, 0.2)' : '#d1fae5' }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="people" size={20} color="#10b981" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-gray-900 text-xl font-bold mb-1">Clientes</Text>
-                  <Text className="text-gray-500 text-sm">Buscar e gerenciar</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-semibold">Clientes</Text>
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs">Buscar e gerenciar</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
+                <Ionicons name="chevron-forward" size={20} color={colors.cardTextSecondary} />
               </View>
             </TouchableOpacity>
 
             {/* Histórico Card */}
             <TouchableOpacity
               onPress={() => router.push('/(app)/(tabs)/historico')}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 active:bg-gray-50"
+              style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }}
+              className="rounded-xl p-4 shadow-sm border"
             >
               <View className="flex-row items-center">
-                <View className="bg-purple-100 w-14 h-14 rounded-full items-center justify-center mr-4">
-                  <Ionicons name="time" size={28} color="#8b5cf6" />
+                <View style={{ backgroundColor: theme === 'dark' ? 'rgba(139, 92, 246, 0.2)' : '#ede9fe' }} className="w-10 h-10 rounded-full items-center justify-center mr-3">
+                  <Ionicons name="time" size={20} color="#8b5cf6" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-gray-900 text-xl font-bold mb-1">Histórico</Text>
-                  <Text className="text-gray-500 text-sm">Chamados finalizados</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-base font-semibold">Histórico</Text>
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs">Chamados finalizados</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
+                <Ionicons name="chevron-forward" size={20} color={colors.cardTextSecondary} />
               </View>
             </TouchableOpacity>
           </View>
@@ -146,10 +151,10 @@ export default function HomeScreen() {
           onPress={() => setShowProfileMenu(false)}
           className="flex-1 bg-black/50 justify-start items-end pt-16 pr-4"
         >
-          <View className="bg-white rounded-2xl shadow-2xl w-80">
+          <View style={{ backgroundColor: colors.cardBackground }} className="rounded-2xl shadow-2xl w-80">
             {/* Profile Header */}
             {currentUser && (
-              <View className="p-6 border-b border-gray-100">
+              <View style={{ borderBottomColor: colors.cardBorder }} className="p-6 border-b">
                 <View className="flex-row items-center mb-3">
                   <View className="w-16 h-16 bg-blue-500 rounded-full items-center justify-center mr-4">
                     <Text className="text-white text-2xl font-bold">
@@ -157,15 +162,15 @@ export default function HomeScreen() {
                     </Text>
                   </View>
                   <View className="flex-1">
-                    <Text className="text-gray-900 text-lg font-bold">
+                    <Text style={{ color: colors.cardTextPrimary }} className="text-lg font-bold">
                       {currentUser.nome}
                     </Text>
-                    <Text className="text-gray-500 text-sm">
+                    <Text style={{ color: colors.cardTextSecondary }} className="text-sm">
                       @{currentUser.login}
                     </Text>
                   </View>
                 </View>
-                <Text className="text-gray-400 text-xs">
+                <Text style={{ color: theme === 'dark' ? '#64748b' : '#9ca3af' }} className="text-xs">
                   {currentUser.email}
                 </Text>
               </View>
@@ -175,26 +180,26 @@ export default function HomeScreen() {
             <View className="py-2">
               <TouchableOpacity
                 onPress={handleSwitchUser}
-                className="flex-row items-center px-6 py-4 active:bg-gray-50"
+                className="flex-row items-center px-6 py-4"
               >
-                <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center mr-4">
+                <View style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe' }} className="w-10 h-10 rounded-full items-center justify-center mr-4">
                   <Ionicons name="swap-horizontal" size={20} color="#3b82f6" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-gray-900 font-semibold">Trocar Usuário</Text>
-                  <Text className="text-gray-500 text-xs">Fazer login com outro usuário</Text>
+                  <Text style={{ color: colors.cardTextPrimary }} className="font-semibold">Trocar Usuário</Text>
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs">Fazer login com outro usuário</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+                <Ionicons name="chevron-forward" size={20} color={colors.cardTextSecondary} />
               </TouchableOpacity>
             </View>
 
             {/* Footer */}
-            <View className="border-t border-gray-100 p-4 bg-gray-50 rounded-b-2xl">
+            <View style={{ borderTopColor: colors.cardBorder, backgroundColor: theme === 'dark' ? colors.screenBackground : '#f9fafb' }} className="border-t p-4 rounded-b-2xl">
               <View className="flex-row items-center justify-center mb-1">
-                <Ionicons name="construct" size={14} color="#9ca3af" />
-                <Text className="text-gray-600 text-xs font-semibold ml-2">MK-Edge</Text>
+                <Ionicons name="construct" size={14} color={colors.cardTextSecondary} />
+                <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold ml-2">MK-Edge</Text>
               </View>
-              <Text className="text-gray-400 text-xs text-center">
+              <Text style={{ color: theme === 'dark' ? '#64748b' : '#9ca3af' }} className="text-xs text-center">
                 v1.0.0 • {ipMkAuth}
               </Text>
             </View>
