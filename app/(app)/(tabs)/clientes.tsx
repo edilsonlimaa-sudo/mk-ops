@@ -1,3 +1,4 @@
+import { FilterPill, FilterPillOption } from '@/components/ui/filter-pill';
 import { useClients, useInvalidateClients } from '@/hooks/cliente';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -47,25 +48,25 @@ export default function ClientesScreen() {
   });
 
   // Define filtros disponíveis
-  const filtros = [
-    { key: 'todos' as const, label: 'Todos', emoji: '📋', count: clients?.length || 0 },
+  const filtros: FilterPillOption<FiltroCliente>[] = [
+    { key: 'todos', label: 'Todos', emoji: '📋', count: clients?.length || 0 },
     { 
-      key: 'ativos' as const, 
+      key: 'ativos', 
       label: 'Ativos', 
       emoji: '✅', 
-      count: clients?.filter(c => c.cli_ativado === 's').length || 0 
+      count: clients?.filter(c => c.cli_ativado === 's').length || 0
     },
     { 
-      key: 'bloqueados' as const, 
+      key: 'bloqueados', 
       label: 'Bloqueados', 
       emoji: '🚫', 
-      count: clients?.filter(c => c.cli_ativado === 's' && c.bloqueado === 'sim').length || 0 
+      count: clients?.filter(c => c.cli_ativado === 's' && c.bloqueado === 'sim').length || 0
     },
     { 
-      key: 'inativos' as const, 
+      key: 'inativos', 
       label: 'Inativos', 
       emoji: '😴', 
-      count: clients?.filter(c => c.cli_ativado === 'n').length || 0 
+      count: clients?.filter(c => c.cli_ativado === 'n').length || 0
     },
   ];
 
@@ -117,43 +118,12 @@ export default function ClientesScreen() {
           className="mb-3"
         >
           {filtros.map((filtro) => (
-            <TouchableOpacity
+            <FilterPill
               key={filtro.key}
-              onPress={() => setFiltroAtivo(filtro.key)}
-              className={`flex-row items-center px-3 py-2 rounded-full ${
-                filtroAtivo === filtro.key
-                  ? filtro.key === 'bloqueados'
-                    ? 'bg-red-600'
-                    : filtro.key === 'ativos'
-                    ? 'bg-green-600'
-                    : 'bg-blue-600'
-                  : 'bg-gray-100'
-              }`}
-            >
-              <Text className="text-sm mr-1">{filtro.emoji}</Text>
-              <Text
-                className={`text-sm font-semibold ${
-                  filtroAtivo === filtro.key ? 'text-white' : 'text-gray-700'
-                }`}
-              >
-                {filtro.label}
-              </Text>
-              {filtro.count > 0 && (
-                <View
-                  className={`ml-1.5 px-1.5 py-0.5 rounded-full ${
-                    filtroAtivo === filtro.key ? 'bg-white/30' : 'bg-gray-200'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-bold ${
-                      filtroAtivo === filtro.key ? 'text-white' : 'text-gray-700'
-                    }`}
-                  >
-                    {filtro.count}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
+              option={filtro}
+              isActive={filtroAtivo === filtro.key}
+              onPress={setFiltroAtivo}
+            />
           ))}
         </ScrollView>
 

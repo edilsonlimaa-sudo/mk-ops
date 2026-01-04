@@ -1,3 +1,4 @@
+import { FilterPill, FilterPillOption } from '@/components/ui/filter-pill';
 import { useAgenda, useInvalidateAgenda } from '@/hooks/agenda';
 import { isChamado, isInstalacao } from '@/services/api/agenda';
 import { Chamado } from '@/types/chamado';
@@ -47,37 +48,37 @@ export default function AgendaScreen() {
   const servicosOrganizados = servicos || [];
 
   // Define filtros disponíveis
-  const filtros = [
-    { key: 'todos' as const, label: 'Todos', emoji: '📋', count: servicosOrganizados.length },
+  const filtros: FilterPillOption<FiltroCategoria>[] = [
+    { key: 'todos', label: 'Todos', emoji: '📋', count: servicosOrganizados.length },
     { 
-      key: 'atrasado' as const, 
+      key: 'atrasado', 
       label: 'Atrasados', 
       emoji: '🚨', 
-      count: servicosOrganizados.filter(s => categorizarVisita(s.visita) === 'atrasado').length 
+      count: servicosOrganizados.filter(s => categorizarVisita(s.visita) === 'atrasado').length
     },
     { 
-      key: 'hoje' as const, 
+      key: 'hoje', 
       label: 'Hoje', 
       emoji: '⚡', 
-      count: servicosOrganizados.filter(s => categorizarVisita(s.visita) === 'hoje').length 
+      count: servicosOrganizados.filter(s => categorizarVisita(s.visita) === 'hoje').length
     },
     { 
-      key: 'amanha' as const, 
+      key: 'amanha', 
       label: 'Amanhã', 
       emoji: '📅', 
-      count: servicosOrganizados.filter(s => categorizarVisita(s.visita) === 'amanha').length 
+      count: servicosOrganizados.filter(s => categorizarVisita(s.visita) === 'amanha').length
     },
     { 
-      key: 'proximo' as const, 
+      key: 'proximo', 
       label: 'Próximos', 
       emoji: '🗓️', 
-      count: servicosOrganizados.filter(s => categorizarVisita(s.visita) === 'proximo').length 
+      count: servicosOrganizados.filter(s => categorizarVisita(s.visita) === 'proximo').length
     },
     { 
-      key: 'sem_agendamento' as const, 
+      key: 'sem_agendamento', 
       label: 'Sem data', 
       emoji: '❓', 
-      count: servicosOrganizados.filter(s => categorizarVisita(s.visita) === 'sem_agendamento').length 
+      count: servicosOrganizados.filter(s => categorizarVisita(s.visita) === 'sem_agendamento').length
     },
   ];
 
@@ -160,47 +161,12 @@ export default function AgendaScreen() {
           contentContainerStyle={{ gap: 8 }}
         >
           {filtros.map((filtro) => (
-            <TouchableOpacity
+            <FilterPill
               key={filtro.key}
-              onPress={() => setFiltroAtivo(filtro.key)}
-              className={`flex-row items-center px-3 py-2 rounded-full ${
-                filtroAtivo === filtro.key
-                  ? filtro.key === 'atrasado'
-                    ? 'bg-red-500'
-                    : filtro.key === 'hoje'
-                    ? 'bg-orange-500'
-                    : filtro.key === 'amanha'
-                    ? 'bg-yellow-500'
-                    : filtro.key === 'proximo'
-                    ? 'bg-blue-500'
-                    : 'bg-gray-700'
-                  : 'bg-gray-100'
-              }`}
-            >
-              <Text className="text-sm mr-1">{filtro.emoji}</Text>
-              <Text
-                className={`text-sm font-semibold ${
-                  filtroAtivo === filtro.key ? 'text-white' : 'text-gray-700'
-                }`}
-              >
-                {filtro.label}
-              </Text>
-              {filtro.count > 0 && (
-                <View
-                  className={`ml-1.5 px-1.5 py-0.5 rounded-full ${
-                    filtroAtivo === filtro.key ? 'bg-white/30' : 'bg-gray-200'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-bold ${
-                      filtroAtivo === filtro.key ? 'text-white' : 'text-gray-700'
-                    }`}
-                  >
-                    {filtro.count}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
+              option={filtro}
+              isActive={filtroAtivo === filtro.key}
+              onPress={setFiltroAtivo}
+            />
           ))}
         </ScrollView>
       </View>

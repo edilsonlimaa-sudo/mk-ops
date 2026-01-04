@@ -1,3 +1,4 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +11,7 @@ export default function ConfiguracoesScreen() {
   const router = useRouter();
   const { ipMkAuth, logout } = useAuthStore();
   const { currentUser, clearIdentification } = useUserStore();
+  const { mode, setMode } = useTheme();
   const [showSobre, setShowSobre] = useState(false);
   const [showAjuda, setShowAjuda] = useState(false);
   const [showPerfil, setShowPerfil] = useState(false);
@@ -88,6 +90,62 @@ export default function ConfiguracoesScreen() {
 
         {/* Configurações */}
         <View className="mt-6 mx-4">
+          <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 ml-1">
+            Aparência
+          </Text>
+          
+          {/* Card de tema */}
+          <View className="bg-white rounded-2xl overflow-hidden shadow-sm mb-6">
+            {/* Tema Claro */}
+            <TouchableOpacity
+              onPress={() => setMode('light')}
+              className="flex-row items-center p-4 border-b border-gray-100 active:bg-gray-50"
+            >
+              <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${mode === 'light' ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                <Ionicons name="sunny" size={22} color={mode === 'light' ? '#3b82f6' : '#9ca3af'} />
+              </View>
+              <View className="flex-1">
+                <Text className={`text-base font-semibold ${mode === 'light' ? 'text-blue-600' : 'text-gray-800'}`}>
+                  Modo Claro
+                </Text>
+              </View>
+              {mode === 'light' && <Ionicons name="checkmark-circle" size={24} color="#3b82f6" />}
+            </TouchableOpacity>
+
+            {/* Tema Escuro */}
+            <TouchableOpacity
+              onPress={() => setMode('dark')}
+              className="flex-row items-center p-4 border-b border-gray-100 active:bg-gray-50"
+            >
+              <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${mode === 'dark' ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                <Ionicons name="moon" size={22} color={mode === 'dark' ? '#3b82f6' : '#9ca3af'} />
+              </View>
+              <View className="flex-1">
+                <Text className={`text-base font-semibold ${mode === 'dark' ? 'text-blue-600' : 'text-gray-800'}`}>
+                  Modo Escuro
+                </Text>
+              </View>
+              {mode === 'dark' && <Ionicons name="checkmark-circle" size={24} color="#3b82f6" />}
+            </TouchableOpacity>
+
+            {/* Automático */}
+            <TouchableOpacity
+              onPress={() => setMode('auto')}
+              className="flex-row items-center p-4 active:bg-gray-50"
+            >
+              <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${mode === 'auto' ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                <Ionicons name="phone-portrait" size={22} color={mode === 'auto' ? '#3b82f6' : '#9ca3af'} />
+              </View>
+              <View className="flex-1">
+                <Text className={`text-base font-semibold ${mode === 'auto' ? 'text-blue-600' : 'text-gray-800'}`}>
+                  Padrão do Sistema
+                </Text>
+                <Text className="text-sm text-gray-500">Segue o tema do dispositivo</Text>
+              </View>
+              {mode === 'auto' && <Ionicons name="checkmark-circle" size={24} color="#3b82f6" />}
+            </TouchableOpacity>
+          </View>
+
           <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 ml-1">
             Informações
           </Text>

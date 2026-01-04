@@ -1,3 +1,4 @@
+import { FilterPill, FilterPillOption } from '@/components/ui/filter-pill';
 import { useHistorico, useInvalidateHistorico } from '@/hooks/historico';
 import { isChamado, isInstalacao } from '@/services/api/agenda';
 import { Chamado } from '@/types/chamado';
@@ -53,10 +54,10 @@ export default function HistoricoScreen() {
     return categoria === filtroFechado;
   }) || [];
 
-  const filtros = [
-    { key: 'hoje' as const, label: 'Hoje', emoji: '📅', count: historico?.filter(item => categorizarFechamento(item) === 'hoje').length || 0 },
-    { key: 'ontem' as const, label: 'Ontem', emoji: '🕐', count: historico?.filter(item => categorizarFechamento(item) === 'ontem').length || 0 },
-    { key: 'ultimos_7_dias' as const, label: 'Últimos 7 dias', emoji: '📆', count: historico?.filter(item => categorizarFechamento(item) === 'ultimos_7_dias').length || 0 },
+  const filtros: FilterPillOption<FiltroFechado>[] = [
+    { key: 'hoje', label: 'Hoje', emoji: '📅', count: historico?.filter(item => categorizarFechamento(item) === 'hoje').length || 0 },
+    { key: 'ontem', label: 'Ontem', emoji: '🕐', count: historico?.filter(item => categorizarFechamento(item) === 'ontem').length || 0 },
+    { key: 'ultimos_7_dias', label: 'Últimos 7 dias', emoji: '📆', count: historico?.filter(item => categorizarFechamento(item) === 'ultimos_7_dias').length || 0 },
   ];
 
   const formatarDataHora = (dataStr: string | null) => {
@@ -123,33 +124,12 @@ export default function HistoricoScreen() {
           contentContainerStyle={{ gap: 8 }}
         >
           {filtros.map((filtro) => (
-            <TouchableOpacity
+            <FilterPill
               key={filtro.key}
-              onPress={() => setFiltroFechado(filtro.key)}
-              className={`flex-row items-center px-3 py-2 rounded-full ${filtroFechado === filtro.key ? 'bg-green-600' : 'bg-gray-100'
-                }`}
-            >
-              <Text className="text-sm mr-1">{filtro.emoji}</Text>
-              <Text
-                className={`text-sm font-semibold ${filtroFechado === filtro.key ? 'text-white' : 'text-gray-700'
-                  }`}
-              >
-                {filtro.label}
-              </Text>
-              {filtro.count > 0 && (
-                <View
-                  className={`ml-1.5 px-1.5 py-0.5 rounded-full ${filtroFechado === filtro.key ? 'bg-white/30' : 'bg-gray-200'
-                    }`}
-                >
-                  <Text
-                    className={`text-xs font-bold ${filtroFechado === filtro.key ? 'text-white' : 'text-gray-700'
-                      }`}
-                  >
-                    {filtro.count}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
+              option={filtro}
+              isActive={filtroFechado === filtro.key}
+              onPress={setFiltroFechado}
+            />
           ))}
         </ScrollView>
       </View>
