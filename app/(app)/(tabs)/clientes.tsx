@@ -1,5 +1,7 @@
+import { ClienteCard } from '@/components/cliente/ClienteCard';
 import { FilterPill, FilterPillOption } from '@/components/ui/filter-pill';
 import { ThemedView } from '@/components/ui/themed-view';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useClients, useInvalidateClients } from '@/hooks/cliente';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -11,6 +13,7 @@ type FiltroCliente = 'todos' | 'ativos' | 'inativos' | 'bloqueados';
 export default function ClientesScreen() {
   const { data: clients, isLoading, isFetching, error } = useClients();
   const { invalidate } = useInvalidateClients();
+  const { colors } = useTheme();
   const [filtroAtivo, setFiltroAtivo] = useState<FiltroCliente>('todos');
   const [buscaTexto, setBuscaTexto] = useState('');
   const router = useRouter();
@@ -129,12 +132,16 @@ export default function ClientesScreen() {
         </ScrollView>
 
         {/* Campo de Busca */}
-        <View className="flex-row items-center bg-gray-100 rounded-lg px-3 py-2 mt-3">
-          <Text className="text-gray-400 text-lg mr-2">🔍</Text>
+        <View 
+          className="flex-row items-center rounded-lg px-3 py-1.5 mt-3"
+          style={{ backgroundColor: colors.searchInputBackground }}
+        >
+          <Text className="text-base mr-2" style={{ color: colors.searchInputIcon }}>🔍</Text>
           <TextInput
-            className="flex-1 text-gray-900"
+            className="flex-1 text-sm"
+            style={{ color: colors.searchInputText }}
             placeholder="Buscar por nome, celular, CPF..."
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.searchInputPlaceholder}
             value={buscaTexto}
             onChangeText={setBuscaTexto}
             autoCapitalize="none"
@@ -142,7 +149,7 @@ export default function ClientesScreen() {
           />
           {buscaTexto.length > 0 && (
             <TouchableOpacity onPress={() => setBuscaTexto('')} className="ml-2">
-              <Text className="text-gray-400 text-lg">⊗</Text>
+              <Text className="text-base" style={{ color: colors.searchInputIcon }}>⊝</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -164,81 +171,10 @@ export default function ClientesScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <TouchableOpacity
+          <ClienteCard
+            cliente={item}
             onPress={() => router.push(`/detalhes/cliente/${item.uuid_cliente}/`)}
-            activeOpacity={0.7}
-          >
-            <View className="bg-white rounded-lg p-4 mb-3 shadow-sm border-l-4 border-blue-500">
-              {/* Header */}
-              <View className="mb-2">
-                <Text className="text-lg font-semibold text-gray-900">
-                  {item.nome}
-                </Text>
-              </View>
-            
-            {item.cpf_cnpj && (
-              <Text className="text-sm text-gray-600 mt-1">
-                CPF/CNPJ: {item.cpf_cnpj}
-              </Text>
-            )}
-            
-            <View className="flex-row justify-between items-center mt-3 pt-3 border-t border-gray-100">
-              <View>
-                <Text className="text-xs text-gray-500">Plano</Text>
-                <Text className="text-sm font-medium text-gray-900">
-                  {item.plano}
-                </Text>
-              </View>
-              
-              {item.celular && (
-                <View>
-                  <Text className="text-xs text-gray-500">Contato</Text>
-                  <Text className="text-sm text-gray-900">{item.celular}</Text>
-                </View>
-              )}
-            </View>
-
-            <View className="flex-row gap-2 mt-3">
-              {/* Badge Ativação */}
-              <View
-                className={`px-2 py-1 rounded ${
-                  item.cli_ativado === 's'
-                    ? 'bg-green-100'
-                    : 'bg-gray-100'
-                }`}
-              >
-                <Text
-                  className={`text-xs font-medium ${
-                    item.cli_ativado === 's'
-                      ? 'text-green-700'
-                      : 'text-gray-600'
-                  }`}
-                >
-                  {item.cli_ativado === 's' ? 'Ativo' : 'Inativo'}
-                </Text>
-              </View>
-              
-              {/* Badge Bloqueio */}
-              <View
-                className={`px-2 py-1 rounded ${
-                  item.bloqueado === 'sim'
-                    ? 'bg-red-100'
-                    : 'bg-blue-100'
-                }`}
-              >
-                <Text
-                  className={`text-xs font-medium ${
-                    item.bloqueado === 'sim'
-                      ? 'text-red-700'
-                      : 'text-blue-700'
-                  }`}
-                >
-                  {item.bloqueado === 'sim' ? 'Bloqueado' : 'Desbloqueado'}
-                </Text>
-              </View>
-            </View>
-            </View>
-          </TouchableOpacity>
+          />
         )}
       />
     </ThemedView>

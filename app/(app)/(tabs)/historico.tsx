@@ -1,3 +1,5 @@
+import { ChamadoCard } from '@/components/chamado/ChamadoCard';
+import { InstalacaoCard } from '@/components/instalacao/InstalacaoCard';
 import { FilterPill, FilterPillOption } from '@/components/ui/filter-pill';
 import { ThemedView } from '@/components/ui/themed-view';
 import { useHistorico, useInvalidateHistorico } from '@/hooks/historico';
@@ -60,28 +62,6 @@ export default function HistoricoScreen() {
     { key: 'ontem', label: 'Ontem', emoji: '🕐', count: historico?.filter(item => categorizarFechamento(item) === 'ontem').length || 0 },
     { key: 'ultimos_7_dias', label: 'Últimos 7 dias', emoji: '📆', count: historico?.filter(item => categorizarFechamento(item) === 'ultimos_7_dias').length || 0 },
   ];
-
-  const formatarDataHora = (dataStr: string | null) => {
-    if (!dataStr) return null;
-
-    try {
-      const data = new Date(dataStr.replace(' ', 'T'));
-      if (isNaN(data.getTime())) return null;
-
-      const dataFormatada = data.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-      });
-      const horaFormatada = data.toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-
-      return { data: dataFormatada, hora: horaFormatada, completo: `${dataFormatada} às ${horaFormatada}` };
-    } catch {
-      return null;
-    }
-  };
 
   if (isLoading && !historico) {
     return (
@@ -151,105 +131,29 @@ export default function HistoricoScreen() {
           </View>
         }
         renderItem={({ item }) => {
-          const ehChamado = isChamado(item);
-          const ehInstalacao = isInstalacao(item);
-          const dataFechamento = ehChamado 
-            ? (item.fechamento ? formatarDataHora(item.fechamento) : null)
-            : (item.datainst ? formatarDataHora(item.datainst) : null);
+          // Renderiza card de Chamado
+          if (isChamado(item)) {
+            return (
+              <ChamadoCard
+                chamado={item as Chamado}
+                variant="historico"
+                onPress={() => router.push(`/detalhes/chamado/${item.uuid_suporte}`)}
+              />
+            );
+          }
 
-          // Navegação condicional
-          const handlePress = () => {
-            if (ehChamado) {
-              router.push(`/detalhes/chamado/${item.uuid_suporte}`);
-            } else if (ehInstalacao) {
-              router.push(`/detalhes/instalacao/${item.uuid_solic}`);
-            }
-          };
+          // Renderiza card de Instalação
+          if (isInstalacao(item)) {
+            return (
+              <InstalacaoCard
+                instalacao={item as Instalacao}
+                variant="historico"
+                onPress={() => router.push(`/detalhes/instalacao/${item.uuid_solic}`)}
+              />
+            );
+          }
 
-          return (
-            <TouchableOpacity
-              onPress={handlePress}
-              activeOpacity={0.7}
-            >
-              <View className={`bg-white rounded-lg p-3 mb-2 shadow-sm border-l-4 ${ehChamado ? 'border-green-500' : 'border-blue-500'}`}>
-                {/* Header */}
-                <View className="flex-row justify-between items-center mb-2">
-                  <View className="flex-row items-center gap-2">
-                    <View
-                      className={`px-2 py-0.5 rounded ${
-                        ehChamado
-                          ? (item.prioridade === 'alta' || item.prioridade === 'Alta')
-                            ? 'bg-red-500'
-                            : (item.prioridade === 'media' || item.prioridade === 'Média')
-                              ? 'bg-orange-500'
-                              : 'bg-green-500'
-                          : 'bg-blue-500'
-                      }`}
-                    >
-                      <Text className="text-xs font-bold text-white">
-                        {ehChamado ? (item.prioridade?.toUpperCase() || 'NORMAL') : 'INSTALAÇÃO'}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text className="text-xs font-mono text-gray-500">
-                    {ehChamado ? `#${item.chamado}` : `#${item.id}`}
-                  </Text>
-                </View>
-
-                {/* Cliente/Nome */}
-                <View className="mb-2">
-                  <Text className="text-sm font-bold text-gray-900" numberOfLines={1}>
-                    {item.nome || 'Cliente não identificado'}
-                  </Text>
-                  {ehChamado && item.ramal && (
-                    <Text className="text-xs text-gray-500" numberOfLines={1}>
-                      {item.ramal}
-                    </Text>
-                  )}
-                  {ehInstalacao && (
-                    <Text className="text-xs text-gray-500" numberOfLines={1}>
-                      {item.plano}
-                    </Text>
-                  )}
-                </View>
-
-                {/* Assunto/Descrição */}
-                <Text className="text-sm text-gray-700 mb-2" numberOfLines={2}>
-                  {ehChamado 
-                    ? (item.assunto || 'Sem assunto')
-                    : `${item.endereco}, ${item.numero} - ${item.bairro}`
-                  }
-                </Text>
-
-                {/* Motivo fechamento / Status instalação */}
-                {ehChamado && item.motivo_fechar && (
-                  <View className="bg-green-50 px-2 py-1 rounded mb-2">
-                    <Text className="text-xs text-green-700">
-                      ✓ {item.motivo_fechar}
-                    </Text>
-                  </View>
-                )}
-                {ehInstalacao && item.instalado === 'sim' && (
-                  <View className="bg-blue-50 px-2 py-1 rounded mb-2">
-                    <Text className="text-xs text-blue-700">
-                      ✓ Instalação concluída
-                    </Text>
-                  </View>
-                )}
-
-                {/* Footer */}
-                <View className="flex-row justify-between items-center pt-2 border-t border-gray-100">
-                  <Text className="text-xs text-gray-500">
-                    {ehChamado ? 'Fechado: ' : 'Instalado: '}
-                    {dataFechamento?.completo || 'Data não disponível'}
-                  </Text>
-                  <Text className="text-xs text-gray-600" numberOfLines={1}>
-                    {ehChamado ? (item.atendente || 'Não atribuído') : (item.tecnico || 'Não atribuído')}
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          );
+          return null;
         }}
       />
     </ThemedView>

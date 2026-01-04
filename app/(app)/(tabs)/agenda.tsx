@@ -1,3 +1,5 @@
+import { ChamadoCard } from '@/components/chamado/ChamadoCard';
+import { InstalacaoCard } from '@/components/instalacao/InstalacaoCard';
 import { FilterPill, FilterPillOption } from '@/components/ui/filter-pill';
 import { ThemedView } from '@/components/ui/themed-view';
 import { useAgenda, useInvalidateAgenda } from '@/hooks/agenda';
@@ -87,15 +89,6 @@ export default function AgendaScreen() {
   const servicosFiltrados = filtroAtivo === 'todos' 
     ? servicosOrganizados 
     : servicosOrganizados.filter(s => categorizarVisita(s.visita) === filtroAtivo);
-
-  // Define cor da borda com base na categoria
-  const getBorderColor = (categoria: string) => {
-    if (categoria === 'atrasado') return 'border-red-500';
-    if (categoria === 'hoje') return 'border-orange-500';
-    if (categoria === 'amanha') return 'border-yellow-500';
-    if (categoria === 'proximo') return 'border-blue-500';
-    return 'border-gray-400';
-  };
 
   // Formata data com hora
   const formatarDataHora = (dataStr: string | null) => {
@@ -188,155 +181,23 @@ export default function AgendaScreen() {
           </View>
         }
         renderItem={({ item }) => {
-            const categoria = categorizarVisita(item.visita);
-            const borderColor = getBorderColor(categoria);
-
-            // Renderiza card de CHAMADO
+            // Renderiza card de Chamado
             if (isChamado(item)) {
-              const chamado = item as Chamado;
-              const dataAbertura = formatarDataHora(chamado.abertura);
-              const dataVisita = chamado.visita ? formatarDataHora(chamado.visita) : null;
-
               return (
-                <TouchableOpacity
+                <ChamadoCard
+                  chamado={item as Chamado}
                   onPress={() => router.push(`/detalhes/chamado/${item.uuid_suporte}`)}
-                  activeOpacity={0.7}
-                >
-                  <View className={`bg-white rounded-lg p-3 mb-2 shadow-sm border-l-4 ${borderColor}`}>
-                  {/* Badge CHAMADO */}
-                  <View className="flex-row justify-between items-center mb-2">
-                    <View className="flex-row items-center gap-2">
-                      <View className="bg-blue-100 px-2 py-0.5 rounded">
-                        <Text className="text-xs font-bold text-blue-700">CHAMADO</Text>
-                      </View>
-                      <View
-                        className={`px-2 py-0.5 rounded ${
-                          chamado.prioridade === 'alta'
-                            ? 'bg-red-500'
-                            : chamado.prioridade === 'media'
-                            ? 'bg-orange-500'
-                            : 'bg-green-500'
-                        }`}
-                      >
-                        <Text className="text-xs font-bold text-white">
-                          {chamado.prioridade?.toUpperCase() || 'NORMAL'}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text className="text-xs font-mono text-gray-500">
-                      #{chamado.chamado}
-                    </Text>
-                  </View>
-
-                  {/* Cliente e Visita */}
-                  <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-1">
-                      <Text className="text-sm font-bold text-gray-900" numberOfLines={1}>
-                        {chamado.nome || 'Cliente não identificado'}
-                      </Text>
-                      {chamado.ramal && (
-                        <Text className="text-xs text-gray-500" numberOfLines={1}>
-                          {chamado.ramal}
-                        </Text>
-                      )}
-                    </View>
-                    
-                    {dataVisita && (
-                      <View className="bg-gray-100 px-2 py-1 rounded ml-2">
-                        <Text className="text-xs font-bold text-gray-700">
-                          {dataVisita.data} {dataVisita.hora}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Assunto */}
-                  <Text className="text-sm text-gray-700 mb-2" numberOfLines={2}>
-                    {chamado.assunto || 'Sem assunto'}
-                  </Text>
-
-                  {/* Footer */}
-                  <View className="flex-row justify-between items-center pt-2 border-t border-gray-100">
-                    <Text className="text-xs text-gray-500">
-                      Aberto: {dataAbertura?.data}
-                    </Text>
-                    <Text className="text-xs text-gray-600" numberOfLines={1}>
-                      {chamado.atendente || '🔴 Livre'}
-                    </Text>
-                  </View>
-                  </View>
-                </TouchableOpacity>
+                />
               );
             }
 
-            // Renderiza card de INSTALAÇÃO
+            // Renderiza card de Instalação
             if (isInstalacao(item)) {
-              const instalacao = item as Instalacao;
-              const dataProcessamento = formatarDataHora(instalacao.processamento);
-              const dataVisita = instalacao.visita ? formatarDataHora(instalacao.visita) : null;
-
               return (
-                <TouchableOpacity
+                <InstalacaoCard
+                  instalacao={item as Instalacao}
                   onPress={() => router.push(`/detalhes/instalacao/${item.uuid_solic}`)}
-                  activeOpacity={0.7}
-                >
-                  <View className={`bg-white rounded-lg p-3 mb-2 shadow-sm border-l-4 ${borderColor}`}>
-                  {/* Badge INSTALAÇÃO */}
-                  <View className="flex-row justify-between items-center mb-2">
-                    <View className="flex-row items-center gap-2">
-                      <View className="bg-purple-100 px-2 py-0.5 rounded">
-                        <Text className="text-xs font-bold text-purple-700">INSTALAÇÃO</Text>
-                      </View>
-                      <View className="bg-purple-500 px-2 py-0.5 rounded">
-                        <Text className="text-xs font-bold text-white">
-                          {instalacao.plano?.toUpperCase() || 'PLANO'}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text className="text-xs font-mono text-gray-500">
-                      #{instalacao.termo}
-                    </Text>
-                  </View>
-
-                  {/* Cliente e Visita */}
-                  <View className="flex-row items-center justify-between mb-2">
-                    <View className="flex-1">
-                      <Text className="text-sm font-bold text-gray-900" numberOfLines={1}>
-                        {instalacao.nome || 'Cliente não identificado'}
-                      </Text>
-                      <Text className="text-xs text-gray-500" numberOfLines={1}>
-                        {instalacao.celular || 'Sem telefone'}
-                      </Text>
-                    </View>
-                    
-                    {dataVisita && (
-                      <View className="bg-gray-100 px-2 py-1 rounded ml-2">
-                        <Text className="text-xs font-bold text-gray-700">
-                          {dataVisita.data} {dataVisita.hora}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Endereço */}
-                  <View className="bg-purple-50 px-2 py-1 rounded mb-2">
-                    <Text className="text-xs text-purple-700" numberOfLines={2}>
-                      📍 {instalacao.endereco}, {instalacao.numero} - {instalacao.bairro}
-                      {instalacao.complemento ? ` (${instalacao.complemento})` : ''}
-                    </Text>
-                  </View>
-
-                  {/* Footer */}
-                  <View className="flex-row justify-between items-center pt-2 border-t border-gray-100">
-                    <Text className="text-xs text-gray-500">
-                      Solicitado: {dataProcessamento?.data}
-                    </Text>
-                    <Text className="text-xs text-gray-600" numberOfLines={1}>
-                      {instalacao.login_atend || '🔴 Livre'}
-                    </Text>
-                  </View>
-                  </View>
-                </TouchableOpacity>
+                />
               );
             }
 

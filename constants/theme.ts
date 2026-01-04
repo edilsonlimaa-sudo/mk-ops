@@ -19,6 +19,9 @@ export const Colors = {
     // Screen backgrounds
     screenBackground: '#f9fafb',      // gray-50
     cardBackground: '#ffffff',
+    cardBorder: '#e5e7eb',            // gray-200
+    cardTextPrimary: '#111827',       // gray-900
+    cardTextSecondary: '#6b7280',     // gray-500
     // Header colors
     headerBackground: '#ffffff',
     headerText: '#11181C',
@@ -28,6 +31,11 @@ export const Colors = {
     tabBarBorder: '#e5e7eb',
     tabBarActiveTint: '#3b82f6',      // blue-500
     tabBarInactiveTint: '#6b7280',    // gray-500
+    // Search input colors
+    searchInputBackground: '#f3f4f6', // gray-100
+    searchInputText: '#111827',       // gray-900
+    searchInputPlaceholder: '#9ca3af', // gray-400
+    searchInputIcon: '#9ca3af',       // gray-400
     // Filter Pill colors
     filterPillActive: '#2563eb',      // blue-600
     filterPillInactive: '#f3f4f6',    // gray-100
@@ -35,6 +43,9 @@ export const Colors = {
     filterPillTextInactive: '#374151', // gray-700
     filterPillBadgeActive: 'rgba(255, 255, 255, 0.3)',
     filterPillBadgeInactive: '#e5e7eb', // gray-200
+    // Success colors (for historico)
+    successBackground: '#dcfce7',      // green-100
+    successText: '#15803d',            // green-700
   },
   dark: {
     text: '#ECEDEE',
@@ -46,6 +57,9 @@ export const Colors = {
     // Screen backgrounds
     screenBackground: '#0f172a',      // slate-900
     cardBackground: '#1e293b',        // slate-800
+    cardBorder: '#334155',            // slate-700
+    cardTextPrimary: '#f1f5f9',       // slate-100
+    cardTextSecondary: '#94a3b8',     // slate-400
     // Header colors
     headerBackground: '#1f2937',
     headerText: '#ECEDEE',
@@ -55,6 +69,11 @@ export const Colors = {
     tabBarBorder: '#374151',
     tabBarActiveTint: '#60a5fa',      // blue-400 (lighter for dark)
     tabBarInactiveTint: '#9ca3af',    // gray-400
+    // Search input colors
+    searchInputBackground: '#374151', // gray-700
+    searchInputText: '#f9fafb',       // gray-50
+    searchInputPlaceholder: '#6b7280', // gray-500
+    searchInputIcon: '#9ca3af',       // gray-400
     // Filter Pill colors
     filterPillActive: '#3b82f6',      // blue-500 (lighter for dark mode)
     filterPillInactive: '#374151',    // gray-700
@@ -62,6 +81,9 @@ export const Colors = {
     filterPillTextInactive: '#d1d5db', // gray-300
     filterPillBadgeActive: 'rgba(255, 255, 255, 0.2)',
     filterPillBadgeInactive: '#4b5563', // gray-600
+    // Success colors (for historico)
+    successBackground: '#166534',      // green-800 (darker for dark mode)
+    successText: '#86efac',            // green-300
   },
 };
 

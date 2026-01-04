@@ -263,7 +263,7 @@ export default function ClienteInstalacaoScreen() {
               </View>
             </View>
 
-            {/* ENDEREÇO RESIDENCIAL E INSTALAÇÃO */}
+            {/* ENDEREÇO RESIDENCIAL E Instalação */}
             <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">
               <View className="flex-row items-center mb-4">
                 <View className="bg-green-100 w-10 h-10 rounded-full items-center justify-center mr-3">
