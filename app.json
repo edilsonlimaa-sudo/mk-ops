@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Precisamos da sua localização para registrar as coordenadas de instalações e atendimentos.",
         "LSApplicationQueriesSchemes": [
           "comgooglemaps",
           "googlemaps",
@@ -29,6 +30,10 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.edilsonlm217.mkauthmobile",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",
