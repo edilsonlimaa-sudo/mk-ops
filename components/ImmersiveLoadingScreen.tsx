@@ -1,3 +1,4 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Animated, Text, View } from 'react-native';
 
@@ -76,6 +77,7 @@ export function ImmersiveLoadingScreen({
   errorSubtitle,
   onAnimationComplete,
 }: ImmersiveLoadingScreenProps) {
+  const { colors } = useTheme();
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0));
 
@@ -124,17 +126,17 @@ export function ImmersiveLoadingScreen({
 
   return (
     <Animated.View
-      style={{ opacity: fadeAnim }}
-      className="absolute inset-0 bg-white justify-center items-center z-50"
+      style={{ opacity: fadeAnim, backgroundColor: colors.screenBackground }}
+      className="absolute inset-0 justify-center items-center z-50"
     >
       {state === 'loading' && (
         <View className="items-center">
           <ActivityIndicator size="large" color="#3B82F6" />
-          <Text className="text-xl font-semibold text-gray-900 mt-6">
+          <Text style={{ color: colors.cardTextPrimary }} className="text-xl font-semibold mt-6">
             {loadingTitle}
           </Text>
           {loadingSubtitle && (
-            <Text className="text-sm text-gray-500 mt-2">
+            <Text style={{ color: colors.cardTextSecondary }} className="text-sm mt-2">
               {loadingSubtitle}
             </Text>
           )}
@@ -149,11 +151,11 @@ export function ImmersiveLoadingScreen({
           <View className="w-20 h-20 bg-green-500 rounded-full items-center justify-center mb-6">
             <Text className="text-white text-4xl font-bold">✓</Text>
           </View>
-          <Text className="text-xl font-semibold text-gray-900">
+          <Text style={{ color: colors.cardTextPrimary }} className="text-xl font-semibold">
             {successTitle}
           </Text>
           {successSubtitle && (
-            <Text className="text-sm text-gray-500 mt-2">
+            <Text style={{ color: colors.cardTextSecondary }} className="text-sm mt-2">
               {successSubtitle}
             </Text>
           )}
@@ -168,11 +170,11 @@ export function ImmersiveLoadingScreen({
           <View className="w-20 h-20 bg-red-500 rounded-full items-center justify-center mb-6">
             <Text className="text-white text-4xl font-bold">✕</Text>
           </View>
-          <Text className="text-xl font-semibold text-gray-900">
+          <Text style={{ color: colors.cardTextPrimary }} className="text-xl font-semibold">
             {errorTitle}
           </Text>
           {errorSubtitle && (
-            <Text className="text-sm text-gray-500 mt-2">
+            <Text style={{ color: colors.cardTextSecondary }} className="text-sm mt-2">
               {errorSubtitle}
             </Text>
           )}

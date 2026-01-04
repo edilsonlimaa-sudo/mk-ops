@@ -1,3 +1,4 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import { Usuario } from '@/types/usuario';
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
@@ -25,6 +26,7 @@ export function PasswordModal({
   usuario,
   onConfirm,
 }: PasswordModalProps) {
+  const { theme, colors } = useTheme();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,13 +78,13 @@ export function PasswordModal({
       onRequestClose={handleClose}
       onShow={handleModalShow}
     >
-      <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground }} edges={['top']}>
         {/* Header */}
-        <View className="bg-white border-b border-gray-200 px-4 py-3">
+        <View style={{ backgroundColor: colors.cardBackground, borderBottomColor: colors.cardBorder }} className="border-b px-4 py-3">
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-xl font-bold text-gray-900">Confirmar Identidade</Text>
+            <Text style={{ color: colors.cardTextPrimary }} className="text-xl font-bold">Confirmar Identidade</Text>
             <TouchableOpacity onPress={handleClose} className="p-2 -mr-2" disabled={isLoading}>
-              <Ionicons name="close" size={24} color="#374151" />
+              <Ionicons name="close" size={24} color={colors.cardTextSecondary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -91,18 +93,18 @@ export function PasswordModal({
         <View className="flex-1 px-4 pt-6">
           {/* User Info */}
           {usuario && (
-            <View className="bg-white rounded-xl p-4 mb-6 shadow-sm border border-gray-100">
+            <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="rounded-xl p-4 mb-6 shadow-sm border">
               <View className="flex-row items-center">
-                <View className="w-16 h-16 bg-blue-100 rounded-full items-center justify-center mr-4">
-                  <Text className="text-blue-600 font-bold text-2xl">
+                <View className="w-16 h-16 bg-blue-500 rounded-full items-center justify-center mr-4">
+                  <Text className="text-white font-bold text-2xl">
                     {usuario.login.charAt(0).toUpperCase()}
                   </Text>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-xl font-bold text-gray-900 mb-1">
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-xl font-bold mb-1">
                     @{usuario.login}
                   </Text>
-                  <Text className="text-sm text-gray-500">
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-sm">
                     {usuario.email}
                   </Text>
                 </View>
@@ -112,9 +114,9 @@ export function PasswordModal({
 
           {/* Password Input */}
           <View className="mb-4">
-            <Text className="text-gray-700 font-semibold mb-2">Senha</Text>
-            <View className={`flex-row items-center bg-white rounded-lg px-4 py-3 border ${error ? 'border-red-300' : 'border-gray-200'}`}>
-              <Ionicons name="lock-closed" size={20} color={error ? '#ef4444' : '#6b7280'} />
+            <Text style={{ color: colors.cardTextPrimary }} className="font-semibold mb-2">Senha</Text>
+            <View style={{ backgroundColor: colors.cardBackground, borderColor: error ? '#fca5a5' : colors.cardBorder }} className="flex-row items-center rounded-lg px-4 py-3 border">
+              <Ionicons name="lock-closed" size={20} color={error ? '#ef4444' : colors.cardTextSecondary} />
               <TextInput
                 ref={inputRef}
                 value={password}
@@ -123,8 +125,9 @@ export function PasswordModal({
                   setError('');
                 }}
                 placeholder="Digite sua senha"
-                placeholderTextColor="#9ca3af"
-                className="flex-1 ml-3 text-gray-900 text-base"
+                placeholderTextColor={colors.cardTextSecondary}
+                style={{ color: colors.cardTextPrimary }}
+                className="flex-1 ml-3 text-base"
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -139,7 +142,7 @@ export function PasswordModal({
                 <Ionicons 
                   name={showPassword ? 'eye-off' : 'eye'} 
                   size={20} 
-                  color="#6b7280" 
+                  color={colors.cardTextSecondary} 
                 />
               </TouchableOpacity>
             </View>
@@ -152,10 +155,10 @@ export function PasswordModal({
           </View>
 
           {/* Info Text */}
-          <View className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+          <View style={{ backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff', borderColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe' }} className="rounded-lg p-3 mb-6 border">
             <View className="flex-row items-start">
               <Ionicons name="information-circle" size={20} color="#3b82f6" style={{ marginTop: 2 }} />
-              <Text className="text-blue-700 text-sm ml-2 flex-1">
+              <Text style={{ color: theme === 'dark' ? '#93c5fd' : '#1d4ed8' }} className="text-sm ml-2 flex-1">
                 Digite sua senha para confirmar que é você e acessar o sistema
               </Text>
             </View>
@@ -166,11 +169,12 @@ export function PasswordModal({
             <TouchableOpacity
               onPress={handleConfirm}
               disabled={isLoading || !password.trim()}
-              className={`rounded-lg py-4 px-6 ${
-                isLoading || !password.trim() 
-                  ? 'bg-gray-300' 
-                  : 'bg-blue-600 active:bg-blue-700'
-              }`}
+              style={{ 
+                backgroundColor: isLoading || !password.trim() ? '#9ca3af' : '#2563eb',
+                borderRadius: 8,
+                paddingVertical: 16,
+                paddingHorizontal: 24,
+              }}
             >
               {isLoading ? (
                 <View className="flex-row items-center justify-center">
@@ -189,9 +193,10 @@ export function PasswordModal({
             <TouchableOpacity
               onPress={handleClose}
               disabled={isLoading}
-              className="rounded-lg py-4 px-6 border border-gray-300 active:bg-gray-50"
+              style={{ borderColor: colors.cardBorder }}
+              className="rounded-lg py-4 px-6 border"
             >
-              <Text className="text-gray-700 font-semibold text-base text-center">
+              <Text style={{ color: colors.cardTextPrimary }} className="font-semibold text-base text-center">
                 Cancelar
               </Text>
             </TouchableOpacity>

@@ -1,5 +1,6 @@
 import { ImmersiveLoadingScreen } from '@/components/ImmersiveLoadingScreen';
 import { PasswordModal } from '@/components/PasswordModal';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useUsuarios } from '@/hooks/usuario';
 import { validatePassword } from '@/services/api/usuario';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -16,6 +17,7 @@ type InitialLoadState = 'loading' | 'success' | 'done';
 export default function UserIdentification() {
   console.log('👤 [UserIdentification] Componente renderizado');
   const { flow = 'login' } = useLocalSearchParams<{ flow?: 'login' | 'switchUser' }>();
+  const { theme, colors } = useTheme();
   const { identifyUser } = useUserStore();
   const { ipMkAuth, logout } = useAuthStore();
   const insets = useSafeAreaInsets();
@@ -113,9 +115,9 @@ export default function UserIdentification() {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
-        <View className="flex-1 bg-gray-50 justify-center items-center">
+        <View style={{ backgroundColor: colors.screenBackground }} className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#3B82F6" />
-          <Text className="text-gray-600 mt-4">Carregando funcionários...</Text>
+          <Text style={{ color: colors.cardTextSecondary }} className="mt-4">Carregando funcionários...</Text>
         </View>
       </>
     );
@@ -125,10 +127,10 @@ export default function UserIdentification() {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
-        <View className="flex-1 bg-gray-50 items-center justify-center px-6">
+        <View style={{ backgroundColor: colors.screenBackground }} className="flex-1 items-center justify-center px-6">
           <Text className="text-2xl mb-2">😕</Text>
-          <Text className="text-gray-900 font-semibold text-lg mb-2">Erro ao carregar funcionários</Text>
-          <Text className="text-gray-600 text-center mb-4">Não foi possível buscar a lista de usuários</Text>
+          <Text style={{ color: colors.cardTextPrimary }} className="font-semibold text-lg mb-2">Erro ao carregar funcionários</Text>
+          <Text style={{ color: colors.cardTextSecondary }} className="text-center mb-4">Não foi possível buscar a lista de usuários</Text>
           <TouchableOpacity 
             onPress={() => refetch()}
             className="bg-blue-600 px-6 py-3 rounded-lg"
@@ -144,10 +146,10 @@ export default function UserIdentification() {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
-        <View className="flex-1 bg-gray-50 items-center justify-center px-6">
+        <View style={{ backgroundColor: colors.screenBackground }} className="flex-1 items-center justify-center px-6">
           <Text className="text-2xl mb-2">👥</Text>
-          <Text className="text-gray-900 font-semibold text-lg mb-2">Nenhum funcionário encontrado</Text>
-          <Text className="text-gray-600 text-center mb-4">Não há usuários cadastrados no sistema</Text>
+          <Text style={{ color: colors.cardTextPrimary }} className="font-semibold text-lg mb-2">Nenhum funcionário encontrado</Text>
+          <Text style={{ color: colors.cardTextSecondary }} className="text-center mb-4">Não há usuários cadastrados no sistema</Text>
           <TouchableOpacity 
             onPress={() => refetch()}
             className="bg-blue-600 px-6 py-3 rounded-lg"
@@ -162,13 +164,13 @@ export default function UserIdentification() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-1 bg-gray-50">
+      <View style={{ backgroundColor: colors.screenBackground }} className="flex-1">
         {/* Hero Section direto (sem header de navegador rs) */}
-        <View className="bg-white px-6 pt-16 pb-8 border-b border-gray-200" style={{ paddingTop: insets.top + 40 }}>
-          <Text className="text-4xl font-bold text-gray-900 mb-3 text-center">
+        <View style={{ backgroundColor: colors.cardBackground, borderBottomColor: colors.cardBorder, paddingTop: insets.top + 40 }} className="px-6 pb-8 border-b">
+          <Text style={{ color: colors.cardTextPrimary }} className="text-4xl font-bold mb-3 text-center">
             👋 Quem é você?
           </Text>
-          <Text className="text-lg text-gray-600 text-center">
+          <Text style={{ color: colors.cardTextSecondary }} className="text-lg text-center">
             Escolha seu usuário para entrar
           </Text>
         </View>
@@ -195,8 +197,8 @@ export default function UserIdentification() {
             }
             renderItem={({ item }) => (
               <TouchableOpacity
-                className="bg-white rounded-3xl p-6 mx-3 shadow-lg border border-gray-200 active:scale-95"
-                style={{ width: 180 }}
+                style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder, width: 180 }}
+                className="rounded-3xl p-6 mx-3 shadow-lg border active:scale-95"
                 onPress={() => handleSelectUser(item)}
                 disabled={isLoading}
               >
@@ -209,13 +211,13 @@ export default function UserIdentification() {
                   </View>
 
                   {/* Info centralizada */}
-                  <Text className="text-xl font-bold text-gray-900 mb-2 text-center" numberOfLines={1}>
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-xl font-bold mb-2 text-center" numberOfLines={1}>
                     @{item.login}
                   </Text>
-                  <Text className="text-xs text-gray-600 text-center mb-1" numberOfLines={2}>
+                  <Text style={{ color: colors.cardTextSecondary }} className="text-xs text-center mb-1" numberOfLines={2}>
                     {item.email}
                   </Text>
-                  <Text className="text-xs text-gray-400 text-center mt-2" numberOfLines={1}>
+                  <Text style={{ color: theme === 'dark' ? '#64748b' : '#9ca3af' }} className="text-xs text-center mt-2" numberOfLines={1}>
                     {item.ultacesso}
                   </Text>
                 </View>
@@ -225,16 +227,16 @@ export default function UserIdentification() {
         </View>
 
         {/* Footer discreto com info de conexão */}
-        <View className="bg-white border-t border-gray-200 px-6 py-4" style={{ paddingBottom: insets.bottom + 16 }}>
+        <View style={{ backgroundColor: colors.cardBackground, borderTopColor: colors.cardBorder, paddingBottom: insets.bottom + 16 }} className="border-t px-6 py-4">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center flex-1 mr-4">
               <View className="w-2 h-2 bg-green-500 rounded-full mr-2" />
-              <Text className="text-xs text-gray-500 flex-1" numberOfLines={1}>
+              <Text style={{ color: colors.cardTextSecondary }} className="text-xs flex-1" numberOfLines={1}>
                 Conectado: {ipMkAuth}
               </Text>
             </View>
             <TouchableOpacity onPress={handleDisconnect} className="py-1">
-              <Text className="text-xs text-gray-400">Desconectar</Text>
+              <Text style={{ color: theme === 'dark' ? '#64748b' : '#9ca3af' }} className="text-xs">Desconectar</Text>
             </TouchableOpacity>
           </View>
         </View>

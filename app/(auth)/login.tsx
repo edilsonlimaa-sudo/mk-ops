@@ -1,4 +1,5 @@
 import { ImmersiveLoadingScreen } from '@/components/ImmersiveLoadingScreen';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
@@ -19,6 +20,7 @@ type LoadingState = 'idle' | 'connecting' | 'success' | 'error';
 
 export default function Login() {
   const router = useRouter();
+  const { theme, colors } = useTheme();
   const { login, isLoading, isAuthenticated } = useAuthStore();
   const [loadingState, setLoadingState] = useState<LoadingState>('idle');
 
@@ -62,25 +64,25 @@ export default function Login() {
 
   return (
     <>
-      <View className="flex-1 bg-gray-50 justify-center px-6">
+      <View style={{ backgroundColor: colors.screenBackground }} className="flex-1 justify-center px-6">
         {/* Header */}
         <View className="mb-8">
         <Text className="text-sm font-semibold text-blue-600 mb-2">
           ETAPA 1 DE 2
         </Text>
-        <Text className="text-4xl font-bold text-gray-900 mb-2">
+        <Text style={{ color: colors.cardTextPrimary }} className="text-4xl font-bold mb-2">
           Conecte-se ao Sistema
         </Text>
-        <Text className="text-lg text-gray-600">
+        <Text style={{ color: colors.cardTextSecondary }} className="text-lg">
           Informe as credenciais do provedor
         </Text>
       </View>
 
       {/* Formulário */}
-      <View className="bg-white rounded-2xl p-6 shadow-lg">
+      <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="rounded-2xl p-6 shadow-lg border">
         {/* IP MK-Auth */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
+          <Text style={{ color: colors.cardTextPrimary }} className="text-sm font-medium mb-2">
             IP do MK-Auth
           </Text>
           <Controller
@@ -88,8 +90,14 @@ export default function Login() {
             name="ipMkAuth"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900"
+                style={{ 
+                  backgroundColor: colors.searchInputBackground, 
+                  borderColor: colors.cardBorder,
+                  color: colors.cardTextPrimary,
+                }}
+                className="border rounded-lg px-4 py-3"
                 placeholder="provedor.updata.com.br"
+                placeholderTextColor={colors.cardTextSecondary}
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
@@ -107,7 +115,7 @@ export default function Login() {
 
         {/* Client ID */}
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
+          <Text style={{ color: colors.cardTextPrimary }} className="text-sm font-medium mb-2">
             Client ID
           </Text>
           <Controller
@@ -115,8 +123,14 @@ export default function Login() {
             name="clientId"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900"
+                style={{ 
+                  backgroundColor: colors.searchInputBackground, 
+                  borderColor: colors.cardBorder,
+                  color: colors.cardTextPrimary,
+                }}
+                className="border rounded-lg px-4 py-3"
                 placeholder="Client_Id_..."
+                placeholderTextColor={colors.cardTextSecondary}
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
@@ -134,7 +148,7 @@ export default function Login() {
 
         {/* Client Secret */}
         <View className="mb-6">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
+          <Text style={{ color: colors.cardTextPrimary }} className="text-sm font-medium mb-2">
             Client Secret
           </Text>
           <Controller
@@ -142,8 +156,14 @@ export default function Login() {
             name="clientSecret"
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                className="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900"
+                style={{ 
+                  backgroundColor: colors.searchInputBackground, 
+                  borderColor: colors.cardBorder,
+                  color: colors.cardTextPrimary,
+                }}
+                className="border rounded-lg px-4 py-3"
                 placeholder="Client_Secret_..."
+                placeholderTextColor={colors.cardTextSecondary}
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
@@ -162,9 +182,12 @@ export default function Login() {
 
         {/* Botão de Login */}
         <TouchableOpacity
-          className={`bg-blue-500 rounded-lg py-4 items-center ${
-            isLoading ? 'opacity-50' : ''
-          }`}
+          style={{ 
+            backgroundColor: isLoading ? 'rgba(37, 99, 235, 0.5)' : '#2563eb',
+            borderRadius: 8,
+            paddingVertical: 16,
+          }}
+          className="items-center"
           onPress={handleSubmit(onSubmit)}
           disabled={isLoading}
         >
@@ -185,7 +208,7 @@ export default function Login() {
 
         {/* Footer */}
         <View className="mt-6 items-center">
-          <Text className="text-gray-500 text-sm">
+          <Text style={{ color: colors.cardTextSecondary }} className="text-sm">
             Credenciais pré-preenchidas para teste
           </Text>
         </View>
