@@ -4,11 +4,11 @@ import { useClienteContext } from '@/lib/cliente/ClienteContext';
 import { EditableInfoRow } from '@/lib/cliente/SharedComponents';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 function EnderecosTab() {
-    const { cliente } = useClienteContext();
+    const { cliente, refetch, isFetching } = useClienteContext();
     const [mapModalVisible, setMapModalVisible] = useState(false);
     const updateClientMutation = useUpdateClient();
 
@@ -42,7 +42,13 @@ function EnderecosTab() {
     };
 
     return (
-        <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
+        <ScrollView 
+            className="flex-1 bg-gray-50" 
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+                <RefreshControl refreshing={isFetching} onRefresh={refetch} />
+            }
+        >
             <View className="p-4">
                 {/* Endereço de Instalação */}
                 <View className="bg-white rounded-2xl p-5 mb-4 shadow-md">

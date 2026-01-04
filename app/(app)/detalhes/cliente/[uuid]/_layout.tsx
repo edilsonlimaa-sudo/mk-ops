@@ -17,7 +17,7 @@ const Tab = createMaterialTopTabNavigator();
 
 export default function ClienteDetalhesLayout() {
   const { uuid } = useLocalSearchParams<{ uuid: string }>();
-  const { data: cliente, isLoading, error } = useClientDetail(uuid);
+  const { data: cliente, isLoading, error, refetch, isFetching } = useClientDetail(uuid);
   const updateClientMutation = useUpdateClient();
 
   // Estados para edição
@@ -128,7 +128,7 @@ export default function ClienteDetalhesLayout() {
           },
         }} 
       />
-      <ClienteContext.Provider value={{ cliente, openEditModal }}>
+      <ClienteContext.Provider value={{ cliente, openEditModal, refetch, isFetching }}>
         <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
           <ErrorBoundary>
             {/* HERO */}

@@ -3,18 +3,24 @@ import { useClienteContext } from '@/lib/cliente/ClienteContext';
 import { EditableInfoRow } from '@/lib/cliente/SharedComponents';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 function GeralTab() {
-    const { cliente } = useClienteContext();
+    const { cliente, refetch, isFetching } = useClienteContext();
     const [quickActionModalVisible, setQuickActionModalVisible] = useState(false);
     const [quickActionOptions, setQuickActionOptions] = useState<Array<{ label: string; value: string; icon: string; action: () => void }>>([]);
     const [quickActionModalTitle, setQuickActionModalTitle] = useState('');
 
 
     return (
-        <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
+        <ScrollView 
+            className="flex-1 bg-gray-50" 
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+                <RefreshControl refreshing={isFetching} onRefresh={refetch} />
+            }
+        >
             <View className="p-4">
                 {/* AÇÕES RÁPIDAS */}
                 <View className="flex-row mb-4 gap-2">
