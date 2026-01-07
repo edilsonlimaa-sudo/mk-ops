@@ -95,3 +95,61 @@ export function findHeaderAtOffset(
   return null;
 }
 
+/**
+ * Interface para dia do calendário
+ */
+export interface CalendarDay {
+  date: Date;
+  dateKey: string;
+  dayNumber: string;
+  dayName: string;
+  isToday: boolean;
+  month: number;
+}
+
+/**
+ * Gera semanas completas (D-S) centradas na semana atual
+ * 4 semanas antes + semana atual + 2 semanas depois = 7 semanas = 49 dias
+ */
+export const generateCalendarDays = (): CalendarDay[] => {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const todayKey = hoje.toISOString().split('T')[0];
+  
+  const days: CalendarDay[] = [];
+  
+  // Encontra o domingo da semana atual
+  const domingoAtual = new Date(hoje);
+  const dayOfWeek = hoje.getDay(); // 0 = domingo, 6 = sábado
+  domingoAtual.setDate(hoje.getDate() - dayOfWeek);
+  
+  // Começa 4 semanas antes do domingo atual
+  const startDate = new Date(domingoAtual);
+  startDate.setDate(domingoAtual.getDate() - (4 * 7));
+  
+  // Gera 7 semanas completas (49 dias: D a S, D a S, ...)
+  for (let i = 0; i < 49; i++) {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + i);
+    
+    const dateKey = date.toISOString().split('T')[0];
+    const isToday = dateKey === todayKey;
+    
+    const dayName = date
+      .toLocaleDateString('pt-BR', { weekday: 'short' })
+      .replace('.', '')
+      .toUpperCase();
+    
+    days.push({
+      date,
+      dateKey,
+      dayNumber: date.getDate().toString(),
+      dayName,
+      isToday,
+      month: date.getMonth(),
+    });
+  }
+  
+  return days;
+};
+

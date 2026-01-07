@@ -1,13 +1,23 @@
+import { AgendaList } from '@/components/agenda/AgendaList';
 import { CollapsedCalendar } from '@/components/agenda/CollapsedCalendar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { View } from 'react-native';
+
+// Mock data para testar - agora com dateKey
+const mockItems = [
+  { id: '1', title: 'Chamado #1234', subtitle: 'Cliente: João Silva', dateKey: '2026-01-07' },
+  { id: '2', title: 'Instalação #5678', subtitle: 'Cliente: Maria Santos', dateKey: '2026-01-08' },
+  { id: '3', title: 'Chamado #9012', subtitle: 'Cliente: Pedro Costa', dateKey: '2026-01-15' },
+  { id: '4', title: 'Instalação #3456', subtitle: 'Cliente: Ana Lima', dateKey: '2026-01-15' },
+];
 
 export default function AgendaScreen() {
   const { colors } = useTheme();
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.screenBackground }}>
+    <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
       <CollapsedCalendar />
+      <AgendaList items={mockItems} />
     </View>
   );
 }
