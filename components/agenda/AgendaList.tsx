@@ -18,7 +18,7 @@ interface AgendaListProps {
 }
 
 export interface AgendaListRef {
-  scrollToDate: (dateKey: string) => void;
+  scrollToDate: (dateKey: string, animated?: boolean) => void;
 }
 
 type FlatListItem =
@@ -81,7 +81,7 @@ export const AgendaList = forwardRef<AgendaListRef, AgendaListProps>(
 
   // Expõe métodos para o componente pai
   useImperativeHandle(ref, () => ({
-    scrollToDate: (dateKey: string) => {
+    scrollToDate: (dateKey: string, animated: boolean = true) => {
       const headerIndex = flatData.flatData.findIndex(
         item => item.type === 'header' && item.dateKey === dateKey
       );
@@ -95,7 +95,7 @@ export const AgendaList = forwardRef<AgendaListRef, AgendaListProps>(
 
       console.log('[AgendaList] Scrollando para:', dateKey, 'offset:', offset);
       
-      flatListRef.current?.scrollToOffset({ offset, animated: true });
+      flatListRef.current?.scrollToOffset({ offset, animated });
     },
   }), [flatData.flatData, flatData.itemLayouts]);
 

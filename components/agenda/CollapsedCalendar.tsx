@@ -12,7 +12,7 @@ interface CollapsedCalendarProps {
 }
 
 export interface CollapsedCalendarRef {
-  scrollToWeek: (weekIndex: number) => void;
+  scrollToWeek: (weekIndex: number, animated?: boolean) => void;
   updateActiveDay: (dateKey: string) => void;
 }
 
@@ -27,9 +27,9 @@ export const CollapsedCalendar = forwardRef<CollapsedCalendarRef, CollapsedCalen
 
     // Expõe métodos para o componente pai
     useImperativeHandle(ref, () => ({
-      scrollToWeek: (weekIndex: number) => {
+      scrollToWeek: (weekIndex: number, animated: boolean = true) => {
         const offset = weekIndex * SCREEN_WIDTH;
-        scrollViewRef.current?.scrollTo({ x: offset, animated: true });
+        scrollViewRef.current?.scrollTo({ x: offset, animated });
       },
       updateActiveDay: (dateKey: string) => {
         console.log('[CollapsedCalendar] updateActiveDay chamado (SEM re-render):', dateKey);

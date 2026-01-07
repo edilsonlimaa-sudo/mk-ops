@@ -1,7 +1,8 @@
 import { AgendaList, AgendaListRef } from '@/components/agenda/AgendaList';
 import { CollapsedCalendar, CollapsedCalendarRef } from '@/components/agenda/CollapsedCalendar';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useRef } from 'react';
+import { getTodayDateKey } from '@/utils/agenda';
+import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 
 // Mock data para testar - agora com dateKey
@@ -19,6 +20,50 @@ export default function AgendaScreen() {
   const agendaListRef = useRef<AgendaListRef>(null);
   const currentWeekRef = useRef<number>(-1);
   const isProgrammaticScrollRef = useRef<boolean>(false);
+
+  // Scroll inicial para hoje
+  useEffect(() => {
+    const todayDateKey = getTodayDateKey();
+    console.log('[AgendaScreen] Scrollando para hoje:', todayDateKey);
+    
+    // Calcula qual semana é hoje
+    // generateCalendarDays() começa 4 semanas antes do domingo atual
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayOfWeek = today.getDay(); // 0 = domingo, 6 = sábado
+    
+    // Domingo da semana atual
+    const domingoAtual = new Date(today);
+    domingoAtual.setDate(today.getDate() - dayOfWeek);
+    
+    // Começa 4 semanas antes
+    const startDate = new Date(domingoAtual);
+    startDate.setDate(domingoAtual.getDate() - (4 * 7));
+    
+    // Calcula quantos dias desde o início até hoje
+    const diffTime = today.getTime() - startDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const todayDayIndex = diffDays;
+    const todayWeekIndex = Math.floor(todayDayIndex / 7);
+    
+    console.log('[AgendaScreen] Hoje está no dayIndex:', todayDayIndex, 'weekIndex:', todayWeekIndex);
+    
+    // Scroll instantâneo (sem animação) na inicialização
+    isProgrammaticScrollRef.current = true;
+    currentWeekRef.current = todayWeekIndex;
+    
+    // Scrolla tudo sem animação para evitar piscada
+    calendarRef.current?.scrollToWeek(todayWeekIndex, false);
+    agendaListRef.current?.scrollToDate(todayDateKey, false);
+    calendarRef.current?.updateActiveDay(todayDateKey);
+    
+    // Reseta flag rapidamente
+    const timer = setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Controle da lista -> calendário
   const handleActiveHeaderChange = (dateKey: string, dayIndex: number) => {

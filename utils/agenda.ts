@@ -3,6 +3,24 @@ import { Chamado } from '@/types/chamado';
 import { Instalacao } from '@/types/instalacao';
 
 /**
+ * Converte Date para dateKey (YYYY-MM-DD) usando timezone local do dispositivo
+ * Evita problemas de fuso horário ao usar toISOString() que converte para UTC
+ */
+export const getLocalDateKey = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Retorna o dateKey de hoje usando timezone local do dispositivo
+ */
+export const getTodayDateKey = (): string => {
+  return getLocalDateKey(new Date());
+};
+
+/**
  * Type guard to check if item is a Chamado
  */
 export const isChamado = (item: ServicoAgenda): item is Chamado => {
@@ -114,7 +132,7 @@ export interface CalendarDay {
 export const generateCalendarDays = (): CalendarDay[] => {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
-  const todayKey = hoje.toISOString().split('T')[0];
+  const todayKey = getLocalDateKey(hoje);
   
   const days: CalendarDay[] = [];
   
@@ -132,7 +150,7 @@ export const generateCalendarDays = (): CalendarDay[] => {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
     
-    const dateKey = date.toISOString().split('T')[0];
+    const dateKey = getLocalDateKey(date);
     const isToday = dateKey === todayKey;
     
     const dayName = date
