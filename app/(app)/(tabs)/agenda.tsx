@@ -25,6 +25,10 @@ export default function AgendaScreen() {
     
     const weekIndex = Math.floor(dayIndex / 7);
     
+    // Atualiza bolinha (sempre, sem re-render)
+    calendarRef.current?.updateActiveDay(dateKey);
+    
+    // Scrolla semana (só se mudou)
     if (currentWeekRef.current !== weekIndex) {
       console.log('[AgendaScreen] Scrollando calendário para semana:', weekIndex);
       currentWeekRef.current = weekIndex;
