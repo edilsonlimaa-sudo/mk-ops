@@ -1,4 +1,4 @@
-import { AgendaList } from '@/components/agenda/AgendaList';
+import { AgendaList, AgendaListRef } from '@/components/agenda/AgendaList';
 import { CollapsedCalendar, CollapsedCalendarRef } from '@/components/agenda/CollapsedCalendar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRef } from 'react';
@@ -16,26 +16,34 @@ export default function AgendaScreen() {
   console.log('[AgendaScreen] Re-render');
   const { colors } = useTheme();
   const calendarRef = useRef<CollapsedCalendarRef>(null);
-  const currentWeekRef = useRef<number>(-1);
+  const agendaListRef = useRef<AgendaListRef>(null);
+  // const currentWeekRef = useRef<number>(-1);
 
-  const handleActiveHeaderChange = (dateKey: string, dayIndex: number) => {
-    console.log('[AgendaScreen] Header ativo:', dateKey, 'dayIndex:', dayIndex);
-    
-    // Calcula qual semana mostrar (0-6)
-    const weekIndex = Math.floor(dayIndex / 7);
-    
-    // Só scrolla se mudou de semana
-    if (currentWeekRef.current !== weekIndex) {
-      console.log('[AgendaScreen] Scrollando calendário para semana:', weekIndex);
-      currentWeekRef.current = weekIndex;
-      calendarRef.current?.scrollToWeek(weekIndex);
-    }
+  // COMENTADO: Controle da lista -> calendário
+  // const handleActiveHeaderChange = (dateKey: string, dayIndex: number) => {
+  //   console.log('[AgendaScreen] Header ativo:', dateKey, 'dayIndex:', dayIndex);
+  //   
+  //   // Calcula qual semana mostrar (0-6)
+  //   const weekIndex = Math.floor(dayIndex / 7);
+  //   
+  //   // Só scrolla se mudou de semana
+  //   if (currentWeekRef.current !== weekIndex) {
+  //     console.log('[AgendaScreen] Scrollando calendário para semana:', weekIndex);
+  //     currentWeekRef.current = weekIndex;
+  //     calendarRef.current?.scrollToWeek(weekIndex);
+  //   }
+  // };
+
+  // NOVO: Controle do calendário -> lista
+  const handleDayPress = (dateKey: string) => {
+    console.log('[AgendaScreen] Data selecionada no calendário:', dateKey);
+    agendaListRef.current?.scrollToDate(dateKey);
   };
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
-      <CollapsedCalendar ref={calendarRef} />
-      <AgendaList items={mockItems} onActiveHeaderChange={handleActiveHeaderChange} />
+      <CollapsedCalendar ref={calendarRef} onDayPress={handleDayPress} />
+      <AgendaList ref={agendaListRef} items={mockItems} />
     </View>
   );
 }
