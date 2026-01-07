@@ -18,10 +18,17 @@ export default function AgendaScreen() {
   const calendarRef = useRef<CollapsedCalendarRef>(null);
   const agendaListRef = useRef<AgendaListRef>(null);
   const currentWeekRef = useRef<number>(-1);
+  const isProgrammaticScrollRef = useRef<boolean>(false);
 
   // Controle da lista -> calendário
   const handleActiveHeaderChange = (dateKey: string, dayIndex: number) => {
     console.log('[AgendaScreen] Header ativo:', dateKey, 'dayIndex:', dayIndex);
+    
+    // Ignora se é scroll programático (clicou no calendário)
+    if (isProgrammaticScrollRef.current) {
+      console.log('[AgendaScreen] Ignorando - scroll programático');
+      return;
+    }
     
     const weekIndex = Math.floor(dayIndex / 7);
     
@@ -39,7 +46,20 @@ export default function AgendaScreen() {
   // Controle do calendário -> lista
   const handleDayPress = (dateKey: string) => {
     console.log('[AgendaScreen] Data selecionada no calendário:', dateKey);
+    
+    // Atualiza bolinha imediatamente
+    calendarRef.current?.updateActiveDay(dateKey);
+    
+    // Marca como scroll programático
+    isProgrammaticScrollRef.current = true;
+    
+    // Scrolla lista
     agendaListRef.current?.scrollToDate(dateKey);
+    
+    // Reseta flag após o scroll terminar
+    setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 500);
   };
 
   return (
@@ -49,6 +69,10 @@ export default function AgendaScreen() {
         ref={agendaListRef} 
         items={mockItems} 
         onActiveHeaderChange={handleActiveHeaderChange}
+        onScrollBeginDrag={() => {
+          console.log('[AgendaScreen] Usuário começou scroll manual');
+          isProgrammaticScrollRef.current = false;
+        }}
       />
     </View>
   );

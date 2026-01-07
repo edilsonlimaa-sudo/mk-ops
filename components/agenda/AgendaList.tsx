@@ -14,6 +14,7 @@ interface AgendaItem {
 interface AgendaListProps {
   items?: AgendaItem[];
   onActiveHeaderChange?: (dateKey: string, dayIndex: number) => void;
+  onScrollBeginDrag?: () => void;
 }
 
 export interface AgendaListRef {
@@ -26,7 +27,7 @@ type FlatListItem =
   | { type: 'empty'; dateKey: string };
 
 export const AgendaList = forwardRef<AgendaListRef, AgendaListProps>(
-  ({ items = [], onActiveHeaderChange }, ref) => {
+  ({ items = [], onActiveHeaderChange, onScrollBeginDrag }, ref) => {
   console.log('[AgendaList] Re-render, items:', items.length);
   const { colors } = useTheme();
   const lastActiveHeaderRef = useRef<string | null>(null);
@@ -205,6 +206,7 @@ export const AgendaList = forwardRef<AgendaListRef, AgendaListProps>(
       stickyHeaderIndices={flatData.stickyIndices}
       contentContainerStyle={{ paddingBottom: 24 }}
       viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs}
+      onScrollBeginDrag={onScrollBeginDrag}
     />
   );
 });
