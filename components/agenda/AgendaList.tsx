@@ -1,6 +1,6 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import { generateCalendarDays } from '@/utils/agenda';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { ListItem } from './ListItem';
 
@@ -13,6 +13,7 @@ interface AgendaItem {
 
 interface AgendaListProps {
   items?: AgendaItem[];
+  onActiveHeaderChange?: (dateKey: string, dayIndex: number) => void;
 }
 
 type FlatListItem =
@@ -20,18 +21,24 @@ type FlatListItem =
   | { type: 'item'; data: AgendaItem }
   | { type: 'empty'; dateKey: string };
 
-export function AgendaList({ items = [] }: AgendaListProps) {
+export function AgendaList({ items = [], onActiveHeaderChange }: AgendaListProps) {
+  console.log('[AgendaList] Re-render, items:', items.length);
   const { colors } = useTheme();
+  const lastActiveHeaderRef = useRef<string | null>(null);
 
   const flatData = useMemo(() => {
     // Gera todos os 49 dias das 7 semanas
     const days = generateCalendarDays();
     const result: FlatListItem[] = [];
     const stickyIndices: number[] = [];
+    const dateKeyToIndexMap = new Map<string, number>();
 
     // Cria estrutura flat com header para cada dia
-    days.forEach((day) => {
+    days.forEach((day, dayIndex) => {
       const dayLabel = `${day.dayName}, ${day.dayNumber} ${day.date.toLocaleDateString('pt-BR', { month: 'long' }).replace('.', '')}`.toUpperCase();
+
+      // Mapeia dateKey para índice do dia (0-48)
+      dateKeyToIndexMap.set(day.dateKey, dayIndex);
 
       // Adiciona header do dia
       stickyIndices.push(result.length);
@@ -49,7 +56,7 @@ export function AgendaList({ items = [] }: AgendaListProps) {
       }
     });
 
-    return { flatData: result, stickyIndices };
+    return { flatData: result, stickyIndices, dateKeyToIndexMap };
   }, [items]);
 
   const renderItem = ({ item }: { item: FlatListItem }) => {
@@ -92,6 +99,43 @@ export function AgendaList({ items = [] }: AgendaListProps) {
     );
   };
 
+  // Detecta o header ativo baseado nos itens visíveis
+  const handleViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: any[] }) => {
+      const firstItem = viewableItems[0]?.item;
+      if (!firstItem) return;
+      
+      // Extrai dateKey baseado no tipo
+      const dateKey = 
+        firstItem.type === 'header' || firstItem.type === 'empty'
+          ? firstItem.dateKey
+          : firstItem.type === 'item'
+          ? firstItem.data.dateKey
+          : null;
+      
+      // Notifica se mudou
+      if (dateKey && lastActiveHeaderRef.current !== dateKey) {
+        lastActiveHeaderRef.current = dateKey;
+        const dayIndex = flatData.dateKeyToIndexMap.get(dateKey) ?? 0;
+        onActiveHeaderChange?.(dateKey, dayIndex);
+      }
+    },
+    [onActiveHeaderChange]
+  );
+
+  const viewabilityConfigCallbackPairs = useMemo(
+    () => [
+      {
+        viewabilityConfig: {
+          itemVisiblePercentThreshold: 10,
+          minimumViewTime: 0,
+        },
+        onViewableItemsChanged: handleViewableItemsChanged,
+      },
+    ],
+    [handleViewableItemsChanged]
+  );
+
   return (
     <FlatList
       data={flatData.flatData}
@@ -99,6 +143,7 @@ export function AgendaList({ items = [] }: AgendaListProps) {
       keyExtractor={(item, index) => `${item.type}-${index}`}
       stickyHeaderIndices={flatData.stickyIndices}
       contentContainerStyle={{ paddingBottom: 24 }}
+      viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs}
     />
   );
 }

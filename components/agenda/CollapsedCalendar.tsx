@@ -1,6 +1,6 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import { generateCalendarDays } from '@/utils/agenda';
-import { useMemo } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import { Dimensions, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 const WEEK_DAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -11,10 +11,25 @@ interface CollapsedCalendarProps {
   onDayPress?: (dateKey: string) => void;
 }
 
-export function CollapsedCalendar({ onDayPress }: CollapsedCalendarProps) {
-  const { colors } = useTheme();
+export interface CollapsedCalendarRef {
+  scrollToWeek: (weekIndex: number) => void;
+}
 
-  const days = useMemo(() => generateCalendarDays(), []);
+export const CollapsedCalendar = forwardRef<CollapsedCalendarRef, CollapsedCalendarProps>(
+  function CollapsedCalendar({ onDayPress }, ref) {
+    console.log('[CollapsedCalendar] Re-render');
+    const { colors } = useTheme();
+    const scrollViewRef = useRef<ScrollView>(null);
+
+    const days = useMemo(() => generateCalendarDays(), []);
+
+    // Expõe método para scrollar para uma semana específica
+    useImperativeHandle(ref, () => ({
+      scrollToWeek: (weekIndex: number) => {
+        const offset = weekIndex * SCREEN_WIDTH;
+        scrollViewRef.current?.scrollTo({ x: offset, animated: true });
+      },
+    }));
 
   const handleDayPress = (dateKey: string) => {
     console.log('[CollapsedCalendar] Dia clicado:', dateKey);
@@ -49,6 +64,7 @@ export function CollapsedCalendar({ onDayPress }: CollapsedCalendarProps) {
 
       {/* ScrollView com os números dos dias */}
       <ScrollView
+        ref={scrollViewRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -88,4 +104,4 @@ export function CollapsedCalendar({ onDayPress }: CollapsedCalendarProps) {
       </ScrollView>
     </View>
   );
-}
+});

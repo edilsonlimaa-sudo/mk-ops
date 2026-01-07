@@ -1,6 +1,7 @@
 import { AgendaList } from '@/components/agenda/AgendaList';
-import { CollapsedCalendar } from '@/components/agenda/CollapsedCalendar';
+import { CollapsedCalendar, CollapsedCalendarRef } from '@/components/agenda/CollapsedCalendar';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useRef } from 'react';
 import { View } from 'react-native';
 
 // Mock data para testar - agora com dateKey
@@ -12,12 +13,29 @@ const mockItems = [
 ];
 
 export default function AgendaScreen() {
+  console.log('[AgendaScreen] Re-render');
   const { colors } = useTheme();
+  const calendarRef = useRef<CollapsedCalendarRef>(null);
+  const currentWeekRef = useRef<number>(-1);
+
+  const handleActiveHeaderChange = (dateKey: string, dayIndex: number) => {
+    console.log('[AgendaScreen] Header ativo:', dateKey, 'dayIndex:', dayIndex);
+    
+    // Calcula qual semana mostrar (0-6)
+    const weekIndex = Math.floor(dayIndex / 7);
+    
+    // Só scrolla se mudou de semana
+    if (currentWeekRef.current !== weekIndex) {
+      console.log('[AgendaScreen] Scrollando calendário para semana:', weekIndex);
+      currentWeekRef.current = weekIndex;
+      calendarRef.current?.scrollToWeek(weekIndex);
+    }
+  };
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
-      <CollapsedCalendar />
-      <AgendaList items={mockItems} />
+      <CollapsedCalendar ref={calendarRef} />
+      <AgendaList items={mockItems} onActiveHeaderChange={handleActiveHeaderChange} />
     </View>
   );
 }
