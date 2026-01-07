@@ -1,124 +1,108 @@
 import { useTheme } from '@/contexts/ThemeContext';
-import { useAgendaCalendarStore } from '@/stores/useAgendaCalendarStore';
-import {
-    forwardRef,
-    memo,
-    useCallback,
-    useImperativeHandle,
-    useRef
-} from 'react';
-import { FlatList, InteractionManager, Text, TouchableOpacity, View } from 'react-native';
-
-export interface CollapsedCalendarRef {
-  scrollToToday: (animated?: boolean) => void;
-  scrollToDate: (dateKey: string, animated?: boolean) => void;
-}
-
-// Mapa para lookup rápido de dateKey -> index
-const DATE_KEY_TO_INDEX = new Map<string, number>();
+import { useAgendaStore } from '@/stores/useAgendaStore';
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { Animated, Dimensions, InteractionManager, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 interface CalendarDay {
   date: Date;
   dateKey: string;
   dayNumber: string;
   dayName: string;
-  monthName: string;
+  dayOfWeek: number; // 0 = domingo, 6 = sábado
   isToday: boolean;
-  isPast: boolean;
-  isFirstOfMonth: boolean;
 }
 
 interface CollapsedCalendarProps {
   onSelectDate: (dateKey: string) => void;
 }
 
-// Store setter fora do componente para evitar re-renders
-const getSetSelectedDateKey = () => useAgendaCalendarStore.getState().setSelectedDateKey;
+export interface CollapsedCalendarRef {
+  updateBolinhaFromScroll: (dateKey: string) => void;
+}
 
-// Gera os 61 dias (D-30 a D+30)
-const generateDays = (): CalendarDay[] => {
+// Gera todas as 9 semanas (61 dias: D-30 a D+30)
+const generateAllWeeks = (): CalendarDay[][] => {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
-
-  const days: CalendarDay[] = [];
-  let lastMonth = -1;
-
-  for (let i = -30; i <= 30; i++) {
-    const date = new Date(hoje);
-    date.setDate(hoje.getDate() + i);
-
-    const dateKey = date.toISOString().split('T')[0];
-    const isToday = i === 0;
-    const isPast = i < 0;
-    const currentMonth = date.getMonth();
-    const isFirstOfMonth = currentMonth !== lastMonth;
-    lastMonth = currentMonth;
-
-    const dayName = date
-      .toLocaleDateString('pt-BR', { weekday: 'short' })
-      .replace('.', '')
-      .toUpperCase();
-
-    const monthName = date
-      .toLocaleDateString('pt-BR', { month: 'short' })
-      .replace('.', '')
-      .toUpperCase();
-
-    days.push({
-      date,
-      dateKey,
-      dayNumber: date.getDate().toString(),
-      dayName,
-      monthName,
-      isToday,
-      isPast,
-      isFirstOfMonth,
-    });
+  const todayKey = hoje.toISOString().split('T')[0];
+  
+  const weeks: CalendarDay[][] = [];
+  
+  // Começa 30 dias antes de hoje
+  const startDate = new Date(hoje);
+  startDate.setDate(hoje.getDate() - 30);
+  
+  // Ajusta para o domingo da primeira semana
+  const firstSunday = new Date(startDate);
+  const dayOfWeek = startDate.getDay();
+  firstSunday.setDate(startDate.getDate() - dayOfWeek);
+  
+  // Gera 9 semanas completas (63 dias, cobrindo os 61 + margem)
+  for (let weekIndex = 0; weekIndex < 9; weekIndex++) {
+    const weekDays: CalendarDay[] = [];
     
-    // Popula mapa para lookup rápido
-    DATE_KEY_TO_INDEX.set(dateKey, days.length - 1);
+    for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+      const date = new Date(firstSunday);
+      date.setDate(firstSunday.getDate() + (weekIndex * 7) + dayIndex);
+      
+      const dateKey = date.toISOString().split('T')[0];
+      const isToday = dateKey === todayKey;
+      
+      const dayName = date
+        .toLocaleDateString('pt-BR', { weekday: 'short' })
+        .replace('.', '')
+        .toUpperCase();
+      
+      weekDays.push({
+        date,
+        dateKey,
+        dayNumber: date.getDate().toString(),
+        dayName,
+        dayOfWeek: dayIndex,
+        isToday,
+      });
+    }
+    
+    weeks.push(weekDays);
   }
-
-  return days;
+  
+  return weeks;
 };
 
-const DAYS = generateDays();
-const TODAY_INDEX = 30;
-const ITEM_WIDTH = 48;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const ITEM_WIDTH = SCREEN_WIDTH / 7;
 
-// Componente que lê o estado do store para um dia específico
-// Só re-renderiza quando esse dia específico muda de seleção
+// Helper: encontra índice da semana que contém uma data
+const findWeekIndex = (dateKey: string, allWeeks: CalendarDay[][]): number => {
+  for (let i = 0; i < allWeeks.length; i++) {
+    if (allWeeks[i].some(day => day.dateKey === dateKey)) {
+      return i;
+    }
+  }
+  return 0; // fallback para primeira semana
+};
+
+// Componente do dia
 interface CalendarDayItemProps {
   item: CalendarDay;
   onPress: (dateKey: string) => void;
 }
 
-const CalendarDayItem = memo(function CalendarDayItem({
+function CalendarDayItem({
   item,
   onPress,
 }: CalendarDayItemProps) {
   const { colors, theme } = useTheme();
   const isDark = theme === 'dark';
-  
-  // Selector granular - só re-renderiza quando ESTE dia muda
-  const isSelected = useAgendaCalendarStore(
-    (state) => state.selectedDateKey === item.dateKey
-  );
 
   const handlePress = useCallback(() => {
-    // Atualiza store imediatamente (sem causar re-render do pai)
-    getSetSelectedDateKey()(item.dateKey);
+    // Atualiza store
+    useAgendaStore.getState().selectDate(item.dateKey);
     // Usa InteractionManager para scroll após animações do tap
     InteractionManager.runAfterInteractions(() => {
       onPress(item.dateKey);
     });
   }, [item.dateKey, onPress]);
-
-  // Cores baseadas no tema
-  const accentColor = isDark ? '#60a5fa' : '#2563eb'; // blue-400 / blue-600
-  const pastColor = colors.cardTextSecondary;
-  const normalColor = colors.cardTextPrimary;
-  const mutedColor = isDark ? '#64748b' : '#9ca3af'; // slate-500 / gray-400
 
   return (
     <TouchableOpacity
@@ -135,141 +119,196 @@ const CalendarDayItem = memo(function CalendarDayItem({
         style={{
           fontSize: 10,
           fontWeight: '500',
-          color: isSelected ? accentColor : item.isPast ? mutedColor : colors.cardTextSecondary,
+          color: colors.cardTextSecondary,
           marginBottom: 2,
         }}
       >
         {item.dayName}
       </Text>
 
-      {/* Número do dia */}
+      {/* Número do dia - SEM círculo (bolinha é overlay) */}
       <View
         style={{
           width: 32,
           height: 32,
-          borderRadius: 16,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: isSelected ? accentColor : 'transparent',
-          // Hoje sem seleção: borda azul
-          borderWidth: item.isToday && !isSelected ? 2 : 0,
-          borderColor: accentColor,
+          // Hoje: borda azul
+          borderWidth: item.isToday ? 2 : 0,
+          borderColor: isDark ? '#60a5fa' : '#2563eb',
+          borderRadius: 16,
         }}
       >
         <Text
           style={{
             fontSize: 15,
-            fontWeight: isSelected || item.isToday ? '600' : '400',
-            color: isSelected
-              ? '#ffffff'
-              : item.isToday
-              ? accentColor
-              : item.isPast
-              ? mutedColor
-              : normalColor,
+            fontWeight: item.isToday ? '600' : '400',
+            color: item.isToday
+              ? (isDark ? '#60a5fa' : '#2563eb')
+              : colors.cardTextPrimary,
           }}
         >
           {item.dayNumber}
         </Text>
       </View>
-
-      {/* Nome do mês - sempre visível */}
-      <Text
-        style={{
-          fontSize: 9,
-          fontWeight: item.isFirstOfMonth ? '700' : '500',
-          color: item.isFirstOfMonth
-            ? accentColor
-            : isSelected
-            ? accentColor
-            : item.isPast
-            ? (isDark ? '#475569' : '#d1d5db')
-            : mutedColor,
-          marginTop: 2,
-        }}
-      >
-        {item.monthName}
-      </Text>
     </TouchableOpacity>
+  );
+}
+
+const CollapsedCalendarComponent = forwardRef<CollapsedCalendarRef, CollapsedCalendarProps>(
+  function CollapsedCalendar({ onSelectDate }, ref) {
+    const t0 = performance.now();
+    console.log('[CollapsedCalendar] Re-render INICIO');
+    const { colors, theme } = useTheme();
+    const isDark = theme === 'dark';
+  
+  // Não precisa mais observar selectedDateKey - bolinha atualiza via ref
+  const scrollViewRef = useRef<ScrollView>(null);
+  
+  // Gera todas as semanas uma única vez
+  const allWeeks = useMemo(() => generateAllWeeks(), []);
+  
+  // Animated.Value para posição da bolinha (atualização instantânea via setValue)
+  const bolinhaLeft = useRef(new Animated.Value(0)).current;
+  const [dayNumber, setDayNumber] = useState<string>('');
+  const lastUpdatedDateKey = useRef<string>('');
+  
+  // Ref para a semana atual (para animação rápida)
+  const currentWeekIndexRef = useRef(4); // começa na semana central
+  
+  // Expõe método para atualização direta (sem esperar re-render)
+  useImperativeHandle(ref, () => ({
+    updateBolinhaFromScroll: (dateKey: string) => {
+      // Guard: só atualiza se a data mudou
+      if (lastUpdatedDateKey.current === dateKey) return;
+      
+      const t0 = performance.now();
+      // Encontra índice absoluto do dia
+      for (let weekIndex = 0; weekIndex < allWeeks.length; weekIndex++) {
+        const dayIndexInWeek = allWeeks[weekIndex].findIndex(day => day.dateKey === dateKey);
+        if (dayIndexInWeek !== -1) {
+          lastUpdatedDateKey.current = dateKey;
+          
+          const absoluteIndex = weekIndex * 7 + dayIndexInWeek;
+          const newLeft = (absoluteIndex * ITEM_WIDTH) + (ITEM_WIDTH - 32) / 2;
+          
+          bolinhaLeft.setValue(newLeft);
+          
+          const newDayNumber = allWeeks[weekIndex][dayIndexInWeek].dayNumber;
+          setDayNumber(newDayNumber);
+          
+          // Scrolla calendário para a semana correta (só se mudou de semana)
+          if (currentWeekIndexRef.current !== weekIndex) {
+            currentWeekIndexRef.current = weekIndex;
+            const weekOffset = weekIndex * SCREEN_WIDTH;
+            // Usa animated: false para scroll instantâneo - mais rápido!
+            scrollViewRef.current?.scrollTo({ x: weekOffset, animated: false });
+          }
+          
+          const t1 = performance.now();
+          console.log(`[Bolinha] setValue para ${dateKey} (index ${absoluteIndex}) em ${(t1 - t0).toFixed(2)}ms`);
+          return;
+        }
+      }
+    }
+  }), [allWeeks, bolinhaLeft]);
+
+  // Inicializa bolinha na data selecionada da store
+  useEffect(() => {
+    const selectedDateKey = useAgendaStore.getState().selectedDateKey;
+    
+    // Encontra índice absoluto
+    for (let weekIndex = 0; weekIndex < allWeeks.length; weekIndex++) {
+      const dayIndexInWeek = allWeeks[weekIndex].findIndex(day => day.dateKey === selectedDateKey);
+      if (dayIndexInWeek !== -1) {
+        const absoluteIndex = weekIndex * 7 + dayIndexInWeek;
+        const newLeft = (absoluteIndex * ITEM_WIDTH) + (ITEM_WIDTH - 32) / 2;
+        bolinhaLeft.setValue(newLeft);
+        
+        const newDayNumber = allWeeks[weekIndex][dayIndexInWeek].dayNumber;
+        setDayNumber(newDayNumber);
+        
+        // Scrolla para a semana correta
+        const weekOffset = weekIndex * SCREEN_WIDTH;
+        scrollViewRef.current?.scrollTo({ x: weekOffset, animated: false });
+        
+        console.log(`[CollapsedCalendar] Inicializado em ${selectedDateKey} (semana ${weekIndex})`);
+        return;
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const t1 = performance.now();
+  console.log(`[CollapsedCalendar] Re-render FIM em ${(t1 - t0).toFixed(2)}ms`);
+
+  return (
+    <View
+      style={{
+        backgroundColor: colors.cardBackground,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.cardBorder,
+        paddingVertical: 4,
+      }}
+    >
+      <ScrollView
+        ref={scrollViewRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        contentContainerStyle={{ width: SCREEN_WIDTH * allWeeks.length }}
+      >
+        {/* Renderiza todas as semanas */}
+        {allWeeks.map((week, weekIndex) => (
+          <View key={`week-${weekIndex}`} style={{ width: SCREEN_WIDTH, flexDirection: 'row' }}>
+            {week.map((day) => (
+              <CalendarDayItem key={day.dateKey} item={day} onPress={onSelectDate} />
+            ))}
+          </View>
+        ))}
+        
+        {/* Bolinha overlay - Animated.View com setValue (sem delay) */}
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 24,
+            left: bolinhaLeft,
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: isDark ? '#60a5fa' : '#2563eb',
+          }}
+        />
+        
+        {/* Número branco por cima */}
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: 24,
+            left: bolinhaLeft,
+            width: 32,
+            height: 32,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 15,
+              fontWeight: '600',
+              color: '#ffffff',
+            }}
+          >
+            {dayNumber}
+          </Text>
+        </Animated.View>
+      </ScrollView>
+    </View>
   );
 });
 
-export const CollapsedCalendar = forwardRef<CollapsedCalendarRef, CollapsedCalendarProps>(
-  function CollapsedCalendar({ onSelectDate }, ref) {
-    const { colors } = useTheme();
-    const flatListRef = useRef<FlatList>(null);
-
-    // Expõe métodos para scroll externo
-    useImperativeHandle(
-      ref,
-      () => ({
-        scrollToToday: (animated = true) => {
-          flatListRef.current?.scrollToIndex({
-            index: TODAY_INDEX,
-            animated,
-            viewPosition: 0.5,
-          });
-        },
-        scrollToDate: (dateKey: string, animated = true) => {
-          const index = DATE_KEY_TO_INDEX.get(dateKey);
-          if (index !== undefined) {
-            flatListRef.current?.scrollToIndex({
-              index,
-              animated,
-              viewPosition: 0.5,
-            });
-          }
-        },
-      }),
-      []
-    );
-
-    // Não precisa de useEffect para scroll inicial
-    // O initialScrollIndex da FlatList já faz isso
-
-    const renderDay = useCallback(
-      ({ item }: { item: CalendarDay }) => {
-        return <CalendarDayItem item={item} onPress={onSelectDate} />;
-      },
-      [onSelectDate]
-    );
-
-    const getItemLayout = useCallback(
-      (_: any, index: number) => ({
-        length: ITEM_WIDTH,
-        offset: ITEM_WIDTH * index,
-        index,
-      }),
-      []
-    );
-
-    return (
-      <View
-        style={{
-          backgroundColor: colors.cardBackground,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.cardBorder,
-          paddingVertical: 4,
-        }}
-      >
-        <FlatList
-          ref={flatListRef}
-          data={DAYS}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.dateKey}
-          renderItem={renderDay}
-          getItemLayout={getItemLayout}
-          // contentOffset em vez de initialScrollIndex - posiciona instantaneamente sem animação
-          contentOffset={{ x: TODAY_INDEX * ITEM_WIDTH - 100, y: 0 }}
-          initialNumToRender={15}
-          maxToRenderPerBatch={10}
-          windowSize={5}
-          onScrollToIndexFailed={() => {
-            // Fallback silencioso
-          }}
-        />
-      </View>
-    );
-  }
-);
+// Memoiza para evitar re-renders quando componente pai atualiza
+export const CollapsedCalendar = memo(CollapsedCalendarComponent);
+CollapsedCalendar.displayName = 'CollapsedCalendar';

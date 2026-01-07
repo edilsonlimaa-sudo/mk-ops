@@ -1,129 +1,58 @@
-import {
-  AgendaItemCard,
-  CollapsedCalendar,
-  CollapsedCalendarRef,
-} from '@/components/agenda';
+import { AgendaItemCard } from '@/components/agenda/AgendaItemCard';
+import type { CollapsedCalendarRef } from '@/components/agenda/CollapsedCalendar';
+import { CollapsedCalendar } from '@/components/agenda/CollapsedCalendar';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAgenda, useInvalidateAgenda } from '@/hooks/agenda';
-import { isChamado, ServicoAgenda } from '@/services/api/agenda';
-import { useAgendaCalendarStore } from '@/stores/useAgendaCalendarStore';
-import { Ionicons } from '@expo/vector-icons';
+import { FlatListItem, HEADER_HEIGHT, useAgendaData } from '@/hooks/agenda/useAgendaData';
+import { useAgendaStore } from '@/stores/useAgendaStore';
+import { Chamado } from '@/types/chamado';
+import { findHeaderAtOffset, isChamado } from '@/utils/agenda';
 import { useRouter } from 'expo-router';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, startTransition, useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   FlatList,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  RefreshControl,
   Text,
   TouchableOpacity,
-  View,
-  ViewToken,
+  View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Tipos para lista achatada (FlatList)
-type FlatListItem = 
-  | { type: 'header'; id: string; title: string; dateKey: string; isToday: boolean; isTomorrow: boolean; isPast: boolean }
-  | { type: 'item'; id: string; data: ServicoAgenda }
-  | { type: 'empty'; id: string; dateKey: string };
-
-// Modo de visualização
-type ViewMode = 'day' | 'agenda';
-
-// Alturas fixas para getItemLayout
-const HEADER_HEIGHT = 40;
-const ITEM_HEIGHT = 100; // Card com padding 12 + conteúdo compacto
-const EMPTY_HEIGHT = 36;
-
-// Componentes memoizados para renderItem (evita re-criação)
+// Componentes memoizados internos
 const HeaderItem = memo(function HeaderItem({ 
   title, 
   isToday, 
-  backgroundColor,
-  textColorToday,
-  textColorNormal,
-  lineColorToday,
-  lineColorNormal,
+  colors,
 }: { 
   title: string; 
   isToday: boolean; 
-  backgroundColor: string;
-  textColorToday: string;
-  textColorNormal: string;
-  lineColorToday: string;
-  lineColorNormal: string;
+  colors: any;
 }) {
-  const textColor = isToday ? textColorToday : textColorNormal;
-  const lineColor = isToday ? lineColorToday : lineColorNormal;
-  const fontWeight = isToday ? '700' : '500';
-
   return (
-    <View
-      style={{
-        backgroundColor,
-        height: HEADER_HEIGHT,
-        justifyContent: 'center',
-      }}
-    >
+    <View style={{ backgroundColor: colors.screenBackground, height: HEADER_HEIGHT, justifyContent: 'center' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View style={{ height: 1, flex: 1, backgroundColor: lineColor, marginRight: 12 }} />
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: fontWeight,
-            color: textColor,
-          }}
-        >
+        <View style={{ height: 1, flex: 1, backgroundColor: isToday ? colors.tabBarActiveTint : colors.cardBorder, marginRight: 12 }} />
+        <Text style={{ fontSize: 13, fontWeight: isToday ? '700' : '500', color: isToday ? colors.tabBarActiveTint : colors.cardTextSecondary }}>
           {title}
         </Text>
-        <View style={{ height: 1, flex: 1, backgroundColor: lineColor, marginLeft: 12 }} />
+        <View style={{ height: 1, flex: 1, backgroundColor: isToday ? colors.tabBarActiveTint : colors.cardBorder, marginLeft: 12 }} />
       </View>
     </View>
   );
 });
 
-const EmptyItem = memo(function EmptyItem({ textColor }: { textColor: string }) {
+const EmptyItem = memo(function EmptyItem({ colors }: { colors: any }) {
   return (
-    <View style={{ height: EMPTY_HEIGHT, justifyContent: 'center', paddingLeft: 16 }}>
-      <Text style={{ fontSize: 13, color: textColor, fontStyle: 'italic' }}>
+    <View style={{ height: 36, justifyContent: 'center', paddingLeft: 16 }}>
+      <Text style={{ fontSize: 13, color: colors.cardTextSecondary, fontStyle: 'italic' }}>
         Sem agendamentos
       </Text>
     </View>
   );
 });
 
-const ServiceItem = memo(function ServiceItem({ 
-  servico, 
-  onPress 
-}: { 
-  servico: ServicoAgenda; 
-  onPress: () => void;
-}) {
-  return (
-    <View style={{ height: ITEM_HEIGHT }}>
-      <AgendaItemCard item={servico} onPress={onPress} />
-    </View>
-  );
-});
-
-// Gera array de datas de D-30 a D+30 (61 dias)
-const gerarDatasFixas = () => {
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-  
-  const datas: Date[] = [];
-  for (let i = -30; i <= 30; i++) {
-    const data = new Date(hoje);
-    data.setDate(hoje.getDate() + i);
-    datas.push(data);
-  }
-  return datas;
-};
-
 export default function AgendaScreen() {
+  const t0 = performance.now();
+  console.log('[AgendaScreen] Re-render INICIO');
   const { data: servicos, isLoading, isFetching, error } = useAgenda();
   const { invalidate } = useInvalidateAgenda();
   const { colors } = useTheme();
@@ -135,206 +64,86 @@ export default function AgendaScreen() {
   const showTodayFabRef = useRef(false);
   const todayIsAboveRef = useRef(false);
   const fabOpacity = useRef(new Animated.Value(0)).current;
-
-  // Data de hoje (constante)
+  
+  const currentCalendarSunday = useRef<number>(-1);
   const todayDateKey = new Date().toISOString().split('T')[0];
 
-  // Modo de visualização (padrão: dia)
-  const [viewMode, setViewMode] = useState<ViewMode>('day');
+  // Store centralizado - NÃO subscreve selectedDateKey para evitar re-renders
+  const store = useAgendaStore();
+  const viewMode = store.viewMode;
+  const [deferredViewMode, setDeferredViewMode] = useState(viewMode);
+  const isTransitioning = viewMode !== deferredViewMode;
   
-  // Dia selecionado no calendário (para modo dia)
-  const selectedDateKey = useAgendaCalendarStore((state) => state.selectedDateKey);
-
-  // Controla FAB no modo dia baseado no selectedDateKey
+  // Adia mudança de modo para depois das interações (feedback visual do botão)
   useEffect(() => {
-    if (viewMode !== 'day') return;
-    
-    const shouldShow = selectedDateKey !== todayDateKey;
-    if (shouldShow !== showTodayFabRef.current) {
-      showTodayFabRef.current = shouldShow;
-      Animated.timing(fabOpacity, {
-        toValue: shouldShow ? 1 : 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
+    if (viewMode !== deferredViewMode) {
+      // Pequeno delay para dar tempo da UI do botão atualizar
+      const timeout = setTimeout(() => {
+        console.log(`[AgendaScreen] Atualizando deferredViewMode para ${viewMode}`);
+        setDeferredViewMode(viewMode);
+      }, 50);
+      return () => clearTimeout(timeout);
     }
-  }, [viewMode, selectedDateKey, todayDateKey, fabOpacity]);
+  }, [viewMode, deferredViewMode]);
+  
+  // Usa ref para selectedDateKey para não causar re-render
+  const selectedDateKeyRef = useRef(store.selectedDateKey);
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Atualiza ref quando necessário (sem causar re-render)
+  useEffect(() => {
+    const unsubscribe = useAgendaStore.subscribe((state) => {
+      selectedDateKeyRef.current = state.selectedDateKey;
+      
+      // Atualiza FAB apenas no modo dia
+      if (viewMode === 'day') {
+        const shouldShow = state.selectedDateKey !== todayDateKey;
+        if (shouldShow !== showTodayFabRef.current) {
+          showTodayFabRef.current = shouldShow;
+          Animated.timing(fabOpacity, {
+            toValue: shouldShow ? 1 : 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+        }
+      }
+    });
+    return unsubscribe;
+  }, [viewMode, todayDateKey, fabOpacity]);
 
   const handleRefresh = async () => {
     await invalidate();
   };
 
-  // Gera lista achatada com headers + itens + vazios + offsets pré-calculados
-  const { flatData, todayHeaderIndex, itemLayouts } = useMemo(() => {
-    const datasFixas = gerarDatasFixas();
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    const amanha = new Date(hoje);
-    amanha.setDate(amanha.getDate() + 1);
-
-    // Mapeia serviços por dateKey
-    const servicosPorData = new Map<string, ServicoAgenda[]>();
-
-    if (servicos && servicos.length > 0) {
-      for (const servico of servicos) {
-        if (!servico.visita) continue;
-        try {
-          const dataServico = new Date(servico.visita.replace(' ', 'T'));
-          dataServico.setHours(0, 0, 0, 0);
-          const dateKey = dataServico.toISOString().split('T')[0];
-
-          if (!servicosPorData.has(dateKey)) {
-            servicosPorData.set(dateKey, []);
-          }
-          servicosPorData.get(dateKey)!.push(servico);
-        } catch {
-          // Ignora datas inválidas
-        }
-      }
-    }
-
-    // Constrói lista achatada E pré-calcula layouts
-    const items: FlatListItem[] = [];
-    const layouts: { length: number; offset: number; index: number }[] = [];
-    let todayIdx = 0;
-    let currentOffset = 0;
-
-    for (let i = 0; i < datasFixas.length; i++) {
-      const data = datasFixas[i];
-      const dateKey = data.toISOString().split('T')[0];
-      const isToday = data.getTime() === hoje.getTime();
-      const isTomorrow = data.getTime() === amanha.getTime();
-      const isPast = data < hoje;
-
-      // Formata título
-      const diaSemana = data.toLocaleDateString('pt-BR', { weekday: 'long' });
-      const diaSemanaCapitalizado =
-        diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
-      const dataFormatada = data.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: 'short',
-      });
-
-      let title: string;
-      if (isToday) {
-        title = `Hoje, ${dataFormatada}`;
-        todayIdx = items.length; // Captura índice ANTES de adicionar o header
-      } else if (isTomorrow) {
-        title = `Amanhã, ${dataFormatada}`;
-      } else {
-        title = `${diaSemanaCapitalizado}, ${dataFormatada}`;
-      }
-
-      // Adiciona header + layout
-      items.push({
-        type: 'header',
-        id: `header-${dateKey}`,
-        title,
-        dateKey,
-        isToday,
-        isTomorrow,
-        isPast,
-      });
-      layouts.push({ length: HEADER_HEIGHT, offset: currentOffset, index: items.length - 1 });
-      currentOffset += HEADER_HEIGHT;
-
-      // Adiciona itens do dia ou placeholder vazio
-      const servicosDoDia = servicosPorData.get(dateKey);
-      if (servicosDoDia && servicosDoDia.length > 0) {
-        for (const servico of servicosDoDia) {
-          items.push({
-            type: 'item',
-            id: servico.id,
-            data: servico,
-          });
-          layouts.push({ length: ITEM_HEIGHT, offset: currentOffset, index: items.length - 1 });
-          currentOffset += ITEM_HEIGHT;
-        }
-      } else {
-        items.push({
-          type: 'empty',
-          id: `empty-${dateKey}`,
-          dateKey,
-        });
-        layouts.push({ length: EMPTY_HEIGHT, offset: currentOffset, index: items.length - 1 });
-        currentOffset += EMPTY_HEIGHT;
-      }
-    }
-
-    return { flatData: items, todayHeaderIndex: todayIdx, itemLayouts: layouts };
-  }, [servicos]);
-
-  // Dados filtrados para modo dia (só mostra o dia selecionado)
-  // Sempre calcula para estar pronto quando mudar de modo
-  const { dayModeData, dayModeLayouts } = useMemo(() => {
-    const items: FlatListItem[] = [];
-    const layouts: { length: number; offset: number; index: number }[] = [];
-    let currentOffset = 0;
-    let foundHeader = false;
-    
-    for (const item of flatData) {
-      if (item.type === 'header') {
-        if (item.dateKey === selectedDateKey) {
-          foundHeader = true;
-          items.push(item);
-          layouts.push({ length: HEADER_HEIGHT, offset: currentOffset, index: items.length - 1 });
-          currentOffset += HEADER_HEIGHT;
-        } else if (foundHeader) {
-          // Chegou no próximo header, para
-          break;
-        }
-      } else if (foundHeader) {
-        items.push(item);
-        const height = item.type === 'empty' ? EMPTY_HEIGHT : ITEM_HEIGHT;
-        layouts.push({ length: height, offset: currentOffset, index: items.length - 1 });
-        currentOffset += height;
-      }
-    }
-    
-    return { dayModeData: items, dayModeLayouts: layouts };
-  }, [flatData, selectedDateKey]);
-
-  // Dados ativos baseado no modo
-  const activeData = viewMode === 'day' ? dayModeData : flatData;
-  const activeLayouts = viewMode === 'day' ? dayModeLayouts : itemLayouts;
-
-  // Mapa de dateKey -> índice do header para navegação rápida
-  const dateKeyToIndex = useMemo(() => {
-    const map = new Map<string, number>();
-    flatData.forEach((item, index) => {
-      if (item.type === 'header') {
-        map.set(item.dateKey, index);
-      }
-    });
-    return map;
-  }, [flatData]);
+  console.log(`[AgendaScreen] Hook useAgendaData START (deferredViewMode: ${deferredViewMode})`);
+  // Hook que transforma servicos em dados otimizados para FlatList
+  const {
+    activeData,
+    activeLayouts,
+    flatData,
+    itemLayouts,
+    todayHeaderIndex,
+    dateKeyToIndex,
+    stickyHeaderIndices,
+  } = useAgendaData(servicos, selectedDateKeyRef.current, deferredViewMode);
+  console.log(`[AgendaScreen] Hook useAgendaData END - ${activeData.length} items`);
 
   // getItemLayout O(1) - usa layouts pré-calculados
   const getItemLayout = useCallback(
     (_: any, index: number) => activeLayouts[index] || { length: 0, offset: 0, index },
     [activeLayouts]
   );
-
-  // Pré-calcula índices dos headers para sticky (evita recalcular em cada render)
-  const stickyHeaderIndices = useMemo(
-    () =>
-      activeData
-        .map((item, idx) => (item.type === 'header' ? idx : null))
-        .filter((idx): idx is number => idx !== null),
-    [activeData]
-  );
-
-  // Refs de controle (declarados antes dos callbacks que os usam)
-  const isScrollingFromCalendar = useRef(false);
-  const lastSyncedDateKey = useRef<string>(todayDateKey);
   
-  // Flag para ignorar onScroll durante mount inicial (evita sync errado)
-  const isMountedRef = useRef(false);
-  setTimeout(() => { isMountedRef.current = true; }, 300);
+  // Marca componente como pronto após 300ms (habilita sync)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      store.markReady();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll para hoje (funciona nos dois modos)
   const scrollToToday = useCallback(() => {
-    // Esconde FAB imediatamente
     showTodayFabRef.current = false;
     Animated.timing(fabOpacity, {
       toValue: 0,
@@ -342,126 +151,69 @@ export default function AgendaScreen() {
       useNativeDriver: true,
     }).start();
 
-    // Atualiza store diretamente (sem hook = sem re-render)
-    useAgendaCalendarStore.getState().setSelectedDateKey(todayDateKey);
-    lastSyncedDateKey.current = todayDateKey;
+    store.goToToday();
 
-    // Faz scroll do calendário
-    calendarRef.current?.scrollToToday(false);
-
-    // No modo agenda, também scrolla a lista
     if (viewMode === 'agenda' && flatListRef.current && todayHeaderIndex >= 0) {
-      // Bloqueia onScroll de interferir
-      isScrollingFromCalendar.current = true;
-
       flatListRef.current.scrollToIndex({
         index: todayHeaderIndex,
         animated: false,
         viewPosition: 0,
       });
-
-      // Libera após o scroll terminar
-      setTimeout(() => {
-        isScrollingFromCalendar.current = false;
-      }, 100);
     }
-  }, [todayHeaderIndex, todayDateKey, fabOpacity, viewMode]);
+  }, [todayHeaderIndex, fabOpacity, viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Scroll para data específica (do calendário)
-
   const scrollToDate = useCallback(
     (dateKey: string) => {
       // No modo dia, não precisa scrollar - a lista já vai mostrar o dia selecionado
-      if (viewMode === 'day') {
-        lastSyncedDateKey.current = dateKey;
-        return;
-      }
+      if (store.viewMode === 'day') return;
       
       const index = dateKeyToIndex.get(dateKey);
       if (index === undefined || !flatListRef.current) return;
 
-      // Marca que estamos scrollando via calendário para ignorar onScroll
-      isScrollingFromCalendar.current = true;
-      lastSyncedDateKey.current = dateKey;
+      // Calcula domingo da semana quando clica no calendário
+      const date = new Date(dateKey);
+      const dayOfWeek = date.getDay(); // 0 = domingo, 6 = sábado
+      const sundayIndex = index - dayOfWeek;
+      currentCalendarSunday.current = sundayIndex;
 
-      // Não precisa setar o store aqui - CalendarDayItem já faz isso
+      // Scroll físico da lista
       flatListRef.current.scrollToIndex({
         index,
         animated: false,
         viewPosition: 0,
       });
-
-      // Libera após o scroll terminar
-      setTimeout(() => {
-        isScrollingFromCalendar.current = false;
-      }, 50);
     },
-    [dateKeyToIndex, viewMode]
+    [dateKeyToIndex] // Removido viewMode - usa store.viewMode direto
   );
 
-  // Sincroniza calendário usando onScroll (mais rápido que onViewableItemsChanged)
-  // Só funciona no modo agenda
+  // Sincroniza calendário usando onScroll (arquitetura de semanas D-S)
   const onScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      // Ignora no modo dia ou se scroll foi iniciado pelo calendário
-      if (viewMode === 'day' || isScrollingFromCalendar.current || !isMountedRef.current) return;
-
+    (event: any) => {
       const offsetY = event.nativeEvent.contentOffset.y;
 
-      // Adiciona tolerância para detectar o header correto
-      // Quando scrollamos para um header, queremos que ele seja detectado
-      const adjustedOffset = offsetY + HEADER_HEIGHT / 2;
-
-      // Busca binária para encontrar o item no offset atual
-      let left = 0;
-      let right = itemLayouts.length - 1;
-      let foundIndex = 0;
-
-      while (left <= right) {
-        const mid = Math.floor((left + right) / 2);
-        const layout = itemLayouts[mid];
-
-        if (layout.offset <= adjustedOffset) {
-          foundIndex = mid;
-          left = mid + 1;
-        } else {
-          right = mid - 1;
-        }
+      // Busca header no offset atual usando busca binária
+      const headerDateKey = findHeaderAtOffset(offsetY, itemLayouts, flatData, HEADER_HEIGHT);
+      
+      if (!headerDateKey) return;
+      
+      // ATUALIZA BOLINHA IMEDIATAMENTE (sem esperar re-render)
+      calendarRef.current?.updateBolinhaFromScroll(headerDateKey);
+      
+      // Debounce: só sincroniza store após 150ms de inatividade (evita re-renders durante scroll)
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
       }
-
-      // Se encontrou um item, verifica se é header ou busca o header anterior
-      const item = flatData[foundIndex];
-      let headerDateKey: string | null = null;
-
-      if (item?.type === 'header') {
-        headerDateKey = item.dateKey;
-      } else {
-        // Busca o header anterior
-        let headerIndex = foundIndex - 1;
-        while (headerIndex >= 0 && flatData[headerIndex]?.type !== 'header') {
-          headerIndex--;
-        }
-        if (headerIndex >= 0) {
-          const header = flatData[headerIndex];
-          if (header?.type === 'header') {
-            headerDateKey = header.dateKey;
-          }
-        }
-      }
-
-      if (headerDateKey && headerDateKey !== lastSyncedDateKey.current) {
-        lastSyncedDateKey.current = headerDateKey;
-        calendarRef.current?.scrollToDate(headerDateKey, false);
-        // Atualiza store diretamente (sem hook = sem re-render do componente)
-        useAgendaCalendarStore.getState().setSelectedDateKey(headerDateKey);
-      }
+      syncTimeoutRef.current = setTimeout(() => {
+        store.syncFromScroll(headerDateKey);
+      }, 150);
     },
-    [viewMode, itemLayouts, flatData]
+    [itemLayouts, flatData] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   // Monitora visibilidade apenas para FAB (usa refs para evitar re-renders)
   const onViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    ({ viewableItems }: { viewableItems: any[] }) => {
       if (viewableItems.length === 0) return;
 
       // Verifica se header do "Hoje" está visível
@@ -500,74 +252,56 @@ export default function AgendaScreen() {
     minimumViewTime: 0,
   }).current;
 
-  // Renderiza item baseado no tipo (usando componentes memoizados)
+  // Renderiza item baseado no tipo
   const renderItem = useCallback(({ item }: { item: FlatListItem }) => {
     if (item.type === 'header') {
-      return (
-        <HeaderItem 
-          title={item.title} 
-          isToday={item.isToday} 
-          backgroundColor={colors.screenBackground}
-          textColorToday={colors.tabBarActiveTint}
-          textColorNormal={colors.cardTextSecondary}
-          lineColorToday={colors.tabBarActiveTint}
-          lineColorNormal={colors.cardBorder}
-        />
-      );
+      return <HeaderItem title={item.title} isToday={item.isToday} colors={colors} />;
     }
     
     if (item.type === 'empty') {
-      return <EmptyItem textColor={colors.cardTextSecondary} />;
+      return <EmptyItem colors={colors} />;
     }
     
     // type === 'item'
     const servico = item.data;
     const route = isChamado(servico)
-      ? `/detalhes/chamado/${servico.uuid_suporte}`
+      ? `/detalhes/chamado/${(servico as Chamado).uuid_suporte}`
       : `/detalhes/instalacao/${(servico as any).uuid_solic}`;
 
     return (
-      <ServiceItem 
-        servico={servico} 
-        onPress={() => router.push(route as any)} 
-      />
+      <View style={{ height: 100 }}>
+        <AgendaItemCard item={servico} onPress={() => router.push(route as any)} />
+      </View>
     );
   }, [colors, router]);
 
+  const t1 = performance.now();
+  console.log(`[AgendaScreen] Re-render FIM em ${(t1 - t0).toFixed(2)}ms`);
+
   if (isLoading && !servicos) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text style={{ color: colors.cardTextSecondary, marginTop: 16 }}>Carregando agenda...</Text>
-      </SafeAreaView>
+      <View style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: colors.cardTextSecondary }}>Carregando agenda...</Text>
+      </View>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-        <Text className="text-red-500 text-lg font-semibold mb-2">
+      <View style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+        <Text style={{ color: 'red', fontSize: 18, fontWeight: '600', marginBottom: 8 }}>
           Erro ao carregar agenda
         </Text>
-        <Text style={{ color: colors.cardTextSecondary }} className="text-center mb-4">
+        <Text style={{ color: colors.cardTextSecondary, textAlign: 'center', marginBottom: 16 }}>
           {error.message}
         </Text>
-        <TouchableOpacity
-          onPress={invalidate}
-          className="bg-blue-600 px-6 py-3 rounded-lg mt-2"
-          activeOpacity={0.7}
-        >
-          <Text className="text-white font-semibold">Tentar novamente</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
-      {/* Toggle + Calendário colapsado no topo */}
+    <View style={{ flex: 1, backgroundColor: colors.screenBackground }}>
       <View style={{ backgroundColor: colors.cardBackground }}>
-        {/* Toggle Dia/Agenda - estilo badge pill, alinhado à esquerda */}
         <View style={{ 
           flexDirection: 'row', 
           justifyContent: 'flex-start',
@@ -582,7 +316,11 @@ export default function AgendaScreen() {
             padding: 3,
           }}>
             <TouchableOpacity
-              onPress={() => setViewMode('day')}
+              onPress={() => {
+                startTransition(() => {
+                  store.setViewMode('day');
+                });
+              }}
               activeOpacity={0.7}
               style={{
                 paddingHorizontal: 16,
@@ -592,16 +330,20 @@ export default function AgendaScreen() {
               }}
             >
               <Text style={{
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: '600',
-                color: viewMode === 'day' ? '#ffffff' : colors.cardTextSecondary,
+                color: viewMode === 'day' ? '#fff' : colors.cardTextSecondary,
               }}>
                 Dia
               </Text>
             </TouchableOpacity>
             
             <TouchableOpacity
-              onPress={() => setViewMode('agenda')}
+              onPress={() => {
+                startTransition(() => {
+                  store.setViewMode('agenda');
+                });
+              }}
               activeOpacity={0.7}
               style={{
                 paddingHorizontal: 16,
@@ -611,9 +353,9 @@ export default function AgendaScreen() {
               }}
             >
               <Text style={{
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: '600',
-                color: viewMode === 'agenda' ? '#ffffff' : colors.cardTextSecondary,
+                color: viewMode === 'agenda' ? '#fff' : colors.cardTextSecondary,
               }}>
                 Agenda
               </Text>
@@ -621,43 +363,28 @@ export default function AgendaScreen() {
           </View>
         </View>
 
-        {/* Calendário colapsado */}
-        <CollapsedCalendar
+        <CollapsedCalendar 
           ref={calendarRef}
-          onSelectDate={(dateKey) => scrollToDate(dateKey)}
+          onSelectDate={scrollToDate}
         />
       </View>
 
       <FlatList
-        key={viewMode} // Força remount quando muda o modo
         ref={flatListRef}
         data={activeData}
-        keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        keyExtractor={(item, index) => `${item.type}-${index}`}
         getItemLayout={getItemLayout}
-        initialScrollIndex={viewMode === 'agenda' ? todayHeaderIndex : undefined}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
-        stickyHeaderIndices={viewMode === 'agenda' ? stickyHeaderIndices : undefined}
-        // Otimizações de performance
-        initialNumToRender={10}
-        maxToRenderPerBatch={5}
-        windowSize={5}
-        updateCellsBatchingPeriod={100}
-        removeClippedSubviews={true}
-        refreshControl={
-          <RefreshControl refreshing={isFetching} onRefresh={handleRefresh} />
-        }
-        onScroll={viewMode === 'agenda' ? onScroll : undefined}
-        scrollEventThrottle={32}
-        onViewableItemsChanged={viewMode === 'agenda' ? onViewableItemsChanged : undefined}
+        onScroll={onScroll}
+        scrollEventThrottle={4}
+        onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
-        onScrollToIndexFailed={(info) => {
-          // Fallback silencioso: scroll via offset
-          flatListRef.current?.scrollToOffset({
-            offset: info.averageItemLength * info.index,
-            animated: false,
-          });
-        }}
+        initialNumToRender={30}
+        maxToRenderPerBatch={50}
+        windowSize={21}
+        style={{ opacity: isTransitioning ? 0.5 : 1 }}
+        removeClippedSubviews={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
       />
 
       {/* FAB - Voltar para Hoje */}
@@ -687,13 +414,11 @@ export default function AgendaScreen() {
             elevation: 4,
           }}
         >
-          <Ionicons name="today-outline" size={16} color="white" />
           <Text
             style={{
               color: 'white',
               fontSize: 13,
               fontWeight: '600',
-              marginLeft: 6,
             }}
           >
             Hoje
@@ -703,3 +428,386 @@ export default function AgendaScreen() {
     </View>
   );
 }
+
+  // // Controle do FAB (usando refs para evitar re-renders)
+  // const showTodayFabRef = useRef(false);
+  // const todayIsAboveRef = useRef(false);
+  // const fabOpacity = useRef(new Animated.Value(0)).current;
+  
+  // // Rastreia domingo da semana atual (não mais necessário - calendário é fixo)
+  // const currentCalendarSunday = useRef<number>(-1);
+
+  // // Data de hoje (constante)
+  // const todayDateKey = new Date().toISOString().split('T')[0];
+
+  // // Store centralizado - NÃO subscreve selectedDateKey para evitar re-renders
+  // const store = useAgendaStore();
+  // const viewMode = store.viewMode;
+  // const setViewMode = store.setViewMode;
+  
+  // // Usa ref para selectedDateKey para não causar re-render
+  // const selectedDateKeyRef = useRef(store.selectedDateKey);
+  
+  // // Atualiza ref quando necessário (sem causar re-render)
+  // useEffect(() => {
+  //   const unsubscribe = useAgendaStore.subscribe((state) => {
+  //     selectedDateKeyRef.current = state.selectedDateKey;
+      
+  //     // Atualiza FAB apenas no modo dia
+  //     if (viewMode === 'day') {
+  //       const shouldShow = state.selectedDateKey !== todayDateKey;
+  //       if (shouldShow !== showTodayFabRef.current) {
+  //         showTodayFabRef.current = shouldShow;
+  //         Animated.timing(fabOpacity, {
+  //           toValue: shouldShow ? 1 : 0,
+  //           duration: 200,
+  //           useNativeDriver: true,
+  //         }).start();
+  //       }
+  //     }
+  //   });
+  //   return unsubscribe;
+  // }, [viewMode, todayDateKey, fabOpacity]);
+
+  // const handleRefresh = async () => {
+  //   await invalidate();
+  // };
+
+  // // Hook que transforma servicos em dados otimizados para FlatList
+  // const {
+  //   activeData,
+  //   activeLayouts,
+  //   flatData,
+  //   itemLayouts,
+  //   todayHeaderIndex,
+  //   dateKeyToIndex,
+  //   stickyHeaderIndices,
+  // } = useAgendaData(servicos, selectedDateKeyRef.current, viewMode);
+
+  // // getItemLayout O(1) - usa layouts pré-calculados
+  // const getItemLayout = useCallback(
+  //   (_: any, index: number) => activeLayouts[index] || { length: 0, offset: 0, index },
+  //   [activeLayouts]
+  // );
+  
+  // // Marca componente como pronto após 300ms (habilita sync)
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     store.markReady();
+  //   }, 300);
+  //   return () => clearTimeout(timer);
+  // }, [store]);
+
+  // // Scroll para hoje (funciona nos dois modos)
+  // const scrollToToday = useCallback(() => {
+  //   // Esconde FAB imediatamente
+  //   showTodayFabRef.current = false;
+  //   Animated.timing(fabOpacity, {
+  //     toValue: 0,
+  //     duration: 150,
+  //     useNativeDriver: true,
+  //   }).start();
+
+  //   // Usa action do store (bloqueia sync automático + atualiza selectedDateKey)
+  //   store.goToToday();
+
+  //   // No modo agenda, também scrolla a lista
+  //   if (viewMode === 'agenda' && flatListRef.current && todayHeaderIndex >= 0) {
+  //     flatListRef.current.scrollToIndex({
+  //       index: todayHeaderIndex,
+  //       animated: false,
+  //       viewPosition: 0,
+  //     });
+  //   }
+  // }, [todayHeaderIndex, fabOpacity, viewMode, store]);
+
+  // // Scroll para data específica (do calendário)
+  // const scrollToDate = useCallback(
+  //   (dateKey: string) => {
+  //     // No modo dia, não precisa scrollar - a lista já vai mostrar o dia selecionado
+  //     if (viewMode === 'day') return;
+      
+  //     const index = dateKeyToIndex.get(dateKey);
+  //     if (index === undefined || !flatListRef.current) return;
+
+  //     // Calcula domingo da semana quando clica no calendário
+  //     const date = new Date(dateKey);
+  //     const dayOfWeek = date.getDay(); // 0 = domingo, 6 = sábado
+  //     const sundayIndex = index - dayOfWeek;
+  //     currentCalendarSunday.current = sundayIndex;
+
+  //     // Scroll físico da lista
+  //     flatListRef.current.scrollToIndex({
+  //       index,
+  //       animated: false,
+  //       viewPosition: 0,
+  //     });
+  //   },
+  //   [dateKeyToIndex, viewMode]
+  // );
+
+  // // Sincroniza calendário usando onScroll (arquitetura de semanas D-S)
+  // // Bolinha corre livremente, calendário só scrolla quando muda de semana
+  // const onScroll = useCallback(
+  //   (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+  //     const t0 = performance.now();
+  //     const offsetY = event.nativeEvent.contentOffset.y;
+
+  //     // Busca header no offset atual usando busca binária
+  //     const headerDateKey = findHeaderAtOffset(offsetY, itemLayouts, flatData, HEADER_HEIGHT);
+      
+  //     if (!headerDateKey) return;
+      
+  //     const t1 = performance.now();
+  //     console.log(`[onScroll] Detectou ${headerDateKey} em ${(t1 - t0).toFixed(2)}ms`);
+      
+  //     // ATUALIZA BOLINHA IMEDIATAMENTE (sem esperar re-render)
+  //     calendarRef.current?.updateBolinhaFromScroll(headerDateKey);
+      
+  //     const t2 = performance.now();
+  //     console.log(`[onScroll] Bolinha atualizada em ${(t2 - t1).toFixed(2)}ms`);
+      
+  //     // Tenta sincronizar via store (valida automaticamente)
+  //     store.syncFromScroll(headerDateKey);
+      
+  //     const t3 = performance.now();
+  //     console.log(`[onScroll] Store sincronizado em ${(t3 - t2).toFixed(2)}ms | TOTAL: ${(t3 - t0).toFixed(2)}ms`);
+
+  //   },
+  //   [itemLayouts, flatData, store]
+  // );
+
+  // // Monitora visibilidade apenas para FAB (usa refs para evitar re-renders)
+  // const onViewableItemsChanged = useCallback(
+  //   ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+  //     if (viewableItems.length === 0) return;
+
+  //     // Verifica se header do "Hoje" está visível
+  //     const todayVisible = viewableItems.some(
+  //       (v) => v.item?.type === 'header' && v.item?.isToday
+  //     );
+
+  //     const shouldShow = !todayVisible;
+      
+  //     // Só anima se mudou
+  //     if (shouldShow !== showTodayFabRef.current) {
+  //       showTodayFabRef.current = shouldShow;
+  //       Animated.timing(fabOpacity, {
+  //         toValue: shouldShow ? 1 : 0,
+  //         duration: 200,
+  //         useNativeDriver: true,
+  //       }).start();
+  //     }
+
+  //     if (!todayVisible) {
+  //       // Determina direção baseado no primeiro item visível
+  //       const firstVisibleHeader = viewableItems.find(
+  //         (v) => v.item?.type === 'header'
+  //       );
+  //       if (firstVisibleHeader && firstVisibleHeader.index !== null) {
+  //         todayIsAboveRef.current = firstVisibleHeader.index > todayHeaderIndex;
+  //       }
+  //     }
+  //   },
+  //   [todayHeaderIndex, fabOpacity]
+  // );
+
+  // // Config mais responsiva para detectar mudanças rapidamente
+  // const viewabilityConfig = useRef({
+  //   itemVisiblePercentThreshold: 1,
+  //   minimumViewTime: 0,
+  // }).current;
+
+  // // Renderiza item baseado no tipo
+  // const renderItem = useCallback(({ item }: { item: FlatListItem }) => {
+  //   if (item.type === 'header') {
+  //     return <HeaderItem title={item.title} isToday={item.isToday} colors={colors} />;
+  //   }
+    
+  //   if (item.type === 'empty') {
+  //     return <EmptyItem colors={colors} />;
+  //   }
+    
+  //   // type === 'item'
+  //   const servico = item.data;
+  //   const route = isChamado(servico)
+  //     ? `/detalhes/chamado/${servico.uuid_suporte}`
+  //     : `/detalhes/instalacao/${(servico as any).uuid_solic}`;
+
+  //   return (
+  //     <View style={{ height: 100 }}>
+  //       <AgendaItemCard item={servico} onPress={() => router.push(route as any)} />
+  //     </View>
+  //   );
+  // }, [colors, router]);
+
+  // if (isLoading && !servicos) {
+  //   return (
+  //     <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center' }}>
+  //       <ActivityIndicator size="large" color="#3b82f6" />
+  //       <Text style={{ color: colors.cardTextSecondary, marginTop: 16 }}>Carregando agenda...</Text>
+  //     </SafeAreaView>
+  //   );
+  // }
+
+  // if (error) {
+  //   return (
+  //     <SafeAreaView style={{ flex: 1, backgroundColor: colors.screenBackground, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+  //       <Text className="text-red-500 text-lg font-semibold mb-2">
+  //         Erro ao carregar agenda
+  //       </Text>
+  //       <Text style={{ color: colors.cardTextSecondary }} className="text-center mb-4">
+  //         {error.message}
+  //       </Text>
+  //       <TouchableOpacity
+  //         onPress={invalidate}
+  //         className="bg-blue-600 px-6 py-3 rounded-lg mt-2"
+  //         activeOpacity={0.7}
+  //       >
+  //         <Text className="text-white font-semibold">Tentar novamente</Text>
+  //       </TouchableOpacity>
+  //     </SafeAreaView>
+  //   );
+  // }
+
+  // return (
+  //   <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
+  //     {/* Toggle + Calendário colapsado no topo */}
+  //     <View style={{ backgroundColor: colors.cardBackground }}>
+  //       {/* Toggle Dia/Agenda - estilo badge pill, alinhado à esquerda */}
+  //       <View style={{ 
+  //         flexDirection: 'row', 
+  //         justifyContent: 'flex-start',
+  //         paddingHorizontal: 16,
+  //         paddingTop: 8,
+  //         paddingBottom: 4,
+  //       }}>
+  //         <View style={{
+  //           flexDirection: 'row',
+  //           backgroundColor: colors.searchInputBackground,
+  //           borderRadius: 20,
+  //           padding: 3,
+  //         }}>
+  //           <TouchableOpacity
+  //             onPress={() => setViewMode('day')}
+  //             activeOpacity={0.7}
+  //             style={{
+  //               paddingHorizontal: 16,
+  //               paddingVertical: 6,
+  //               borderRadius: 16,
+  //               backgroundColor: viewMode === 'day' ? colors.tabBarActiveTint : 'transparent',
+  //             }}
+  //           >
+  //             <Text style={{
+  //               fontSize: 12,
+  //               fontWeight: '600',
+  //               color: viewMode === 'day' ? '#ffffff' : colors.cardTextSecondary,
+  //             }}>
+  //               Dia
+  //             </Text>
+  //           </TouchableOpacity>
+            
+  //           <TouchableOpacity
+  //             onPress={() => setViewMode('agenda')}
+  //             activeOpacity={0.7}
+  //             style={{
+  //               paddingHorizontal: 16,
+  //               paddingVertical: 6,
+  //               borderRadius: 16,
+  //               backgroundColor: viewMode === 'agenda' ? colors.tabBarActiveTint : 'transparent',
+  //             }}
+  //           >
+  //             <Text style={{
+  //               fontSize: 12,
+  //               fontWeight: '600',
+  //               color: viewMode === 'agenda' ? '#ffffff' : colors.cardTextSecondary,
+  //             }}>
+  //               Agenda
+  //             </Text>
+  //           </TouchableOpacity>
+  //         </View>
+  //       </View>
+
+  //       {/* Calendário colapsado fixo (Dom-Sab) */}
+  //       <CollapsedCalendar
+  //         ref={calendarRef}
+  //         onSelectDate={(dateKey) => scrollToDate(dateKey)}
+  //       />
+  //     </View>
+
+  //     <FlatList
+  //       key={viewMode} // Força remount quando muda o modo
+  //       ref={flatListRef}
+  //       data={activeData}
+  //       keyExtractor={(item) => item.id}
+  //       renderItem={renderItem}
+  //       getItemLayout={getItemLayout}
+  //       initialScrollIndex={viewMode === 'agenda' ? todayHeaderIndex : undefined}
+  //       contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
+  //       stickyHeaderIndices={viewMode === 'agenda' ? stickyHeaderIndices : undefined}
+  //       // Desabilita TODA virtualização
+  //       initialNumToRender={9999}
+  //       maxToRenderPerBatch={9999}
+  //       windowSize={999}
+  //       updateCellsBatchingPeriod={0}
+  //       removeClippedSubviews={false}
+  //       disableVirtualization={true}
+  //       refreshControl={
+  //         <RefreshControl refreshing={isFetching} onRefresh={handleRefresh} />
+  //       }
+  //       onScroll={viewMode === 'agenda' ? onScroll : undefined}
+  //       scrollEventThrottle={8}
+  //       onViewableItemsChanged={viewMode === 'agenda' ? onViewableItemsChanged : undefined}
+  //       viewabilityConfig={viewabilityConfig}
+  //       onScrollToIndexFailed={(info) => {
+  //         // Fallback silencioso: scroll via offset
+  //         flatListRef.current?.scrollToOffset({
+  //           offset: info.averageItemLength * info.index,
+  //           animated: false,
+  //         });
+  //       }}
+  //     />
+
+  //     {/* FAB - Voltar para Hoje */}
+  //     <Animated.View
+  //       pointerEvents="box-none"
+  //       style={{
+  //         position: 'absolute',
+  //         bottom: 24,
+  //         right: 20,
+  //         opacity: fabOpacity,
+  //       }}
+  //     >
+  //       <TouchableOpacity
+  //         onPress={scrollToToday}
+  //         activeOpacity={0.8}
+  //         style={{
+  //           flexDirection: 'row',
+  //           alignItems: 'center',
+  //           backgroundColor: colors.tabBarActiveTint,
+  //           paddingHorizontal: 16,
+  //           paddingVertical: 10,
+  //           borderRadius: 20,
+  //           shadowColor: '#000',
+  //           shadowOffset: { width: 0, height: 2 },
+  //           shadowOpacity: 0.2,
+  //           shadowRadius: 4,
+  //           elevation: 4,
+  //         }}
+  //       >
+  //         <Ionicons name="today-outline" size={16} color="white" />
+  //         <Text
+  //           style={{
+  //             color: 'white',
+  //             fontSize: 13,
+  //             fontWeight: '600',
+  //             marginLeft: 6,
+  //           }}
+  //         >
+  //           Hoje
+  //         </Text>
+  //       </TouchableOpacity>
+  //     </Animated.View>
+  //   </View>
+  // );
+// }

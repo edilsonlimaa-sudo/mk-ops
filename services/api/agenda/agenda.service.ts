@@ -40,6 +40,50 @@ export const fetchAgenda = async (): Promise<ServicoAgenda[]> => {
 };
 
 /**
+ * Fetches and combines ALL chamados and instalacoes (open + closed)
+ * Returns a unified timeline sorted by visita date
+ * 
+ * This is the complete timeline view that includes:
+ * - Open chamados and instalacoes (pending work)
+ * - Closed chamados and completed instalacoes (historical)
+ * 
+ * @returns Array of all chamados and instalacoes sorted by visita date
+ */
+export const fetchAgendaCompleta = async (): Promise<ServicoAgenda[]> => {
+  console.log('🗓️ [AgendaService] Iniciando busca de agenda COMPLETA (abertos + fechados)...');
+  
+  try {
+    // Fetch all in parallel for better performance
+    const [chamadosAbertos, chamadosFechados, instalacoesAbertas, instalacoesConcluidas] = await Promise.all([
+      fetchAllChamados('aberto'),
+      fetchRecentChamadosFechados(100), // últimos 100 fechados
+      fetchAllInstalacoes('aberto'),
+      fetchRecentInstalacoesConcluidadas(100), // últimas 100 concluídas
+    ]);
+
+    console.log(`📊 [AgendaService] Chamados: ${chamadosAbertos.length} abertos + ${chamadosFechados.length} fechados`);
+    console.log(`📊 [AgendaService] Instalações: ${instalacoesAbertas.length} abertas + ${instalacoesConcluidas.length} concluídas`);
+
+    // Combine all
+    const todosServicos: ServicoAgenda[] = [
+      ...chamadosAbertos,
+      ...chamadosFechados,
+      ...instalacoesAbertas,
+      ...instalacoesConcluidas,
+    ];
+
+    // Sort by visita date
+    todosServicos.sort((a, b) => compareVisita(a.visita, b.visita));
+
+    console.log(`✅ [AgendaService] Agenda completa: ${todosServicos.length} itens`);
+    return todosServicos;
+  } catch (error) {
+    console.error('❌ [AgendaService] Erro ao buscar agenda completa:', error);
+    throw error;
+  }
+};
+
+/**
  * Fetches the most recent historical records (closed chamados + completed instalações)
  * using reverse pagination for optimal performance
  * 
