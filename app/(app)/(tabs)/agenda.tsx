@@ -17,24 +17,22 @@ export default function AgendaScreen() {
   const { colors } = useTheme();
   const calendarRef = useRef<CollapsedCalendarRef>(null);
   const agendaListRef = useRef<AgendaListRef>(null);
-  // const currentWeekRef = useRef<number>(-1);
+  const currentWeekRef = useRef<number>(-1);
 
-  // COMENTADO: Controle da lista -> calendário
-  // const handleActiveHeaderChange = (dateKey: string, dayIndex: number) => {
-  //   console.log('[AgendaScreen] Header ativo:', dateKey, 'dayIndex:', dayIndex);
-  //   
-  //   // Calcula qual semana mostrar (0-6)
-  //   const weekIndex = Math.floor(dayIndex / 7);
-  //   
-  //   // Só scrolla se mudou de semana
-  //   if (currentWeekRef.current !== weekIndex) {
-  //     console.log('[AgendaScreen] Scrollando calendário para semana:', weekIndex);
-  //     currentWeekRef.current = weekIndex;
-  //     calendarRef.current?.scrollToWeek(weekIndex);
-  //   }
-  // };
+  // Controle da lista -> calendário
+  const handleActiveHeaderChange = (dateKey: string, dayIndex: number) => {
+    console.log('[AgendaScreen] Header ativo:', dateKey, 'dayIndex:', dayIndex);
+    
+    const weekIndex = Math.floor(dayIndex / 7);
+    
+    if (currentWeekRef.current !== weekIndex) {
+      console.log('[AgendaScreen] Scrollando calendário para semana:', weekIndex);
+      currentWeekRef.current = weekIndex;
+      calendarRef.current?.scrollToWeek(weekIndex);
+    }
+  };
 
-  // NOVO: Controle do calendário -> lista
+  // Controle do calendário -> lista
   const handleDayPress = (dateKey: string) => {
     console.log('[AgendaScreen] Data selecionada no calendário:', dateKey);
     agendaListRef.current?.scrollToDate(dateKey);
@@ -43,7 +41,11 @@ export default function AgendaScreen() {
   return (
     <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
       <CollapsedCalendar ref={calendarRef} onDayPress={handleDayPress} />
-      <AgendaList ref={agendaListRef} items={mockItems} />
+      <AgendaList 
+        ref={agendaListRef} 
+        items={mockItems} 
+        onActiveHeaderChange={handleActiveHeaderChange}
+      />
     </View>
   );
 }
