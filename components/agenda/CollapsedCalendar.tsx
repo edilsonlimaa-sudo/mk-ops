@@ -43,7 +43,7 @@ export const CollapsedCalendar = forwardRef<CollapsedCalendarRef, CollapsedCalen
         
         Animated.timing(bolinhaX, {
           toValue: x,
-          duration: 100, // Bolinha mais rápida que a paginação
+          duration: 0, // Bolinha mais rápida que a paginação
           useNativeDriver: true,
         }).start();
       },
