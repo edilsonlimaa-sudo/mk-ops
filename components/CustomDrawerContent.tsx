@@ -94,7 +94,7 @@ export function CustomDrawerContent(props: any) {
         <Pressable
           onPress={() => {
             props.navigation.closeDrawer();
-            router.push('/(app)/');
+            router.push('/');
           }}
           className="py-2 flex-row items-center justify-between active:opacity-60">
           <View className="flex-row items-center flex-1">
