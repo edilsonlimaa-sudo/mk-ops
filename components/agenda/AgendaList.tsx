@@ -15,6 +15,8 @@ interface AgendaListProps {
   items?: AgendaItem[];
   onActiveHeaderChange?: (dateKey: string, dayIndex: number) => void;
   onScrollBeginDrag?: () => void;
+  viewMode?: 'agenda' | 'day';
+  activeDateKey?: string;
 }
 
 export interface AgendaListRef {
@@ -27,8 +29,8 @@ type FlatListItem =
   | { type: 'empty'; dateKey: string };
 
 export const AgendaList = forwardRef<AgendaListRef, AgendaListProps>(
-  ({ items = [], onActiveHeaderChange, onScrollBeginDrag }, ref) => {
-  console.log('[AgendaList] Re-render, items:', items.length);
+  ({ items = [], onActiveHeaderChange, onScrollBeginDrag, viewMode = 'agenda', activeDateKey }, ref) => {
+  console.log('[AgendaList] Re-render, items:', items.length, 'viewMode:', viewMode);
   const { colors } = useTheme();
   const lastActiveHeaderRef = useRef<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
@@ -39,8 +41,11 @@ export const AgendaList = forwardRef<AgendaListRef, AgendaListProps>(
     const EMPTY_HEIGHT = 46;
     const ITEM_HEIGHT = 82;
 
-    // Gera todos os 49 dias das 7 semanas
-    const days = generateCalendarDays();
+    // Gera dias baseado no viewMode
+    const allDays = generateCalendarDays();
+    const days = viewMode === 'day' && activeDateKey
+      ? allDays.filter(day => day.dateKey === activeDateKey)
+      : allDays;
     const result: FlatListItem[] = [];
     const stickyIndices: number[] = [];
     const dateKeyToIndexMap = new Map<string, number>();
@@ -77,7 +82,7 @@ export const AgendaList = forwardRef<AgendaListRef, AgendaListProps>(
     });
 
     return { flatData: result, stickyIndices, dateKeyToIndexMap, itemLayouts };
-  }, [items]);
+  }, [items, viewMode, activeDateKey]);
 
   // Expõe métodos para o componente pai
   useImperativeHandle(ref, () => ({
@@ -198,12 +203,13 @@ export const AgendaList = forwardRef<AgendaListRef, AgendaListProps>(
 
   return (
     <FlatList
+      key={viewMode}
       ref={flatListRef}
       data={flatData.flatData}
       renderItem={renderItem}
       keyExtractor={(item, index) => `${item.type}-${index}`}
       getItemLayout={getItemLayout}
-      stickyHeaderIndices={flatData.stickyIndices}
+      stickyHeaderIndices={viewMode === 'agenda' ? flatData.stickyIndices : undefined}
       contentContainerStyle={{ paddingBottom: 24 }}
       viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs}
       onScrollBeginDrag={onScrollBeginDrag}

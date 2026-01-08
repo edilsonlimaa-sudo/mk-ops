@@ -18,6 +18,8 @@ export default function AgendaScreen() {
   console.log('[AgendaScreen] Re-render');
   const { colors } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>('agenda');
+  const [activeDateKey, setActiveDateKey] = useState<string>(getTodayDateKey());
+  const lastActiveDateKeyRef = useRef<string>(getTodayDateKey());
   const calendarRef = useRef<CollapsedCalendarRef>(null);
   const agendaListRef = useRef<AgendaListRef>(null);
   const currentWeekRef = useRef<number>(-1);
@@ -70,6 +72,14 @@ export default function AgendaScreen() {
   // Controle da lista -> calendário
   const handleActiveHeaderChange = (dateKey: string, dayIndex: number) => {
     console.log('[AgendaScreen] Header ativo:', dateKey, 'dayIndex:', dayIndex);
+    
+    // Sempre atualiza a ref (sem causar re-render)
+    lastActiveDateKeyRef.current = dateKey;
+    
+    // Só atualiza o state no modo dia (evita re-renders desnecessários no modo agenda)
+    if (viewMode === 'day') {
+      setActiveDateKey(dateKey);
+    }
 
     // Ignora se é scroll programático (clicou no calendário)
     if (isProgrammaticScrollRef.current) {
@@ -94,31 +104,63 @@ export default function AgendaScreen() {
   const handleDayPress = (dateKey: string) => {
     console.log('[AgendaScreen] Data selecionada no calendário:', dateKey);
 
+    // Atualiza o activeDateKey (importante para modo dia)
+    setActiveDateKey(dateKey);
+
     // Atualiza bolinha imediatamente
     calendarRef.current?.updateActiveDay(dateKey);
 
-    // Marca como scroll programático
-    isProgrammaticScrollRef.current = true;
+    // No modo agenda, scrolla a lista
+    if (viewMode === 'agenda') {
+      // Marca como scroll programático
+      isProgrammaticScrollRef.current = true;
 
-    // Scrolla lista
-    agendaListRef.current?.scrollToDate(dateKey);
+      // Scrolla lista
+      agendaListRef.current?.scrollToDate(dateKey);
 
-    // Reseta flag após o scroll terminar
-    setTimeout(() => {
-      isProgrammaticScrollRef.current = false;
-    }, 500);
+      // Reseta flag após o scroll terminar
+      setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 500);
+    }
+    // No modo dia, a lista já atualiza automaticamente via filteredItems
   };
+
+  // Quando mudar de modo, sincroniza o activeDateKey com a ref
+  const handleViewModeChange = (newMode: ViewMode) => {
+    const previousMode = viewMode;
+    
+    if (newMode === 'day') {
+      // Ao entrar no modo dia, usa o último dia que estava visível
+      setActiveDateKey(lastActiveDateKeyRef.current);
+    } else if (newMode === 'agenda' && previousMode === 'day') {
+      // Ao voltar do modo dia para agenda, agenda o scroll
+      setTimeout(() => {
+        console.log('[AgendaScreen] Voltando para modo agenda, scrollando para:', lastActiveDateKeyRef.current);
+        agendaListRef.current?.scrollToDate(lastActiveDateKeyRef.current, false);
+      }, 100);
+    }
+    
+    setViewMode(newMode);
+  };
+
+  // Filtra itens baseado no viewMode
+  const filteredItems = viewMode === 'day'
+    ? mockItems.filter(item => item.dateKey === activeDateKey)
+    : mockItems;
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
       <View style={{ backgroundColor: colors.cardBackground }}>
-        <ViewModeToggle value={viewMode} onChange={setViewMode} />
+        <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
         <CollapsedCalendar ref={calendarRef} onDayPress={handleDayPress} />
       </View>
 
       <AgendaList
         ref={agendaListRef}
-        items={mockItems}
+        items={filteredItems}
+        viewMode={viewMode}
+        activeDateKey={activeDateKey}
         onActiveHeaderChange={handleActiveHeaderChange}
         onScrollBeginDrag={() => {
           console.log('[AgendaScreen] Usuário começou scroll manual');
