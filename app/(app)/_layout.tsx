@@ -1,11 +1,15 @@
+import { CustomDrawerContent } from '@/components/CustomDrawerContent';
+import { DrawerProfileButton, DrawerSearchButton } from '@/components/DrawerHeader';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemedHeader } from '@/hooks/ui';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
-import { Redirect, Stack } from 'expo-router';
+import { Redirect } from 'expo-router';
+import { Drawer } from 'expo-router/drawer';
 
 /**
  * Layout de app - Guard: precisa estar TOTALMENTE autenticado (API + identificado)
+ * Agora usando Drawer Navigation ao invés de Tabs
  */
 export default function AppLayout() {
   const { colors } = useTheme();
@@ -34,50 +38,113 @@ export default function AppLayout() {
 
   console.log('✅ [AppLayout] Totalmente autenticado, permitindo acesso');
   return (
-    <Stack screenOptions={{ 
-      headerShown: false,
-      contentStyle: { backgroundColor: colors.screenBackground },
-    }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen 
+    <Drawer
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={{
+        drawerActiveTintColor: colors.tabBarActiveTint,
+        drawerInactiveTintColor: colors.tabBarInactiveTint,
+        drawerStyle: {
+          backgroundColor: colors.cardBackground,
+        },
+        sceneStyle: { backgroundColor: colors.screenBackground },
+        headerStyle: {
+          backgroundColor: colors.headerBackground,
+        },
+        headerTintColor: colors.headerText,
+      }}>
+      <Drawer.Screen 
+        name="index" 
+        options={{
+          ...headerOptions,
+          title: 'Agenda',
+          headerTitle: '',
+          headerLeft: () => <DrawerProfileButton />,
+          headerRight: () => <DrawerSearchButton />,
+          drawerItemStyle: { display: 'none' },
+          headerShadowVisible: false,
+        }} 
+      />
+      <Drawer.Screen 
+        name="perfil" 
+        options={{
+          ...headerOptions,
+          title: 'Perfil',
+          headerLeft: undefined,
+          headerRight: undefined,
+          drawerItemStyle: { display: 'none' },
+        }} 
+      />
+      <Drawer.Screen 
+        name="sobre" 
+        options={{
+          ...headerOptions,
+          title: 'Sobre',
+          headerLeft: undefined,
+          headerRight: undefined,
+          drawerItemStyle: { display: 'none' },
+        }} 
+      />
+      <Drawer.Screen 
+        name="ajuda" 
+        options={{
+          ...headerOptions,
+          title: 'Ajuda',
+          headerLeft: undefined,
+          headerRight: undefined,
+          drawerItemStyle: { display: 'none' },
+        }} 
+      />
+      <Drawer.Screen 
+        name="limitacoes" 
+        options={{
+          ...headerOptions,
+          title: 'Limitações da API',
+          headerLeft: undefined,
+          headerRight: undefined,
+          drawerItemStyle: { display: 'none' },
+        }} 
+      />
+      <Drawer.Screen 
         name="detalhes/cliente/[uuid]" 
         options={{ 
           ...headerOptions,
           headerShown: true,
-          headerBackTitle: 'Voltar',
-          presentation: 'card',
+          drawerItemStyle: { display: 'none' },
         }} 
       />
-      <Stack.Screen 
+      <Drawer.Screen 
         name="detalhes/chamado/[id]" 
         options={{ 
           ...headerOptions,
           headerShown: true,
-          headerBackTitle: 'Voltar',
           headerTitle: 'Detalhes do Chamado',
-          presentation: 'card',
+          drawerItemStyle: { display: 'none' },
         }} 
       />
-      <Stack.Screen 
+      <Drawer.Screen 
         name="detalhes/instalacao/[id]" 
         options={{ 
           ...headerOptions,
           headerShown: true,
-          headerBackTitle: 'Voltar',
           headerTitle: 'Detalhes da Instalação',
-          presentation: 'card',
+          drawerItemStyle: { display: 'none' },
         }} 
       />
-      <Stack.Screen 
+      <Drawer.Screen 
         name="detalhes/instalacao/cliente-info" 
         options={{ 
           ...headerOptions,
           headerShown: true,
-          headerBackTitle: 'Voltar',
           headerTitle: 'Dados do Cliente',
-          presentation: 'card',
+          drawerItemStyle: { display: 'none' },
         }} 
       />
-    </Stack>
+      <Drawer.Screen 
+        name="(tabs)" 
+        options={{ 
+          drawerItemStyle: { display: 'none' },
+        }} 
+      />
+    </Drawer>
   );
 }

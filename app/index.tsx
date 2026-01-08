@@ -17,10 +17,10 @@ export default function Index() {
 
   console.log('🔄 [Index] Sessão restaurada, isAuthenticated:', isAuthenticated);
 
-  // Redireciona para tabs (guards vão interceptar se necessário)
+  // Redireciona para app (guards vão interceptar se necessário)
   // Se não autenticado → AppLayout redireciona para login
   // Se autenticado mas não identificado → AppLayout redireciona para identificação
-  // Se tudo ok → vai para tabs
-  console.log('➡️ [Index] Redirecionando para /(app)/(tabs) (guards decidem o resto)');
-  return <Redirect href="/(app)/(tabs)" />;
+  // Se tudo ok → vai para drawer (agenda)
+  console.log('➡️ [Index] Redirecionando para /(app) (guards decidem o resto)');
+  return <Redirect href="/(app)" />;
 }
