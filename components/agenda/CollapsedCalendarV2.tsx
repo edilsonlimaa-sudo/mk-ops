@@ -14,20 +14,21 @@ export interface CollapsedCalendarV2Ref {
 
 interface CollapsedCalendarV2Props {
   onDayPress?: (dateKey: string) => void;
+  initialDateKey?: string;
 }
 
 export const CollapsedCalendarV2 = forwardRef<CollapsedCalendarV2Ref, CollapsedCalendarV2Props>(
-  function CollapsedCalendarV2({ onDayPress }, ref) {
+  function CollapsedCalendarV2({ onDayPress, initialDateKey }, ref) {
     console.log('[CollapsedCalendarV2] Re-render');
     const { colors } = useTheme();
     const scrollViewRef = useRef<ScrollView>(null);
 
     const days = useMemo(() => generateCalendarDays(), []);
 
-    // Bolinha começa no dia de hoje
-    const todayDateKey = getTodayDateKey();
-    const todayIndex = days.findIndex(d => d.dateKey === todayDateKey);
-    const initialX = todayIndex !== -1 ? (todayIndex * DAY_WIDTH) + (DAY_WIDTH / 2) - 16 : 0;
+    // Bolinha começa no initialDateKey ou hoje
+    const targetDateKey = initialDateKey || getTodayDateKey();
+    const targetIndex = days.findIndex(d => d.dateKey === targetDateKey);
+    const initialX = targetIndex !== -1 ? (targetIndex * DAY_WIDTH) + (DAY_WIDTH / 2) - 16 : 0;
     const bolinhaX = useRef(new Animated.Value(initialX)).current;
 
     // Lógica compartilhada de scroll

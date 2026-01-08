@@ -1,10 +1,10 @@
 import { ViewMode, ViewModeToggle } from '@/components/agenda';
-import { AgendaListV2 } from '@/components/agenda/AgendaListV2';
-import { CollapsedCalendarV2 } from '@/components/agenda/CollapsedCalendarV2';
+import { AgendaListV2, AgendaListV2Ref } from '@/components/agenda/AgendaListV2';
+import { CollapsedCalendarV2, CollapsedCalendarV2Ref } from '@/components/agenda/CollapsedCalendarV2';
 import { DayListV2 } from '@/components/agenda/DayListV2';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getTodayDateKey } from '@/utils/agenda';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { View } from 'react-native';
 
 // Mock data para testar
@@ -18,19 +18,22 @@ const mockItems = [
 export default function AgendaV2Screen() {
   const { colors } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>('agenda');
-  const [activeDateKey, setActiveDateKey] = useState<string>(getTodayDateKey());
+
+  // Estado silencioso - não causa re-render
+  const activeDateKeyRef = useRef<string>(getTodayDateKey());
+  const calendarRef = useRef<CollapsedCalendarV2Ref>(null);
+  const agendaListRef = useRef<AgendaListV2Ref>(null);
 
   return (
     <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
       <View style={{ backgroundColor: colors.cardBackground }}>
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
-        <CollapsedCalendarV2 />
+        <CollapsedCalendarV2 ref={calendarRef} initialDateKey={activeDateKeyRef.current} />
       </View>
-      {viewMode === 'agenda' ? (
-        <AgendaListV2 items={mockItems} />
-      ) : (
-        <DayListV2 items={mockItems} dateKey={activeDateKey} />
-      )}
+      {viewMode === 'agenda'
+        ? (<AgendaListV2 ref={agendaListRef} items={mockItems} initialDateKey={activeDateKeyRef.current} />)
+        : (<DayListV2 items={mockItems} dateKey={activeDateKeyRef.current} />)
+      }
     </View>
   );
 }
