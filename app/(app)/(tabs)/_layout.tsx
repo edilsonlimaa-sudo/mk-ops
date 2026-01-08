@@ -64,6 +64,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="agenda-v2"
+        options={{
+          ...headerOptions,
+          title: 'Agenda V2',
+          headerShadowVisible: false,
+          headerShown: true,
+          headerTitle: 'Agenda V2 (Store Silenciosa)',
+          tabBarIcon: ({ color, focused }) => (
+            <IconSymbol size={24} name="calendar" color={color || (focused ? '#3b82f6' : '#6b7280')} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="historico"
         options={{
           ...headerOptions,
