@@ -24,11 +24,27 @@ export default function AgendaV2Screen() {
   const calendarRef = useRef<CollapsedCalendarV2Ref>(null);
   const agendaListRef = useRef<AgendaListV2Ref>(null);
 
+  const handleDayPress = (dateKey: string) => {
+    activeDateKeyRef.current = dateKey;
+    
+    // Sincroniza o calendário
+    calendarRef.current?.setActiveDateAnimated(dateKey);
+    
+    // Sincroniza a lista (apenas em modo agenda)
+    if (viewMode === 'agenda') {
+      agendaListRef.current?.setActiveDateAnimated(dateKey);
+    }
+  };
+
   return (
     <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
       <View style={{ backgroundColor: colors.cardBackground }}>
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
-        <CollapsedCalendarV2 ref={calendarRef} initialDateKey={activeDateKeyRef.current} />
+        <CollapsedCalendarV2 
+          ref={calendarRef} 
+          initialDateKey={activeDateKeyRef.current} 
+          onDayPress={handleDayPress}
+        />
       </View>
       {viewMode === 'agenda'
         ? (<AgendaListV2 ref={agendaListRef} items={mockItems} initialDateKey={activeDateKeyRef.current} />)
