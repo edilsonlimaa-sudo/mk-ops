@@ -17,15 +17,15 @@ export function ViewModeToggle({ value, onChange }: ViewModeToggleProps) {
         flexDirection: 'row',
         justifyContent: 'flex-start',
         paddingHorizontal: 16,
-        paddingTop: 12,
-        paddingBottom: 8,
+        paddingTop: 10,
+        paddingBottom: 7,
       }}
     >
       <View
         style={{
           flexDirection: 'row',
           backgroundColor: colors.searchInputBackground,
-          borderRadius: 20,
+          borderRadius: 18,
           padding: 3,
         }}
       >
@@ -33,15 +33,15 @@ export function ViewModeToggle({ value, onChange }: ViewModeToggleProps) {
           onPress={() => onChange('agenda')}
           activeOpacity={0.7}
           style={{
-            paddingHorizontal: 18,
-            paddingVertical: 7,
-            borderRadius: 17,
+            paddingHorizontal: 16,
+            paddingVertical: 6,
+            borderRadius: 15,
             backgroundColor: value === 'agenda' ? colors.tabBarActiveTint : 'transparent',
           }}
         >
           <Text
             style={{
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: '600',
               color: value === 'agenda' ? '#ffffff' : colors.cardTextSecondary,
             }}
@@ -54,15 +54,15 @@ export function ViewModeToggle({ value, onChange }: ViewModeToggleProps) {
           onPress={() => onChange('day')}
           activeOpacity={0.7}
           style={{
-            paddingHorizontal: 18,
-            paddingVertical: 7,
-            borderRadius: 17,
+            paddingHorizontal: 16,
+            paddingVertical: 6,
+            borderRadius: 15,
             backgroundColor: value === 'day' ? colors.tabBarActiveTint : 'transparent',
           }}
         >
           <Text
             style={{
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: '600',
               color: value === 'day' ? '#ffffff' : colors.cardTextSecondary,
             }}
