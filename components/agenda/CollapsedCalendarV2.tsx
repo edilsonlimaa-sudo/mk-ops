@@ -1,6 +1,6 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import { generateCalendarDays, getTodayDateKey } from '@/utils/agenda';
-import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { Animated, Dimensions, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 const WEEK_DAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -75,6 +75,13 @@ export const CollapsedCalendarV2 = forwardRef<CollapsedCalendarV2Ref, CollapsedC
         setActiveDate(dateKey, false);
       },
     }), [days, bolinhaX]);
+
+    // Scroll inicial para o initialDateKey
+    useEffect(() => {
+      if (initialDateKey) {
+        scrollToDate(initialDateKey, false);
+      }
+    }, [initialDateKey]);
 
     const handleDayPress = (dateKey: string) => {
       console.log('[CollapsedCalendarV2] Dia clicado:', dateKey);
