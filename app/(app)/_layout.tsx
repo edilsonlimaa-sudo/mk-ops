@@ -1,5 +1,4 @@
 import { CustomDrawerContent } from '@/components/CustomDrawerContent';
-import { DrawerProfileButton, DrawerSearchButton } from '@/components/DrawerHeader';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemedHeader } from '@/hooks/ui';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -53,15 +52,11 @@ export default function AppLayout() {
         headerTintColor: colors.headerText,
       }}>
       <Drawer.Screen 
-        name="index" 
+        name="(agenda)" 
         options={{
-          ...headerOptions,
           title: 'Agenda',
-          headerTitle: '',
-          headerLeft: () => <DrawerProfileButton />,
-          headerRight: () => <DrawerSearchButton />,
+          headerShown: false,
           drawerItemStyle: { display: 'none' },
-          headerShadowVisible: false,
         }} 
       />
       <Drawer.Screen 
@@ -101,47 +96,6 @@ export default function AppLayout() {
           title: 'Limitações da API',
           headerLeft: undefined,
           headerRight: undefined,
-          drawerItemStyle: { display: 'none' },
-        }} 
-      />
-      <Drawer.Screen 
-        name="detalhes/cliente/[uuid]" 
-        options={{ 
-          ...headerOptions,
-          headerShown: true,
-          drawerItemStyle: { display: 'none' },
-        }} 
-      />
-      <Drawer.Screen 
-        name="detalhes/chamado/[id]" 
-        options={{ 
-          ...headerOptions,
-          headerShown: true,
-          headerTitle: 'Detalhes do Chamado',
-          drawerItemStyle: { display: 'none' },
-        }} 
-      />
-      <Drawer.Screen 
-        name="detalhes/instalacao/[id]" 
-        options={{ 
-          ...headerOptions,
-          headerShown: true,
-          headerTitle: 'Detalhes da Instalação',
-          drawerItemStyle: { display: 'none' },
-        }} 
-      />
-      <Drawer.Screen 
-        name="detalhes/instalacao/cliente-info" 
-        options={{ 
-          ...headerOptions,
-          headerShown: true,
-          headerTitle: 'Dados do Cliente',
-          drawerItemStyle: { display: 'none' },
-        }} 
-      />
-      <Drawer.Screen 
-        name="(tabs)" 
-        options={{ 
           drawerItemStyle: { display: 'none' },
         }} 
       />
