@@ -39,6 +39,13 @@ export default function AgendaV2Screen() {
     }
   };
 
+  const handleActiveHeaderChange = (dateKey: string) => {
+    activeDateKeyRef.current = dateKey;
+    
+    // Sincroniza o calendário quando a lista scrolla
+    calendarRef.current?.setActiveDateInstant(dateKey);
+  };
+
   return (
     <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
       <View style={{ backgroundColor: colors.cardBackground }}>
@@ -50,7 +57,12 @@ export default function AgendaV2Screen() {
         />
       </View>
       {viewMode === 'agenda'
-        ? (<AgendaListV2 ref={agendaListRef} items={mockItems} initialDateKey={activeDateKeyRef.current} />)
+        ? (<AgendaListV2 
+            ref={agendaListRef} 
+            items={mockItems} 
+            initialDateKey={activeDateKeyRef.current}
+            onActiveHeaderChange={handleActiveHeaderChange}
+          />)
         : (<DayListV2 ref={dayListRef} items={mockItems} initialDateKey={activeDateKeyRef.current} />)
       }
     </View>

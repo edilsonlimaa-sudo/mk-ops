@@ -15,6 +15,7 @@ interface AgendaItem {
 interface AgendaListV2Props {
   items?: AgendaItem[];
   initialDateKey?: string;
+  onActiveHeaderChange?: (dateKey: string) => void;
 }
 
 export interface AgendaListV2Ref {
@@ -23,10 +24,11 @@ export interface AgendaListV2Ref {
   getIndexForDate: (dateKey: string) => number;
 }
 
-export const AgendaListV2 = forwardRef<AgendaListV2Ref, AgendaListV2Props>(({ items = [], initialDateKey }, ref) => {
+export const AgendaListV2 = forwardRef<AgendaListV2Ref, AgendaListV2Props>(({ items = [], initialDateKey, onActiveHeaderChange }, ref) => {
   console.log('[AgendaListV2] Re-render, items:', items.length);
   const { colors } = useTheme();
   const flatListRef = useRef<FlatList>(null);
+  const lastEmittedDateKeyRef = useRef<string | null>(null);
 
   // Gera todos os dateKeys (modo agenda = 90 dias)
   const dateKeys = useMemo(() => generateCalendarDays().map(d => d.dateKey), []);
@@ -125,6 +127,33 @@ export const AgendaListV2 = forwardRef<AgendaListV2Ref, AgendaListV2Props>(({ it
     return itemLayouts[index] || { length: 0, offset: 0, index };
   };
 
+  const handleScroll = ({ nativeEvent }: any) => {
+    if (!onActiveHeaderChange) return;
+
+    const scrollY = nativeEvent.contentOffset.y;
+
+    // Encontra qual header está ativo baseado no scroll position
+    let activeDateKey: string | null = null;
+
+    // Percorre os headers de trás pra frente para encontrar o último que passou
+    for (let i = flatData.length - 1; i >= 0; i--) {
+      const item = flatData[i];
+      if (item.type === 'header' && item.dateKey) {
+        const layout = itemLayouts[i];
+        if (layout && layout.offset <= scrollY) {
+          activeDateKey = item.dateKey;
+          break;
+        }
+      }
+    }
+
+    // Só notifica se o dateKey realmente mudou
+    if (activeDateKey && lastEmittedDateKeyRef.current !== activeDateKey) {
+      lastEmittedDateKeyRef.current = activeDateKey;
+      onActiveHeaderChange(activeDateKey);
+    }
+  };
+
   return (
     <FlatList
       ref={flatListRef}
@@ -134,6 +163,8 @@ export const AgendaListV2 = forwardRef<AgendaListV2Ref, AgendaListV2Props>(({ it
       getItemLayout={getItemLayout}
       initialScrollIndex={initialScrollIndex}
       stickyHeaderIndices={stickyIndices}
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
       contentContainerStyle={{ paddingBottom: 24 }}
     />
   );
