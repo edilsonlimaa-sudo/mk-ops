@@ -1,5 +1,6 @@
+import { CollapsedCalendarV2 } from '@/components/agenda/CollapsedCalendarV2';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
 // Mock data para testar
 const mockItems = [
@@ -12,14 +13,15 @@ const mockItems = [
 export default function AgendaV2Screen() {
   const { colors } = useTheme();
 
+  const handleDayPress = (dateKey: string) => {
+    console.log('[AgendaV2] Dia clicado:', dateKey);
+  };
+
   return (
-    <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.screenBackground }}>
-      <Text className="text-2xl font-bold" style={{ color: colors.cardText }}>
-        Agenda V2
-      </Text>
-      <Text className="text-sm mt-2" style={{ color: colors.cardTextSecondary }}>
-        Nova implementação com store silenciosa
-      </Text>
+    <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
+      <View style={{ backgroundColor: colors.cardBackground }}>
+        <CollapsedCalendarV2 onDayPress={handleDayPress} />
+      </View>
     </View>
   );
 }
