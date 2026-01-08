@@ -9,7 +9,7 @@ import { Usuario } from '@/types/usuario';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ValidationState = 'idle' | 'validating' | 'success' | 'error';
 type InitialLoadState = 'loading' | 'success' | 'done';
@@ -20,14 +20,13 @@ export default function UserIdentification() {
   const { theme, colors } = useTheme();
   const { identifyUser } = useUserStore();
   const { ipMkAuth, logout } = useAuthStore();
-  const insets = useSafeAreaInsets();
-  
+
   const { data: usuarios = [], isLoading, isError, refetch } = useUsuarios();
   console.log('📋 [UserIdentification] Usuários carregados:', usuarios?.length || 0);
   const [selectedUsuario, setSelectedUsuario] = useState<Usuario | null>(null);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [validationState, setValidationState] = useState<ValidationState>('idle');
-  
+
   // Se flow=switchUser (troca de usuário), pula o intro imersivo
   const [initialLoadState, setInitialLoadState] = useState<InitialLoadState>(
     flow === 'switchUser' ? 'done' : 'loading'
@@ -62,28 +61,28 @@ export default function UserIdentification() {
 
     try {
       console.log('🔐 [UserIdentification] Iniciando validação de senha para:', selectedUsuario.login);
-      
+
       // Aguarda um pouco para o modal fechar completamente
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       // Inicia loading imersivo
       setValidationState('validating');
-      
+
       // Valida senha via service layer (retorna usuário validado)
       const usuarioDetalhado = await validatePassword(selectedUsuario.uuid, password);
       console.log('✅ [UserIdentification] Senha validada com sucesso');
-      
+
       // Mostra animação de sucesso
       setValidationState('success');
-      
+
       // Aguarda animação completar ANTES de identificar (evita redirect prematuro)
       await new Promise(resolve => setTimeout(resolve, 1800));
-      
+
       // Identifica o usuário (guard vai redirecionar automaticamente)
       console.log('💾 [UserIdentification] Identificando usuário...');
       await identifyUser(usuarioDetalhado);
       console.log('✨ [UserIdentification] Usuário identificado! Guard vai redirecionar...');
-      
+
     } catch (error) {
       console.error('❌ [UserIdentification] Erro:', error);
       setValidationState('error');
@@ -127,17 +126,17 @@ export default function UserIdentification() {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
-        <View style={{ backgroundColor: colors.screenBackground }} className="flex-1 items-center justify-center px-6">
+        <SafeAreaView style={{ backgroundColor: colors.screenBackground }} className="flex-1 items-center justify-center px-6" edges={['bottom']}>
           <Text className="text-2xl mb-2">😕</Text>
           <Text style={{ color: colors.cardTextPrimary }} className="font-semibold text-lg mb-2">Erro ao carregar funcionários</Text>
           <Text style={{ color: colors.cardTextSecondary }} className="text-center mb-4">Não foi possível buscar a lista de usuários</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => refetch()}
             className="bg-blue-600 px-6 py-3 rounded-lg"
           >
             <Text className="text-white font-semibold">Tentar novamente</Text>
           </TouchableOpacity>
-        </View>
+        </SafeAreaView>
       </>
     );
   }
@@ -146,17 +145,17 @@ export default function UserIdentification() {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
-        <View style={{ backgroundColor: colors.screenBackground }} className="flex-1 items-center justify-center px-6">
+        <SafeAreaView style={{ backgroundColor: colors.screenBackground }} className="flex-1 items-center justify-center px-6" edges={['bottom']}>
           <Text className="text-2xl mb-2">👥</Text>
           <Text style={{ color: colors.cardTextPrimary }} className="font-semibold text-lg mb-2">Nenhum funcionário encontrado</Text>
           <Text style={{ color: colors.cardTextSecondary }} className="text-center mb-4">Não há usuários cadastrados no sistema</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => refetch()}
             className="bg-blue-600 px-6 py-3 rounded-lg"
           >
             <Text className="text-white font-semibold">Tentar novamente</Text>
           </TouchableOpacity>
-        </View>
+        </SafeAreaView>
       </>
     );
   }
@@ -164,9 +163,9 @@ export default function UserIdentification() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={{ backgroundColor: colors.screenBackground }} className="flex-1">
+      <SafeAreaView style={{ backgroundColor: colors.screenBackground }} className="flex-1" edges={['top', 'bottom']}>
         {/* Hero Section direto (sem header de navegador rs) */}
-        <View style={{ backgroundColor: colors.cardBackground, borderBottomColor: colors.cardBorder, paddingTop: insets.top + 40 }} className="px-6 pb-8 border-b">
+        <View style={{ backgroundColor: colors.cardBackground, borderBottomColor: colors.cardBorder }} className="px-6 pb-8 pt-10 border-b">
           <Text style={{ color: colors.cardTextPrimary }} className="text-4xl font-bold mb-3 text-center">
             👋 Quem é você?
           </Text>
@@ -182,7 +181,7 @@ export default function UserIdentification() {
             keyExtractor={(item) => item.uuid}
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ 
+            contentContainerStyle={{
               paddingHorizontal: 20,
               alignItems: 'center',
             }}
@@ -227,7 +226,7 @@ export default function UserIdentification() {
         </View>
 
         {/* Footer discreto com info de conexão */}
-        <View style={{ backgroundColor: colors.cardBackground, borderTopColor: colors.cardBorder, paddingBottom: insets.bottom + 16 }} className="border-t px-6 py-4">
+        <View style={{ backgroundColor: colors.cardBackground, borderTopColor: colors.cardBorder }} className="border-t px-6 py-4">
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center flex-1 mr-4">
               <View className="w-2 h-2 bg-green-500 rounded-full mr-2" />
@@ -240,7 +239,7 @@ export default function UserIdentification() {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
 
       {/* Password Modal */}
       <PasswordModal

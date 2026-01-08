@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -64,7 +65,7 @@ export default function Login() {
 
   return (
     <>
-      <View style={{ backgroundColor: colors.screenBackground }} className="flex-1 justify-center px-6">
+      <SafeAreaView style={{ backgroundColor: colors.screenBackground }} className="flex-1 justify-center px-6" edges={['bottom']}>
         {/* Header */}
         <View className="mb-8">
         <Text className="text-sm font-semibold text-blue-600 mb-2">
@@ -212,7 +213,7 @@ export default function Login() {
             Credenciais pré-preenchidas para teste
           </Text>
         </View>
-      </View>
+      </SafeAreaView>
 
       {/* Loading Screen Fullscreen */}
       <ImmersiveLoadingScreen
