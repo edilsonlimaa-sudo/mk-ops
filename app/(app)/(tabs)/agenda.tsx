@@ -96,7 +96,7 @@ export default function AgendaScreen() {
     if (currentWeekRef.current !== weekIndex) {
       console.log('[AgendaScreen] Scrollando calendário para semana:', weekIndex);
       currentWeekRef.current = weekIndex;
-      calendarRef.current?.scrollToWeek(weekIndex);
+      calendarRef.current?.scrollToWeek(weekIndex, true); // Com animação no scroll normal
     }
   };
 
@@ -134,10 +134,39 @@ export default function AgendaScreen() {
       // Ao entrar no modo dia, usa o último dia que estava visível
       setActiveDateKey(lastActiveDateKeyRef.current);
     } else if (newMode === 'agenda' && previousMode === 'day') {
-      // Ao voltar do modo dia para agenda, agenda o scroll
+      // Ao voltar do modo dia para agenda, agenda o scroll sem animação
       setTimeout(() => {
         console.log('[AgendaScreen] Voltando para modo agenda, scrollando para:', lastActiveDateKeyRef.current);
+        
+        // Marca como programático para evitar que handleActiveHeaderChange anime o calendário
+        isProgrammaticScrollRef.current = true;
+        
+        // Calcula a semana do dia ativo
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dayOfWeek = today.getDay();
+        const domingoAtual = new Date(today);
+        domingoAtual.setDate(today.getDate() - dayOfWeek);
+        const startDate = new Date(domingoAtual);
+        startDate.setDate(domingoAtual.getDate() - (4 * 7));
+        
+        const targetDate = new Date(lastActiveDateKeyRef.current);
+        const diffTime = targetDate.getTime() - startDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const weekIndex = Math.floor(diffDays / 7);
+        
+        // Atualiza semana e bolinha SEM animação
+        currentWeekRef.current = weekIndex;
+        calendarRef.current?.scrollToWeek(weekIndex, false);
+        calendarRef.current?.updateActiveDay(lastActiveDateKeyRef.current);
+        
+        // Scrolla lista SEM animação
         agendaListRef.current?.scrollToDate(lastActiveDateKeyRef.current, false);
+        
+        // Reseta flag após o scroll
+        setTimeout(() => {
+          isProgrammaticScrollRef.current = false;
+        }, 100);
       }, 100);
     }
     
