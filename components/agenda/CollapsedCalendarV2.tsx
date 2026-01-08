@@ -12,8 +12,12 @@ export interface CollapsedCalendarV2Ref {
   setActiveDateInstant: (dateKey: string) => void;
 }
 
-export const CollapsedCalendarV2 = forwardRef<CollapsedCalendarV2Ref, {}>(
-  function CollapsedCalendarV2(props, ref) {
+interface CollapsedCalendarV2Props {
+  onDayPress?: (dateKey: string) => void;
+}
+
+export const CollapsedCalendarV2 = forwardRef<CollapsedCalendarV2Ref, CollapsedCalendarV2Props>(
+  function CollapsedCalendarV2({ onDayPress }, ref) {
     console.log('[CollapsedCalendarV2] Re-render');
     const { colors } = useTheme();
     const scrollViewRef = useRef<ScrollView>(null);
@@ -73,6 +77,7 @@ export const CollapsedCalendarV2 = forwardRef<CollapsedCalendarV2Ref, {}>(
 
     const handleDayPress = (dateKey: string) => {
       console.log('[CollapsedCalendarV2] Dia clicado:', dateKey);
+      onDayPress?.(dateKey);
     };
 
     return (
