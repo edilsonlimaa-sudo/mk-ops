@@ -36,7 +36,7 @@ export function ViewModeToggle({ value, onChange }: ViewModeToggleProps) {
             paddingHorizontal: 16,
             paddingVertical: 6,
             borderRadius: 15,
-            backgroundColor: value === 'agenda' ? colors.tabBarActiveTint : 'transparent',
+            backgroundColor: value === 'agenda' ? '#3b82f6' : 'transparent',
           }}
         >
           <Text
@@ -57,7 +57,7 @@ export function ViewModeToggle({ value, onChange }: ViewModeToggleProps) {
             paddingHorizontal: 16,
             paddingVertical: 6,
             borderRadius: 15,
-            backgroundColor: value === 'day' ? colors.tabBarActiveTint : 'transparent',
+            backgroundColor: value === 'day' ? '#3b82f6' : 'transparent',
           }}
         >
           <Text

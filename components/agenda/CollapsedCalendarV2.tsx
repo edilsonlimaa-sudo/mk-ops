@@ -1,3 +1,4 @@
+import { ThemedView } from '@/components/ui/themed-view';
 import { useTheme } from '@/contexts/ThemeContext';
 import { generateCalendarDays, getTodayDateKey } from '@/utils/agenda';
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
@@ -89,10 +90,10 @@ export const CollapsedCalendarV2 = forwardRef<CollapsedCalendarV2Ref, CollapsedC
     };
 
     return (
-      <View
+      <ThemedView
+        variant="header"
         className="border-b"
         style={{
-          backgroundColor: colors.cardBackground,
           borderBottomColor: colors.cardBorder,
         }}
       >
@@ -174,7 +175,7 @@ export const CollapsedCalendarV2 = forwardRef<CollapsedCalendarV2Ref, CollapsedC
             </View>
           </View>
         </ScrollView>
-      </View>
+      </ThemedView>
     );
   },
 );
