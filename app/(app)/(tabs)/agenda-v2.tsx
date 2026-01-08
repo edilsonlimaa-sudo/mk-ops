@@ -13,14 +13,10 @@ const mockItems = [
 export default function AgendaV2Screen() {
   const { colors } = useTheme();
 
-  const handleDayPress = (dateKey: string) => {
-    console.log('[AgendaV2] Dia clicado:', dateKey);
-  };
-
   return (
     <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
       <View style={{ backgroundColor: colors.cardBackground }}>
-        <CollapsedCalendarV2 onDayPress={handleDayPress} />
+        <CollapsedCalendarV2 />
       </View>
     </View>
   );

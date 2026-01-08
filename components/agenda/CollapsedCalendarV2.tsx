@@ -7,11 +7,7 @@ const WEEK_DAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const DAY_WIDTH = SCREEN_WIDTH / 7;
 
-interface CollapsedCalendarV2Props {
-  onDayPress?: (dateKey: string) => void;
-}
-
-export function CollapsedCalendarV2({ onDayPress }: CollapsedCalendarV2Props) {
+export function CollapsedCalendarV2() {
   console.log('[CollapsedCalendarV2] Re-render');
   const { colors } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
@@ -20,7 +16,6 @@ export function CollapsedCalendarV2({ onDayPress }: CollapsedCalendarV2Props) {
 
   const handleDayPress = (dateKey: string) => {
     console.log('[CollapsedCalendarV2] Dia clicado:', dateKey);
-    onDayPress?.(dateKey);
   };
 
   return (
