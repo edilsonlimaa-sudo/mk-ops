@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { DrawerActions } from '@react-navigation/native';
 import { useNavigation } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text } from 'react-native';
 
 export function DrawerProfileButton() {
   const { colors } = useTheme();
@@ -22,15 +22,13 @@ export function DrawerProfileButton() {
     : '?';
 
   return (
-    <View className="pl-3 pr-1">
-      <Pressable
-        onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        className="w-9 h-9 rounded-full bg-blue-500 items-center justify-center active:opacity-70">
-        <Text className="text-white text-sm font-bold">
-          {initials}
-        </Text>
-      </Pressable>
-    </View>
+    <Pressable
+      onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+      className="w-9 h-9 rounded-full bg-blue-500 items-center justify-center active:opacity-70">
+      <Text className="text-white text-sm font-bold">
+        {initials}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -39,7 +37,7 @@ export function DrawerSearchButton() {
   const [searchModalVisible, setSearchModalVisible] = useState(false);
 
   return (
-    <View className="pr-3 pl-1">
+    <>
       <Pressable
         onPress={() => setSearchModalVisible(true)}
         className="w-9 h-9 items-center justify-center active:opacity-70">
@@ -51,7 +49,7 @@ export function DrawerSearchButton() {
         onClose={() => setSearchModalVisible(false)}
         initialSearchQuery=""
       />
-    </View>
+    </>
   );
 }
 
