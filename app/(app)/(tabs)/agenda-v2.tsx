@@ -1,7 +1,7 @@
 import { ViewMode, ViewModeToggle } from '@/components/agenda';
 import { AgendaListV2, AgendaListV2Ref } from '@/components/agenda/AgendaListV2';
 import { CollapsedCalendarV2, CollapsedCalendarV2Ref } from '@/components/agenda/CollapsedCalendarV2';
-import { DayListV2 } from '@/components/agenda/DayListV2';
+import { DayListV2, DayListV2Ref } from '@/components/agenda/DayListV2';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getTodayDateKey } from '@/utils/agenda';
 import { useRef, useState } from 'react';
@@ -23,16 +23,19 @@ export default function AgendaV2Screen() {
   const activeDateKeyRef = useRef<string>(getTodayDateKey());
   const calendarRef = useRef<CollapsedCalendarV2Ref>(null);
   const agendaListRef = useRef<AgendaListV2Ref>(null);
+  const dayListRef = useRef<DayListV2Ref>(null);
 
   const handleDayPress = (dateKey: string) => {
     activeDateKeyRef.current = dateKey;
     
     // Sincroniza o calendário
-    calendarRef.current?.setActiveDateAnimated(dateKey);
+    calendarRef.current?.setActiveDateInstant(dateKey);
     
-    // Sincroniza a lista (apenas em modo agenda)
+    // Sincroniza a lista conforme o modo
     if (viewMode === 'agenda') {
       agendaListRef.current?.setActiveDateAnimated(dateKey);
+    } else {
+      dayListRef.current?.setDateKey(dateKey);
     }
   };
 
@@ -48,7 +51,7 @@ export default function AgendaV2Screen() {
       </View>
       {viewMode === 'agenda'
         ? (<AgendaListV2 ref={agendaListRef} items={mockItems} initialDateKey={activeDateKeyRef.current} />)
-        : (<DayListV2 items={mockItems} dateKey={activeDateKeyRef.current} />)
+        : (<DayListV2 ref={dayListRef} items={mockItems} initialDateKey={activeDateKeyRef.current} />)
       }
     </View>
   );
