@@ -21,6 +21,6 @@ export default function Index() {
   // Se não autenticado → AppLayout redireciona para login
   // Se autenticado mas não identificado → AppLayout redireciona para identificação
   // Se tudo ok → vai para drawer (agenda)
-  console.log('➡️ [Index] Redirecionando para /(app) (guards decidem o resto)');
-  return <Redirect href="/(app)" />;
+  console.log('➡️ [Index] Redirecionando para /(app)/(agenda) (guards decidem o resto)');
+  return <Redirect href="/(app)/(agenda)" />;
 }
