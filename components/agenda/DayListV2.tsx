@@ -1,7 +1,7 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import { FlatListItem, useFlatAgendaData } from '@/hooks/agenda/useFlatAgendaData';
 import { forwardRef, useImperativeHandle, useState } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { ListItem } from './ListItem';
 
 interface AgendaItem {
@@ -22,10 +22,12 @@ interface DayListV2Props {
   items?: AgendaItem[];
   initialDateKey: string;
   onItemPress?: (item: AgendaItem) => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 export const DayListV2 = forwardRef<DayListV2Ref, DayListV2Props>(
-  function DayListV2({ items = [], initialDateKey, onItemPress }, ref) {
+  function DayListV2({ items = [], initialDateKey, onItemPress, refreshing = false, onRefresh }, ref) {
     const [currentDateKey, setCurrentDateKey] = useState(initialDateKey);
     console.log('[DayListV2] Re-render, items:', items.length, 'dateKey:', currentDateKey);
     const { colors } = useTheme();
@@ -106,6 +108,17 @@ export const DayListV2 = forwardRef<DayListV2Ref, DayListV2Props>(
         keyExtractor={(item, index) => `${item.type}-${index}`}
         getItemLayout={getItemLayout}
         contentContainerStyle={{ paddingBottom: 24 }}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[colors.tint]}
+              tintColor={colors.tint}
+              progressBackgroundColor={colors.cardBackground}
+            />
+          ) : undefined
+        }
       />
     );
   }

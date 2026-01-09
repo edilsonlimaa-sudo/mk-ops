@@ -19,7 +19,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function AgendaScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const [viewMode, setViewMode] = useState<ViewMode>('agenda');
+  const [viewMode, setViewMode] = useState<ViewMode>('day');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Hook de sincronização entre calendário e listas
   const {
@@ -32,7 +33,14 @@ export default function AgendaScreen() {
   } = useAgendaSync(viewMode);
 
   // Busca dados reais da agenda
-  const { data: servicos, isLoading, error } = useAgenda();
+  const { data: servicos, isLoading, error, refetch } = useAgenda();
+
+  // Handler para pull-to-refresh (apenas modo dia)
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  };
 
   // Transforma os serviços em formato para as listas
   const items = useMemo(() => {
@@ -135,6 +143,8 @@ export default function AgendaScreen() {
             items={items} 
             initialDateKey={activeDateKeyRef.current}
             onItemPress={handleItemPress}
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
           />)
       }
     </SafeAreaView>
