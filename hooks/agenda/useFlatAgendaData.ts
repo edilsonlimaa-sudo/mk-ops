@@ -6,6 +6,9 @@ interface AgendaItem {
   title: string;
   subtitle?: string;
   dateKey: string;
+  isChamado?: boolean;
+  isConcluido?: boolean;
+  horario?: string;
 }
 
 export type FlatListItem =
@@ -18,7 +21,7 @@ export function useFlatAgendaData(items: AgendaItem[], dateKeys: string[]) {
     // Constantes de altura fixas
     const HEADER_HEIGHT = 36;
     const EMPTY_HEIGHT = 46;
-    const ITEM_HEIGHT = 82;
+    const ITEM_HEIGHT = 132;
 
     const allDays = generateCalendarDays();
     const result: FlatListItem[] = [];
