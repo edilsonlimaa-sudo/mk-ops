@@ -7,9 +7,10 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAgenda } from '@/hooks/agenda';
 import { useAgendaSync } from '@/hooks/agenda/useAgendaSync';
 import { isChamado } from '@/utils/agenda';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 /**
@@ -30,6 +31,7 @@ export default function AgendaScreen() {
     dayListRef,
     handleDayPress,
     handleActiveHeaderChange,
+    goToToday,
   } = useAgendaSync(viewMode);
 
   // Busca dados reais da agenda
@@ -147,11 +149,36 @@ export default function AgendaScreen() {
             onRefresh={handleRefresh}
           />)
       }
+
+      {/* FAB - Go to Today */}
+      <TouchableOpacity
+        onPress={goToToday}
+        activeOpacity={0.8}
+        style={styles.fab}
+      >
+        <Ionicons name="today-outline" size={24} color="#ffffff" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    alignSelf: 'center',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#3b82f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+  },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',

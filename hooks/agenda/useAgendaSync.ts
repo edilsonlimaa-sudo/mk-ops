@@ -62,6 +62,25 @@ export function useAgendaSync(viewMode: ViewMode) {
     calendarRef.current?.setActiveDateAnimated(dateKey);
   };
 
+  /**
+   * Navega instantaneamente para o dia de hoje
+   * Sincroniza calendário e lista sem animação
+   */
+  const goToToday = () => {
+    const todayKey = getTodayDateKey();
+    activeDateKeyRef.current = todayKey;
+
+    // Sincroniza calendário sem animação
+    calendarRef.current?.setActiveDateInstant(todayKey);
+
+    // Sincroniza lista conforme o modo, sem animação
+    if (viewMode === 'agenda') {
+      agendaListRef.current?.setActiveDateInstant(todayKey);
+    } else {
+      dayListRef.current?.setDateKey(todayKey);
+    }
+  };
+
   return {
     activeDateKeyRef,
     calendarRef,
@@ -69,5 +88,6 @@ export function useAgendaSync(viewMode: ViewMode) {
     dayListRef,
     handleDayPress,
     handleActiveHeaderChange,
+    goToToday,
   };
 }
