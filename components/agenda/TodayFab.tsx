@@ -1,6 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
 import { forwardRef, useImperativeHandle, useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
 export interface TodayFabRef {
   show: () => void;
@@ -16,8 +15,8 @@ export const TodayFab = forwardRef<TodayFabRef, TodayFabProps>(
     const [visible, setVisible] = useState(false);
 
     useImperativeHandle(ref, () => ({
-      show: () => setVisible(true),
-      hide: () => setVisible(false),
+      show: () => setVisible((prev) => prev ? prev : true),
+      hide: () => setVisible((prev) => prev ? false : prev),
     }));
 
     if (!visible) return null;
@@ -28,7 +27,7 @@ export const TodayFab = forwardRef<TodayFabRef, TodayFabProps>(
         activeOpacity={0.8}
         style={styles.fab}
       >
-        <Ionicons name="today-outline" size={24} color="#ffffff" />
+        <Text style={styles.text}>Hoje</Text>
       </TouchableOpacity>
     );
   }
@@ -37,11 +36,11 @@ export const TodayFab = forwardRef<TodayFabRef, TodayFabProps>(
 const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 80,
     alignSelf: 'center',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 14,
     backgroundColor: '#3b82f6',
     justifyContent: 'center',
     alignItems: 'center',
@@ -50,5 +49,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
+  },
+  text: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
