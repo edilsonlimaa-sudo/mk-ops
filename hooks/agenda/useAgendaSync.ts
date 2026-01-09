@@ -1,6 +1,7 @@
 import { AgendaListV2Ref } from '@/components/agenda/AgendaListV2';
 import { CollapsedCalendarV2Ref } from '@/components/agenda/CollapsedCalendarV2';
 import { DayListV2Ref } from '@/components/agenda/DayListV2';
+import { TodayFabRef } from '@/components/agenda/TodayFab';
 import { getTodayDateKey } from '@/utils/agenda';
 import { useRef } from 'react';
 
@@ -18,9 +19,21 @@ export function useAgendaSync(viewMode: ViewMode) {
   const calendarRef = useRef<CollapsedCalendarV2Ref>(null);
   const agendaListRef = useRef<AgendaListV2Ref>(null);
   const dayListRef = useRef<DayListV2Ref>(null);
+  const todayFabRef = useRef<TodayFabRef>(null);
   
   // Flag para evitar loop de sincronização
   const isProgrammaticScrollRef = useRef(false);
+
+  /**
+   * Atualiza visibilidade do FAB baseado na data
+   */
+  const updateFabVisibility = (dateKey: string) => {
+    if (dateKey === getTodayDateKey()) {
+      todayFabRef.current?.hide();
+    } else {
+      todayFabRef.current?.show();
+    }
+  };
 
   /**
    * Handler para quando o usuário clica em um dia no calendário
@@ -28,6 +41,7 @@ export function useAgendaSync(viewMode: ViewMode) {
    */
   const handleDayPress = (dateKey: string) => {
     activeDateKeyRef.current = dateKey;
+    updateFabVisibility(dateKey);
     
     // Sincroniza o calendário
     calendarRef.current?.setActiveDateInstant(dateKey);
@@ -57,6 +71,7 @@ export function useAgendaSync(viewMode: ViewMode) {
     if (isProgrammaticScrollRef.current) return;
     
     activeDateKeyRef.current = dateKey;
+    updateFabVisibility(dateKey);
     
     // Sincroniza o calendário quando a lista scrolla
     calendarRef.current?.setActiveDateAnimated(dateKey);
@@ -69,6 +84,7 @@ export function useAgendaSync(viewMode: ViewMode) {
   const goToToday = () => {
     const todayKey = getTodayDateKey();
     activeDateKeyRef.current = todayKey;
+    todayFabRef.current?.hide();
 
     // Sincroniza calendário sem animação
     calendarRef.current?.setActiveDateInstant(todayKey);
@@ -86,6 +102,7 @@ export function useAgendaSync(viewMode: ViewMode) {
     calendarRef,
     agendaListRef,
     dayListRef,
+    todayFabRef,
     handleDayPress,
     handleActiveHeaderChange,
     goToToday,
