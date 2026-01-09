@@ -10,12 +10,16 @@ interface AgendaItem {
   title: string;
   subtitle?: string;
   dateKey: string;
+  isChamado?: boolean;
+  isConcluido?: boolean;
+  horario?: string;
 }
 
 interface AgendaListV2Props {
   items?: AgendaItem[];
   initialDateKey?: string;
   onActiveHeaderChange?: (dateKey: string) => void;
+  onItemPress?: (item: AgendaItem) => void;
 }
 
 export interface AgendaListV2Ref {
@@ -24,7 +28,7 @@ export interface AgendaListV2Ref {
   getIndexForDate: (dateKey: string) => number;
 }
 
-export const AgendaListV2 = forwardRef<AgendaListV2Ref, AgendaListV2Props>(({ items = [], initialDateKey, onActiveHeaderChange }, ref) => {
+export const AgendaListV2 = forwardRef<AgendaListV2Ref, AgendaListV2Props>(({ items = [], initialDateKey, onActiveHeaderChange, onItemPress }, ref) => {
   console.log('[AgendaListV2] Re-render, items:', items.length);
   const { colors } = useTheme();
   const flatListRef = useRef<FlatList>(null);
@@ -113,11 +117,14 @@ export const AgendaListV2 = forwardRef<AgendaListV2Ref, AgendaListV2Props>(({ it
 
     // type === 'item'
     return (
-      <View style={{ height: 82 }}>
+      <View style={{ height: 132 }}>
         <ListItem
           title={item.data.title}
           subtitle={item.data.subtitle}
-          onPress={() => console.log('Item clicado:', item.data.id)}
+          isChamado={item.data.isChamado}
+          isConcluido={item.data.isConcluido}
+          horario={item.data.horario}
+          onPress={() => onItemPress?.(item.data)}
         />
       </View>
     );

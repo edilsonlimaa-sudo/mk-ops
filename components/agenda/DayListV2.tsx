@@ -9,6 +9,9 @@ interface AgendaItem {
   title: string;
   subtitle?: string;
   dateKey: string;
+  isChamado?: boolean;
+  isConcluido?: boolean;
+  horario?: string;
 }
 
 export interface DayListV2Ref {
@@ -18,10 +21,11 @@ export interface DayListV2Ref {
 interface DayListV2Props {
   items?: AgendaItem[];
   initialDateKey: string;
+  onItemPress?: (item: AgendaItem) => void;
 }
 
 export const DayListV2 = forwardRef<DayListV2Ref, DayListV2Props>(
-  function DayListV2({ items = [], initialDateKey }, ref) {
+  function DayListV2({ items = [], initialDateKey, onItemPress }, ref) {
     const [currentDateKey, setCurrentDateKey] = useState(initialDateKey);
     console.log('[DayListV2] Re-render, items:', items.length, 'dateKey:', currentDateKey);
     const { colors } = useTheme();
@@ -78,11 +82,14 @@ export const DayListV2 = forwardRef<DayListV2Ref, DayListV2Props>(
 
       // type === 'item'
       return (
-        <View style={{ height: 82 }}>
+        <View style={{ height: 132 }}>
           <ListItem
             title={item.data.title}
             subtitle={item.data.subtitle}
-            onPress={() => console.log('Item clicado:', item.data.id)}
+            isChamado={item.data.isChamado}
+            isConcluido={item.data.isConcluido}
+            horario={item.data.horario}
+            onPress={() => onItemPress?.(item.data)}
           />
         </View>
       );
