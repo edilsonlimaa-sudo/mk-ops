@@ -22,8 +22,8 @@ export default function AuthLayout() {
 
   // Guard: Se TOTALMENTE autenticado (API + identificado), não deve estar aqui
   if (isAuthenticated && isIdentified) {
-    console.log('🚫 [AuthLayout] Totalmente autenticado, redirecionando para /(app)/(tabs)');
-    return <Redirect href="/(app)/(tabs)" />;
+    console.log('🚫 [AuthLayout] Totalmente autenticado, redirecionando para /(app)/(agenda)');
+    return <Redirect href="/(app)/(agenda)" />;
   }
 
   console.log('✅ [AuthLayout] Permitindo acesso à área de autenticação');
