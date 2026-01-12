@@ -2,8 +2,7 @@ import { ImmersiveLoadingScreen } from '@/components/ImmersiveLoadingScreen';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,12 +19,9 @@ type LoginFormData = z.infer<typeof loginSchema>;
 type LoadingState = 'idle' | 'connecting' | 'success' | 'error';
 
 export default function Login() {
-  const router = useRouter();
   const { theme, colors } = useTheme();
-  const { login, isLoading, isAuthenticated } = useAuthStore();
+  const { login, isLoading } = useAuthStore();
   const [loadingState, setLoadingState] = useState<LoadingState>('idle');
-
-  console.log('🔐 [Login] Componente renderizado. isAuthenticated:', isAuthenticated);
 
   const {
     control,
@@ -40,22 +36,14 @@ export default function Login() {
     },
   });
 
-  // Redireciona para tabs se já estiver autenticado
-  useEffect(() => {
-    if (isAuthenticated) {
-      console.log('🚀 [Login] Redirecionando para user-identification');
-      router.replace('/(auth)/user-identification?flow=login');
-    }
-  }, [isAuthenticated]);
-
   const onSubmit = async (data: LoginFormData) => {
     try {
       console.log('📝 [Login] Iniciando processo de login...');
       setLoadingState('connecting');
       
       await login(data.ipMkAuth, data.clientId, data.clientSecret);
-      console.log('✅ [Login] Login concluído! Redirecionando...');
-      // useEffect vai redirecionar automaticamente quando isAuthenticated mudar
+      console.log('✅ [Login] Login concluído!');
+      // AuthLayout detecta mudança e redireciona automaticamente
     } catch (error) {
       console.error('❌ [Login] Erro no login:', error);
       setLoadingState('error'); // Mostra X vermelho

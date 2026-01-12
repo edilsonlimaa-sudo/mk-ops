@@ -1,26 +1,44 @@
 import { useAuthStore } from '@/stores/useAuthStore';
-import { Redirect } from 'expo-router';
+import { useUserStore } from '@/stores/useUserStore';
+import { Redirect, useRootNavigationState } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 
 /**
- * Rota raiz - Bootstrap inicial da aplicação
- * Os route guards nos layouts cuidam da proteção de cada seção
+ * Rota raiz - Ponto de entrada da aplicação
+ * Aguarda bootstrap e decide rota inicial baseado em autenticação e identificação
  */
 export default function Index() {
   const isRestored = useAuthStore((state) => state.isRestored);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isUserRestored = useUserStore((state) => state.isUserRestored);
+  const isIdentified = useUserStore((state) => state.isIdentified);
+  const rootNavigationState = useRootNavigationState();
 
-  // Aguarda restauração antes de redirecionar
-  if (!isRestored) {
-    console.log('⏳ [Index] Aguardando restauração da sessão...');
-    return null;
+  // Esconde splash quando navegação estiver pronta E bootstrap completo (auth + user)
+  useEffect(() => {
+    if (rootNavigationState?.key && isRestored && isUserRestored) {
+      console.log('👋 [Index] Navegação pronta e bootstrap completo, escondendo splash screen...');
+      SplashScreen.hideAsync();
+    }
+  }, [rootNavigationState?.key, isRestored, isUserRestored]);
+
+  // Aguarda navegação estar pronta E bootstrap completo (auth + user)
+  if (!rootNavigationState?.key || !isRestored || !isUserRestored) {
+    console.log('⏳ [Index] Aguardando (navigation:', !!rootNavigationState?.key, ', isRestored:', isRestored, ', isUserRestored:', isUserRestored, ')');
+    return null; // Mantém splash visível
   }
 
-  console.log('🔄 [Index] Sessão restaurada, isAuthenticated:', isAuthenticated);
+  console.log('🔄 [Index] Redirecionando (isAuthenticated:', isAuthenticated, ', isIdentified:', isIdentified, ')');
 
-  // Redireciona para app (guards vão interceptar se necessário)
-  // Se não autenticado → AppLayout redireciona para login
-  // Se autenticado mas não identificado → AppLayout redireciona para identificação
-  // Se tudo ok → vai para drawer (agenda)
-  console.log('➡️ [Index] Redirecionando para /(app)/(agenda) (guards decidem o resto)');
+  // Decisão de rota baseada em autenticação e identificação
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  if (!isIdentified) {
+    return <Redirect href="/(auth)/user-identification" />;
+  }
+
   return <Redirect href="/(app)/(agenda)" />;
 }

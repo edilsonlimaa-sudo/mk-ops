@@ -7,7 +7,7 @@ import { useUserStore } from '@/stores/useUserStore';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -18,52 +18,30 @@ SplashScreen.preventAutoHideAsync();
 console.log('💦 [SplashScreen] Splash mantida visível (preventAutoHideAsync)');
 
 export default function RootLayout() {
-  const isRestored = useAuthStore((state) => state.isRestored);
-  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const restoreAuth = useAuthStore((state) => state.restoreAuth);
   const restoreUser = useUserStore((state) => state.restoreUser);
-  const [appIsReady, setAppIsReady] = useState(false);
 
   // CAMADA 2: Refresh proativo ao voltar do background
   useProactiveTokenRefresh();
 
-  // Restaura sessão ao abrir o app (persistência)
+  // Bootstrap: Restaura sessão ao abrir o app
   useEffect(() => {
-    async function prepare() {
+    async function bootstrap() {
       try {
         console.log('🚀 [RootLayout] Iniciando bootstrap da aplicação...');
-        // Verifica se tem sessão salva
-        await checkAuth();
+        // Restaura sessão salva do storage
+        await restoreAuth();
         // Restaura identificação do usuário (se tiver)
         await restoreUser();
         console.log('✅ [RootLayout] Bootstrap concluído');
       } catch (error) {
         console.log('❌ [RootLayout] Erro no bootstrap:', error);
-        // checkAuth já limpou estado e storage
-      } finally {
-        // App está pronto, esconde splash screen
-        setAppIsReady(true);
-        console.log('🎬 [RootLayout] App pronto para renderizar');
+        // restoreAuth já limpou estado e storage
       }
     }
 
-    prepare();
+    bootstrap();
   }, []);
-
-  // Esconde splash screen quando app estiver pronto E sessão restaurada
-  useEffect(() => {
-    if (appIsReady && isRestored) {
-      console.log('👋 [SplashScreen] Escondendo splash (appIsReady && isRestored)');
-      SplashScreen.hideAsync();
-      console.log('✨ [SplashScreen] Splash escondida com sucesso');
-    } else {
-      console.log(`⏳ [SplashScreen] Aguardando (appIsReady: ${appIsReady}, isRestored: ${isRestored})`);
-    }
-  }, [appIsReady, isRestored]);
-
-  // Não renderiza nada até verificar autenticação E restaurar sessão
-  if (!appIsReady || !isRestored) {
-    return null;
-  }
 
   return (
     <SafeAreaProvider>
@@ -80,10 +58,10 @@ export default function RootLayout() {
 
 function RootLayoutInner() {
   const { colors } = useTheme();
-  
+
   return (
-    <Stack 
-      screenOptions={{ 
+    <Stack
+      screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: colors.screenBackground },
       }}

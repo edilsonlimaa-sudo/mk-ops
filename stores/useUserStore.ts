@@ -8,6 +8,7 @@ const IDENTIFIED_USER_KEY = 'identified_user_data';
 interface UserState {
   currentUser: Omit<UsuarioDetalhado, 'sha'> | null;
   isIdentified: boolean;
+  isUserRestored: boolean; // Indica se a restauração do usuário foi concluída
   
   // Identifica o usuário (salva dados completos no SecureStore, exceto sha)
   identifyUser: (usuario: UsuarioDetalhado) => Promise<void>;
@@ -25,6 +26,7 @@ interface UserState {
 export const useUserStore = create<UserState>((set) => ({
   currentUser: null,
   isIdentified: false,
+  isUserRestored: false,
 
   identifyUser: async (usuario: UsuarioDetalhado) => {
     try {
@@ -90,12 +92,14 @@ export const useUserStore = create<UserState>((set) => ({
         set({
           currentUser: usuario,
           isIdentified: true,
+          isUserRestored: true,
         });
         console.log('♻️ [UserStore] Usuário restaurado:', usuario.login);
       } else {
         set({
           currentUser: null,
           isIdentified: false,
+          isUserRestored: true,
         });
         console.log('ℹ️ [UserStore] Nenhum usuário identificado no storage');
       }
@@ -104,6 +108,7 @@ export const useUserStore = create<UserState>((set) => ({
       set({
         currentUser: null,
         isIdentified: false,
+        isUserRestored: true,
       });
     }
   },

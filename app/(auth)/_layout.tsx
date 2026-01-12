@@ -2,7 +2,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useThemedHeader } from '@/hooks/ui';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
-import { Redirect, Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 
 /**
  * Layout de autenticação - Guard: se TOTALMENTE autenticado (auth + identificado), redireciona para app
@@ -10,23 +11,34 @@ import { Redirect, Stack } from 'expo-router';
 export default function AuthLayout() {
   const { colors } = useTheme();
   const headerOptions = useThemedHeader();
+  const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isIdentified = useUserStore((state) => state.isIdentified);
-  const isRestored = useAuthStore((state) => state.isRestored);
 
-  // Aguarda restauração antes de avaliar
-  if (!isRestored) {
-    console.log('⏳ [AuthLayout] Aguardando restauração...');
-    return null;
-  }
+  // Guard reativo: observa mudanças de autenticação/identificação durante sessão
+  useEffect(() => {
+    // Se totalmente autenticado, não deve estar em (auth)
+    if (isAuthenticated && isIdentified) {
+      console.log('🚫 [AuthLayout] Totalmente autenticado, redirecionando para /(app)/(agenda)');
+      router.replace('/(app)/(agenda)');
+      return;
+    }
 
-  // Guard: Se TOTALMENTE autenticado (API + identificado), não deve estar aqui
-  if (isAuthenticated && isIdentified) {
-    console.log('🚫 [AuthLayout] Totalmente autenticado, redirecionando para /(app)/(agenda)');
-    return <Redirect href="/(app)/(agenda)" />;
-  }
+    // Se autenticado mas não identificado, vai para identificação
+    if (isAuthenticated && !isIdentified) {
+      console.log('🔄 [AuthLayout] Autenticado mas não identificado, redirecionando para /user-identification');
+      router.replace('/(auth)/user-identification?flow=login');
+      return;
+    }
 
-  console.log('✅ [AuthLayout] Permitindo acesso à área de autenticação');
+    // Se não autenticado, deve estar no login
+    if (!isAuthenticated) {
+      console.log('🔙 [AuthLayout] Não autenticado, redirecionando para /login');
+      router.replace('/(auth)/login');
+    }
+  }, [isAuthenticated, isIdentified]);
+
+  console.log('✅ [AuthLayout] Renderizando área de autenticação');
   return (
     <Stack screenOptions={{ 
       headerShown: false,

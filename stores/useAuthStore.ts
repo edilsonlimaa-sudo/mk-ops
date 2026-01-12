@@ -1,7 +1,7 @@
+import { queryClient } from '@/lib/queryClient';
 import { authService } from '@/services/api/auth';
 import { getTokenExpiration } from '@/services/api/core/token/jwtDecoder';
 import { authStorage, type LoginCredentials } from '@/services/storage/authStorage';
-import { router } from 'expo-router';
 import { create } from 'zustand';
 
 interface AuthState {
@@ -13,7 +13,7 @@ interface AuthState {
   isLoading: boolean;
   login: (ipMkAuth: string, clientId: string, clientSecret: string) => Promise<void>;
   logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
+  restoreAuth: () => Promise<void>;
   getSavedCredentials: () => Promise<LoginCredentials | null>;
   refreshToken: () => Promise<string>;
 }
@@ -62,9 +62,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     console.log('🚪 [AuthStore.logout] Iniciando logout...');
+    
     // Limpa storage via authStorage
     await authStorage.clearAll();
     console.log('🗑️ [AuthStore.logout] Storage limpo');
+    
+    // Limpa cache do React Query (remove dados de todas as queries)
+    queryClient.clear();
+    console.log('🧹 [AuthStore.logout] Cache do React Query limpo');
     
     // Limpa estado (apiClient se auto-limpa via subscription)
     set({
@@ -74,14 +79,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       isAuthenticated: false,
     });
     console.log('📝 [AuthStore.logout] Estado limpo: isAuthenticated = false');
-    
-    // Redireciona para login (AppLayout guard vai confirmar)
-    console.log('➡️ [AuthStore.logout] Redirecionando para /(auth)/login');
-    router.replace('/(auth)/login');
   },
 
-  checkAuth: async () => {
-    console.log('🔍 [AuthStore] checkAuth iniciado...');
+  restoreAuth: async () => {
+    console.log('🔍 [AuthStore] restoreAuth iniciado...');
     try {
       const session = await authStorage.getSession();
       
@@ -91,7 +92,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         
         // VALIDAÇÃO PROATIVA: Verifica se token expirado
         if (Date.now() >= tokenExpiration) {
-          console.log('🔄 Token expirado detectado no checkAuth, renovando...');
+          console.log('🔄 Token expirado detectado no restoreAuth, renovando...');
           try {
             // Renova token ANTES de marcar como autenticado
             await useAuthStore.getState().refreshToken();
@@ -133,7 +134,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         console.log('⚠️ [AuthStore] Nenhuma sessão encontrada');
       }
     } catch (error) {
-      console.log('❌ [AuthStore] Erro no checkAuth:', error);
+      console.log('❌ [AuthStore] Erro no restoreAuth:', error);
       // Limpa estado se falhar (storage corrompido, permissão negada, etc)
       set({
         token: null,

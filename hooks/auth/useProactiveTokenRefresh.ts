@@ -9,7 +9,7 @@ import { AppState } from 'react-native';
  * Se token expirou durante o background, renova automaticamente.
  * 
  * Combinado com:
- * - checkAuth() ao abrir app (Camada 1)
+ * - restoreAuth() ao abrir app (Camada 1)
  * - Interceptor Axios como fallback (Camada 3)
  */
 export const useProactiveTokenRefresh = () => {
