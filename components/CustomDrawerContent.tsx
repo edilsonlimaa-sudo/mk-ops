@@ -37,6 +37,8 @@ export function CustomDrawerContent(props: any) {
         style: 'destructive',
         onPress: async () => {
           props.navigation.closeDrawer();
+          // Aguarda animação do drawer completar antes de mudar estado
+          await new Promise(resolve => setTimeout(resolve, 300));
           await clearIdentification();
           await logout();
         },
@@ -52,8 +54,10 @@ export function CustomDrawerContent(props: any) {
         style: 'default',
         onPress: async () => {
           props.navigation.closeDrawer();
+          // Aguarda animação do drawer completar antes de mudar estado
+          await new Promise(resolve => setTimeout(resolve, 300));
           await clearIdentification();
-          router.replace('/(auth)/user-identification?flow=switchUser');
+          // AppLayout detecta mudança e redireciona automaticamente
         },
       },
     ]);

@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 
 /**
  * Stack navigation para Agenda e suas telas de detalhes
+ * Sem guard - já protegido pelo AppLayout (precisa estar autenticado + identificado)
  */
 export default function AgendaStackLayout() {
   const headerOptions = useThemedHeader();
