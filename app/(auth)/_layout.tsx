@@ -24,17 +24,10 @@ export default function AuthLayout() {
       return;
     }
 
-    // Se autenticado mas não identificado, vai para identificação
-    if (isAuthenticated && !isIdentified) {
-      console.log('🔄 [AuthLayout] Autenticado mas não identificado, redirecionando para /user-identification');
-      router.replace('/(auth)/user-identification?flow=login');
-      return;
-    }
-
-    // Se não autenticado, deve estar no login
+    // Se não autenticado, volta para onboarding
     if (!isAuthenticated) {
-      console.log('🔙 [AuthLayout] Não autenticado, redirecionando para /login');
-      router.replace('/(auth)/login');
+      console.log('🔙 [AuthLayout] Não autenticado, redirecionando para /(onboarding)/login');
+      router.replace('/(onboarding)/login');
     }
   }, [isAuthenticated, isIdentified]);
 
@@ -44,7 +37,6 @@ export default function AuthLayout() {
       headerShown: false,
       contentStyle: { backgroundColor: colors.screenBackground },
     }}>
-      <Stack.Screen name="login" />
       <Stack.Screen 
         name="user-identification" 
         options={{ 
