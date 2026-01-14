@@ -1,4 +1,5 @@
-import { useAuthStore } from '@/stores/useAuthStore';
+import { refreshToken } from '@/lib/auth';
+import { useAuthStore } from '@/stores/auth';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
@@ -13,8 +14,6 @@ import { AppState } from 'react-native';
  * - Interceptor Axios como fallback (Camada 3)
  */
 export const useProactiveTokenRefresh = () => {
-  const refreshToken = useAuthStore((state) => state.refreshToken);
-
   // AppState Listener: Detecta volta do background
   useEffect(() => {
     console.log('🎯 [ProactiveTokenRefresh] Hook inicializado');

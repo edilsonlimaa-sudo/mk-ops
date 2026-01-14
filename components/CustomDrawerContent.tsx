@@ -1,5 +1,6 @@
 import { useTheme } from '@/contexts/ThemeContext';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { logout } from '@/lib/auth';
+import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/useUserStore';
 import { Ionicons } from '@expo/vector-icons';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
@@ -10,7 +11,7 @@ import { Alert, Pressable, Text, View } from 'react-native';
 
 export function CustomDrawerContent(props: any) {
   const { colors, mode, setMode, theme } = useTheme();
-  const { ipMkAuth, logout } = useAuthStore();
+  const ipMkAuth = useAuthStore(state => state.ipMkAuth);
   const { currentUser, clearIdentification } = useUserStore();
   const pathname = usePathname();
 

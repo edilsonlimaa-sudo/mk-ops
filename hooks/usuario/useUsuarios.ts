@@ -1,5 +1,5 @@
 import { fetchAllUsuarios } from '@/services/api/usuario';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuthStore } from '@/stores/auth';
 import { Usuario } from '@/types/usuario';
 import { useQuery } from '@tanstack/react-query';
 import { usuarioKeys } from './keys';

@@ -1,7 +1,7 @@
 import { CustomDrawerContent } from '@/components/CustomDrawerContent';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemedHeader } from '@/hooks/ui';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/useUserStore';
 import { useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';

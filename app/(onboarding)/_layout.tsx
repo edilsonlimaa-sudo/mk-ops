@@ -1,5 +1,5 @@
 import { useTheme } from '@/contexts/ThemeContext';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuthStore } from '@/stores/auth';
 import { Stack, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 

@@ -1,8 +1,8 @@
 import { ThemedStatusBar } from '@/components/ui/themed-status-bar';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { useProactiveTokenRefresh } from '@/hooks/auth';
+import { restoreAuth } from '@/lib/auth';
 import { queryClient } from '@/lib/queryClient';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
@@ -18,7 +18,6 @@ SplashScreen.preventAutoHideAsync();
 console.log('💦 [SplashScreen] Splash mantida visível (preventAutoHideAsync)');
 
 export default function RootLayout() {
-  const restoreAuth = useAuthStore((state) => state.restoreAuth);
   const restoreUser = useUserStore((state) => state.restoreUser);
 
   // CAMADA 2: Refresh proativo ao voltar do background

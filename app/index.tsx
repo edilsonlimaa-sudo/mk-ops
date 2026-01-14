@@ -1,4 +1,4 @@
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/useUserStore';
 import { Redirect, useRootNavigationState } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';

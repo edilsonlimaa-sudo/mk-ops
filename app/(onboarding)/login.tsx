@@ -1,6 +1,6 @@
 import { ImmersiveLoadingScreen } from '@/components/ImmersiveLoadingScreen';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { login } from '@/lib/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -20,7 +20,6 @@ type LoadingState = 'idle' | 'connecting' | 'success' | 'error';
 
 export default function Login() {
   const { theme, colors } = useTheme();
-  const { login, isLoading } = useAuthStore();
   const [loadingState, setLoadingState] = useState<LoadingState>('idle');
 
   const {
@@ -43,6 +42,7 @@ export default function Login() {
       
       await login(data.ipMkAuth, data.clientId, data.clientSecret);
       console.log('✅ [Login] Login concluído!');
+      setLoadingState('success'); // Reseta loading após sucesso
       // AuthLayout detecta mudança e redireciona automaticamente
     } catch (error) {
       console.error('❌ [Login] Erro no login:', error);
@@ -172,15 +172,15 @@ export default function Login() {
         {/* Botão de Login */}
         <TouchableOpacity
           style={{ 
-            backgroundColor: isLoading ? 'rgba(37, 99, 235, 0.5)' : '#2563eb',
+            backgroundColor: loadingState === 'connecting' ? 'rgba(37, 99, 235, 0.5)' : '#2563eb',
             borderRadius: 8,
             paddingVertical: 16,
           }}
           className="items-center"
           onPress={handleSubmit(onSubmit)}
-          disabled={isLoading}
+          disabled={loadingState === 'connecting'}
         >
-          {isLoading ? (
+          {loadingState === 'connecting' ? (
             <View className="flex-row items-center">
               <ActivityIndicator color="#fff" />
               <Text className="text-white font-semibold text-base ml-2">

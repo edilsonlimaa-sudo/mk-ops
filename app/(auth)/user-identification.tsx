@@ -2,8 +2,9 @@ import { ImmersiveLoadingScreen } from '@/components/ImmersiveLoadingScreen';
 import { PasswordModal } from '@/components/PasswordModal';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUsuarios } from '@/hooks/usuario';
+import { logout } from '@/lib/auth';
 import { validatePassword } from '@/services/api/usuario';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/useUserStore';
 import { Usuario } from '@/types/usuario';
 import { Stack, useLocalSearchParams } from 'expo-router';
@@ -19,7 +20,7 @@ export default function UserIdentification() {
   const { flow = 'login' } = useLocalSearchParams<{ flow?: 'login' | 'switchUser' }>();
   const { theme, colors } = useTheme();
   const { identifyUser } = useUserStore();
-  const { ipMkAuth, logout } = useAuthStore();
+  const ipMkAuth = useAuthStore(state => state.ipMkAuth);
 
   const { data: usuarios = [], isLoading, isError, refetch } = useUsuarios();
   console.log('📋 [UserIdentification] Usuários carregados:', usuarios?.length || 0);

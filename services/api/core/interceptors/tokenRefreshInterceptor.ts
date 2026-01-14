@@ -1,4 +1,4 @@
-import { useAuthStore } from '@/stores/useAuthStore';
+import { refreshToken } from '@/lib/auth';
 import { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { tokenRefreshManager } from '../token/tokenRefreshManager';
 
@@ -10,7 +10,7 @@ import { tokenRefreshManager } from '../token/tokenRefreshManager';
  * 
  * Responsabilidades:
  * - Detectar erro 401 (token expirado)
- * - Renovar token via useAuthStore.refreshToken()
+ * - Renovar token via auth.token.refreshToken()
  * - Retentar request (authRequestInterceptor injeta token atualizado)
  * - Gerenciar fila de requests durante refresh
  */
@@ -51,8 +51,8 @@ export const createTokenRefreshErrorHandler = (apiClient: AxiosInstance) => {
       try {
         console.log('🔄 [TokenRefresh] Token expirado (401 recebido), renovando...');
 
-        // Renova token via store (mantendo Single Source of Truth)
-        await useAuthStore.getState().refreshToken();
+        // Renova token via função externa (mantendo Single Source of Truth)
+        await refreshToken();
 
         console.log('✅ [TokenRefresh] Token renovado, retentando request original...');
 
