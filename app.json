@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mk-auth-mobile",
+    "name": "Mk-Ops",
     "slug": "mk-auth-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -18,6 +18,9 @@
           "http",
           "https"
         ]
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyBQ71JxBducEr61G38-CxCEtYMo-Q_VcwA"
       }
     },
     "android": {
@@ -34,6 +37,11 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
       ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBQ71JxBducEr61G38-CxCEtYMo-Q_VcwA"
+        }
+      },
       "intentFilters": [
         {
           "action": "VIEW",
@@ -68,7 +76,7 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#0f172a"
           }
         }
       ]
