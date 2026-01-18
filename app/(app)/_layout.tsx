@@ -23,7 +23,7 @@ export default function AppLayout() {
     // Se não autenticado, volta para onboarding
     if (!isAuthenticated) {
       console.log('🔙 [AppLayout] Não autenticado, redirecionando para /(onboarding)');
-      router.replace('/(onboarding)/welcome');
+      router.replace('/(onboarding)');
       return;
     }
 
