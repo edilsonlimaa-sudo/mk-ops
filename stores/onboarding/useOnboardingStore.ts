@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-type OnboardingPhase = 'welcome' | 'setup-intro' | 'in-setup' | 'success' | 'complete';
+type OnboardingPhase = 'welcome' | 'in-setup' | 'success' | 'complete';
 
 interface OnboardingStore {
   // Estado
@@ -34,7 +34,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
         set({ currentPhase: phase });
       },
 
-      // Inicia o setup (usuário clicou em "Configurar" na setup-intro)
+      // Inicia o setup (usuário clicou em "Começar" na welcome)
       startSetup: () => {
         set({ currentPhase: 'in-setup' });
       },
@@ -50,11 +50,11 @@ export const useOnboardingStore = create<OnboardingStore>()(
         const { resetSetup } = require('./useSetupStore').useSetupStore.getState();
         resetSetup();
         
-        // Volta para a intro do setup
-        set({ currentPhase: 'setup-intro' });
+        // Volta para a welcome
+        set({ currentPhase: 'welcome' });
         
         // Retorna a rota de destino
-        return '/(onboarding)/setup-intro';
+        return '/(onboarding)/welcome';
       },
 
       // Marca o onboarding como completo (usuário clicou em "Começar a usar")

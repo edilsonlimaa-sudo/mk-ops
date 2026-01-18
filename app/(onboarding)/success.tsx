@@ -17,14 +17,13 @@ export default function SetupSuccess() {
 
   useEffect(() => {
     // Animação de entrada do ícone
-    Animated.sequence([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 5,
-        useNativeDriver: true,
-      }),
-      // Pulse contínuo
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      tension: 50,
+      friction: 5,
+      useNativeDriver: true,
+    }).start(() => {
+      // Pulse contínuo apenas após a entrada
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
@@ -38,8 +37,8 @@ export default function SetupSuccess() {
             useNativeDriver: true,
           }),
         ])
-      ),
-    ]).start();
+      ).start();
+    });
 
     // Fade in do texto
     Animated.timing(fadeAnim, {
