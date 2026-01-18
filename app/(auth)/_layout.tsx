@@ -26,8 +26,8 @@ export default function AuthLayout() {
 
     // Se não autenticado, volta para onboarding
     if (!isAuthenticated) {
-      console.log('🔙 [AuthLayout] Não autenticado, redirecionando para /(onboarding)/login');
-      router.replace('/(onboarding)/login');
+      console.log('🔙 [AuthLayout] Não autenticado, redirecionando para /(onboarding)');
+      router.replace('/(onboarding)');
     }
   }, [isAuthenticated, isIdentified]);
 

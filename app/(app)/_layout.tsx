@@ -22,8 +22,8 @@ export default function AppLayout() {
   useEffect(() => {
     // Se não autenticado, volta para onboarding
     if (!isAuthenticated) {
-      console.log('🔙 [AppLayout] Não autenticado, redirecionando para /(onboarding)/login');
-      router.replace('/(onboarding)/login');
+      console.log('🔙 [AppLayout] Não autenticado, redirecionando para /(onboarding)');
+      router.replace('/(onboarding)/welcome');
       return;
     }
 
