@@ -33,7 +33,7 @@ export default function Index() {
 
   // Decisão de rota baseada em autenticação e identificação
   if (!isAuthenticated) {
-    return <Redirect href="/(onboarding)/login" />;
+    return <Redirect href="/(onboarding)" />;
   }
 
   if (!isIdentified) {

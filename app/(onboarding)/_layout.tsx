@@ -1,5 +1,6 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuthStore } from '@/stores/auth';
+import { useOnboardingStore } from '@/stores/onboarding/useOnboardingStore';
 import { Stack, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 
@@ -11,6 +12,16 @@ export default function OnboardingLayout() {
   const { colors } = useTheme();
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isOnboardingComplete } = useOnboardingStore();
+
+  // Guard: se onboarding completo, vai pro app
+  useEffect(() => {
+    if (isOnboardingComplete) {
+      console.log('✅ [OnboardingLayout] Onboarding completo, redirecionando para /(app)');
+      router.replace('/(app)' as any);
+      return;
+    }
+  }, [isOnboardingComplete]);
 
   // Guard reativo: se autenticado, não deve estar em onboarding
   useEffect(() => {
@@ -26,9 +37,15 @@ export default function OnboardingLayout() {
       screenOptions={{ 
         headerShown: false,
         contentStyle: { backgroundColor: colors.screenBackground },
+        animation: 'slide_from_right',
+        animationDuration: 300,
       }}
     >
-      <Stack.Screen name="login" />
+      <Stack.Screen name="index" />
+      <Stack.Screen name="welcome" />
+      <Stack.Screen name="setup-intro" />
+      <Stack.Screen name="(setup)" />
+      <Stack.Screen name="success" />
     </Stack>
   );
 }
