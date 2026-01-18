@@ -43,7 +43,6 @@ export default function OnboardingLayout() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="welcome" />
-      <Stack.Screen name="setup-intro" />
       <Stack.Screen name="(setup)" />
       <Stack.Screen name="success" />
     </Stack>
