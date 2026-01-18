@@ -2,7 +2,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useSetupStore } from '@/stores/onboarding/useSetupStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -48,6 +48,7 @@ export default function Step5Permissions() {
 
   // Estados para animação do mockup
   const [selectedMethods, setSelectedMethods] = useState<{ [key: string]: string[] }>({});
+  const [buttonClicked, setButtonClicked] = useState(false);
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Animação de pulse no botão de ajuda
@@ -83,6 +84,10 @@ export default function Step5Permissions() {
   const cursorTranslateY = useRef(new Animated.Value(0)).current;
   const cursorScale = useRef(new Animated.Value(1)).current;
 
+  // Animação de scroll do mockup
+  const mockupScrollY = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
+
   // Animação do mockup quando modal abre
   useEffect(() => {
     if (!showHelpModal) return;
@@ -114,11 +119,18 @@ export default function Step5Permissions() {
 
       // Reset completo
       setSelectedMethods({});
+      setButtonClicked(false);
 
       // Reset cursor
       cursorOpacity.setValue(0);
       cursorTranslateX.setValue(0);
       cursorTranslateY.setValue(0);
+
+      // Reset scroll
+      mockupScrollY.setValue(0);
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: 0, animated: false });
+      }
 
       const animationStartDelay = 2000;
 
@@ -272,7 +284,21 @@ export default function Step5Permissions() {
       }, animationStartDelay + 3300);
       timeoutsRef.current.push(t7);
 
-      // Vai para GET de Funcionarios
+      // Scroll down quando vai para Funcionarios (3º controller)
+      const t7_scroll = setTimeout(() => {
+        const scrollToY = 80; // Scroll mais para mostrar Funcionarios bem visível
+        Animated.timing(mockupScrollY, {
+          toValue: scrollToY,
+          duration: 500,
+          useNativeDriver: false,
+        }).start();
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollTo({ y: scrollToY, animated: true });
+        }
+      }, animationStartDelay + 3700);
+      timeoutsRef.current.push(t7_scroll);
+
+      // Vai para GET de Funcionarios (compensando scroll de 80px)
       const t8 = setTimeout(() => {
         Animated.parallel([
           Animated.timing(cursorTranslateX, {
@@ -281,7 +307,7 @@ export default function Step5Permissions() {
             useNativeDriver: true,
           }),
           Animated.timing(cursorTranslateY, {
-            toValue: 228,
+            toValue: 148, // 228 - 80 (compensando scroll)
             duration: 400,
             useNativeDriver: true,
           }),
@@ -313,7 +339,7 @@ export default function Step5Permissions() {
       }, animationStartDelay + 4400);
       timeoutsRef.current.push(t9);
 
-      // Vai para GET de Instalacao
+      // Vai para GET de Instalacao (compensando scroll de 80px)
       const t10 = setTimeout(() => {
         Animated.parallel([
           Animated.timing(cursorTranslateX, {
@@ -322,7 +348,7 @@ export default function Step5Permissions() {
             useNativeDriver: true,
           }),
           Animated.timing(cursorTranslateY, {
-            toValue: 284,
+            toValue: 204, // 284 - 80 (compensando scroll)
             duration: 400,
             useNativeDriver: true,
           }),
@@ -355,7 +381,7 @@ export default function Step5Permissions() {
       }, animationStartDelay + 5500);
       timeoutsRef.current.push(t11);
 
-      // Vai para PUT de Instalacao
+      // Vai para PUT de Instalacao (Y já está correto em 204)
       const t12 = setTimeout(() => {
         Animated.timing(cursorTranslateX, {
           toValue: 130,
@@ -390,7 +416,21 @@ export default function Step5Permissions() {
       }, animationStartDelay + 6500);
       timeoutsRef.current.push(t13);
 
-      // Vai para GET de Plano
+      // Scroll down mais um pouco quando vai para Plano (5º controller)
+      const t13_scroll = setTimeout(() => {
+        const scrollToY = 180; // Scroll maior para mostrar Plano e Usuario
+        Animated.timing(mockupScrollY, {
+          toValue: scrollToY,
+          duration: 500,
+          useNativeDriver: false,
+        }).start();
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollTo({ y: scrollToY, animated: true });
+        }
+      }, animationStartDelay + 6800);
+      timeoutsRef.current.push(t13_scroll);
+
+      // Vai para GET de Plano (compensando scroll de 180px)
       const t14 = setTimeout(() => {
         Animated.parallel([
           Animated.timing(cursorTranslateX, {
@@ -399,7 +439,7 @@ export default function Step5Permissions() {
             useNativeDriver: true,
           }),
           Animated.timing(cursorTranslateY, {
-            toValue: 340,
+            toValue: 160, // 340 - 180 (compensando scroll total)
             duration: 400,
             useNativeDriver: true,
           }),
@@ -433,7 +473,7 @@ export default function Step5Permissions() {
       }, animationStartDelay + 7600);
       timeoutsRef.current.push(t15);
 
-      // Vai para GET de Usuario
+      // Vai para GET de Usuario (compensando scroll de 180px)
       const t16 = setTimeout(() => {
         Animated.parallel([
           Animated.timing(cursorTranslateX, {
@@ -442,7 +482,7 @@ export default function Step5Permissions() {
             useNativeDriver: true,
           }),
           Animated.timing(cursorTranslateY, {
-            toValue: 396,
+            toValue: 216, // 396 - 180 (compensando scroll total)
             duration: 400,
             useNativeDriver: true,
           }),
@@ -477,6 +517,60 @@ export default function Step5Permissions() {
       }, animationStartDelay + 8700);
       timeoutsRef.current.push(t17);
 
+      // Scroll final para mostrar o botão Gravar
+      const t17_scroll = setTimeout(() => {
+        const scrollToY = 240; // Scroll para mostrar o botão
+        Animated.timing(mockupScrollY, {
+          toValue: scrollToY,
+          duration: 500,
+          useNativeDriver: false,
+        }).start();
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollTo({ y: scrollToY, animated: true });
+        }
+      }, animationStartDelay + 9100);
+      timeoutsRef.current.push(t17_scroll);
+
+      // Vai para o botão Gravar (centro do botão)
+      const t17_button = setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(cursorTranslateX, {
+            toValue: 150, // Centro horizontal aproximado do botão
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(cursorTranslateY, {
+            toValue: 200, // Posição Y do centro do botão (40 barra + 144 conteúdo + 16 centro)
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }, animationStartDelay + 9500);
+      timeoutsRef.current.push(t17_button);
+
+      // Clica no botão Gravar
+      const t17_click = setTimeout(() => {
+        // Ativa efeito visual no botão
+        setButtonClicked(true);
+        
+        Animated.sequence([
+          Animated.timing(cursorScale, {
+            toValue: 0.8,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+          Animated.timing(cursorScale, {
+            toValue: 1,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+        ]).start();
+        
+        // Desativa efeito visual após 200ms
+        setTimeout(() => setButtonClicked(false), 200);
+      }, animationStartDelay + 10100);
+      timeoutsRef.current.push(t17_click);
+
       // Cursor desaparece
       const t18 = setTimeout(() => {
         Animated.timing(cursorOpacity, {
@@ -484,11 +578,11 @@ export default function Step5Permissions() {
           duration: 300,
           useNativeDriver: true,
         }).start();
-      }, animationStartDelay + 9800);
+      }, animationStartDelay + 10500);
       timeoutsRef.current.push(t18);
 
       // Reinicia
-      const t19 = setTimeout(() => runAnimation(), animationStartDelay + 11000);
+      const t19 = setTimeout(() => runAnimation(), animationStartDelay + 12000);
       timeoutsRef.current.push(t19);
     };
 
@@ -500,10 +594,27 @@ export default function Step5Permissions() {
   }, [showHelpModal]);
 
   const handleFinish = () => {
-    // Marca step como completo
-    completeStep(3);
-    // Navegar para tela de teste de conexão
-    router.push('/(onboarding)/(setup)/4-validation');
+    // Alerta lembrando de clicar em "Gravar" no painel
+    Alert.alert(
+      '⚠️ Atenção importante!',
+      'Não esqueça de clicar no botão "Gravar" no final da página "Api do usuario" do painel MK-Auth.\n\nSem isso, as permissões não serão salvas!',
+      [
+        {
+          text: 'Voltar',
+          style: 'cancel',
+        },
+        {
+          text: 'Já cliquei em Gravar',
+          style: 'default',
+          onPress: () => {
+            // Marca step como completo
+            completeStep(3);
+            // Navegar para tela de teste de conexão
+            router.push('/(onboarding)/(setup)/4-validation');
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -635,6 +746,7 @@ export default function Step5Permissions() {
               borderColor: colors.cardBorder,
               opacity: mockupFadeAnim,
               transform: [{ scale: mockupScaleAnim }],
+              height: 250, // Altura reduzida pela metade
             }}
             className="rounded-xl border-2 overflow-hidden mb-6"
           >
@@ -650,26 +762,32 @@ export default function Step5Permissions() {
               </View>
             </View>
 
-            {/* Conteúdo do mockup */}
-            <View className="p-4">
-              {/* Header */}
-              <View className="mb-3">
-                <Text style={{ color: colors.cardTextPrimary }} className="text-sm font-bold">
-                  Selecione os Controllers e Métodos
-                </Text>
-              </View>
+            {/* Conteúdo do mockup com ScrollView */}
+            <ScrollView
+              ref={scrollViewRef}
+              style={{ flex: 1 }}
+              showsVerticalScrollIndicator={false}
+              scrollEnabled={false}
+            >
+              <View className="p-4">
+                {/* Header */}
+                <View className="mb-3">
+                  <Text style={{ color: colors.cardTextPrimary }} className="text-sm font-bold">
+                    Selecione os Controllers e Métodos
+                  </Text>
+                </View>
 
-              {/* Lista de controllers */}
-              <View>
-                {['Chamado', 'Cliente', 'Funcionarios', 'Instalacao', 'Plano', 'Usuario'].map((controller, idx) => {
-                  return (
-                    <View key={idx} style={{ marginBottom: 12 }}>
-                      {/* Controller label (não clicável) */}
-                      <Text style={{ color: colors.cardTextPrimary }} className="text-sm font-bold mb-2">
-                        {controller}
-                      </Text>
+                {/* Lista de controllers */}
+                <View>
+                  {['Chamado', 'Cliente', 'Funcionarios', 'Instalacao', 'Plano', 'Usuario'].map((controller, idx) => {
+                    return (
+                      <View key={idx} style={{ marginBottom: 12 }}>
+                        {/* Controller label (não clicável) */}
+                        <Text style={{ color: colors.cardTextPrimary }} className="text-sm font-bold mb-2">
+                          {controller}
+                        </Text>
 
-                      {/* Métodos sempre visíveis (horizontal) */}
+                        {/* Métodos sempre visíveis (horizontal) */}
                       <View className="ml-2 flex-row flex-wrap gap-2">
                         {['GET', 'POST', 'PUT', 'DELETE'].map((method, midx) => {
                           const isMethodSelected = selectedMethods[controller]?.includes(method);
@@ -700,8 +818,26 @@ export default function Step5Permissions() {
                     </View>
                   );
                 })}
+                </View>
+
+                {/* Botão Gravar */}
+                <View className="pt-4 pb-2">
+                  <TouchableOpacity
+                    disabled
+                    className="py-3 rounded-xl items-center"
+                    style={{ 
+                      backgroundColor: '#10b981',
+                      opacity: buttonClicked ? 0.7 : 1,
+                      transform: [{ scale: buttonClicked ? 0.97 : 1 }]
+                    }}
+                  >
+                    <Text className="text-white font-semibold text-sm">
+                      Gravar
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            </ScrollView>
 
             {/* Cursor animado */}
             <Animated.View
@@ -735,6 +871,34 @@ export default function Step5Permissions() {
               />
             </Animated.View>
           </Animated.View>
+
+          {/* Steps textuais */}
+          <View className="space-y-3 mb-6">
+            <View className="flex-row">
+              <Text style={{ color: '#8b5cf6' }} className="font-bold mr-2">1.</Text>
+              <Text style={{ color: colors.cardTextPrimary }} className="flex-1">
+                Acesse a tela <Text className="font-semibold">Api do usuario</Text> no painel MK-Auth
+              </Text>
+            </View>
+            <View className="flex-row">
+              <Text style={{ color: '#8b5cf6' }} className="font-bold mr-2">2.</Text>
+              <Text style={{ color: colors.cardTextPrimary }} className="flex-1">
+                Marque os métodos <Text className="font-semibold">GET</Text> e <Text className="font-semibold">PUT</Text> para cada controller
+              </Text>
+            </View>
+            <View className="flex-row">
+              <Text style={{ color: '#8b5cf6' }} className="font-bold mr-2">3.</Text>
+              <Text style={{ color: colors.cardTextPrimary }} className="flex-1">
+                Clique em <Text className="font-semibold">Gravar</Text> para salvar as permissões
+              </Text>
+            </View>
+            <View className="flex-row">
+              <Text style={{ color: '#8b5cf6' }} className="font-bold mr-2">4.</Text>
+              <Text style={{ color: colors.cardTextPrimary }} className="flex-1">
+                As permissões estarão ativas instantaneamente
+              </Text>
+            </View>
+          </View>
 
           {/* Botão fechar */}
           <TouchableOpacity
