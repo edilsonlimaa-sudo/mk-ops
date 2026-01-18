@@ -213,7 +213,7 @@ export default function Welcome() {
             className="py-2 px-4"
           >
             <Text style={{ color: '#2563eb' }} className="text-base font-semibold">
-              Começar →
+              Começar
             </Text>
           </TouchableOpacity>
         </View>

@@ -9,5 +9,5 @@ export default function OnboardingIndex() {
   const route = getResumeRoute();
   
   // Redireciona para a rota correta baseado no progresso
-  return <Redirect href={route as any} />;
+  return <Redirect href="/(onboarding)/welcome" />;
 }
