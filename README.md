@@ -134,8 +134,7 @@ mk-auth-mobile/
 
 ## 📝 Versionamento da Documentação
 
-**Última atualização:** 30 de abril de 2026  
-**Preparado para handoff ao desenvolvedor**
+**Última atualização:** 30 de abril de 2026
 
 ---
 
