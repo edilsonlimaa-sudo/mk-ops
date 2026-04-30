@@ -102,6 +102,43 @@ Baixe o APK gerado e instale no dispositivo. O app roda standalone.
 
 ---
 
+## 🎭 Modos Mock (Para Testes Sem Alterar Dados Reais)
+
+Existem **mocks ativados** no código para testar funcionalidades críticas sem modificar dados no servidor MK-Auth.
+
+### Onde encontrar os mocks:
+
+| Funcionalidade | Arquivo | Variável | Status Atual |
+|----------------|---------|----------|--------------|
+| Fechar chamado | `hooks/chamado/useFechaChamado.ts` | `MOCK_MODE` | ✅ **ATIVO** (`true`) |
+| Reabrir chamado | `hooks/chamado/useReabrirChamado.ts` | `MOCK_MODE` | ❌ Desativado (`false`) |
+| Fechar instalação | `hooks/instalacao/useFechaInstalacao.ts` | `MOCK_MODE` | ✅ **ATIVO** (`true`) |
+| Reset MAC do cliente | `hooks/cliente/useUpdateClient.ts` | `MOCK_RESET_MAC` | ✅ **ATIVO** (`true`) |
+
+### Como usar:
+
+```typescript
+// Exemplo: hooks/chamado/useFechaChamado.ts
+const MOCK_MODE = true;  // ✅ Ativado - não chama API real
+const MOCK_MODE = false; // ❌ Desativado - chama API real
+```
+
+**Com mock ativo:**
+- ✅ Simula latência de rede (500ms)
+- ✅ Atualiza caches do React Query normalmente
+- ✅ UI funciona exatamente igual
+- ❌ API real NÃO é chamada
+- ❌ Dados no servidor NÃO são alterados
+
+**Quando desativar o mock:**
+- Após validar que a UI funciona corretamente
+- Quando quiser testar a integração real com a API
+- Antes de fazer build de produção
+
+> **💡 Dica:** Deixe os mocks ativos durante desenvolvimento para evitar poluir a base de dados com testes.
+
+---
+
 
 ## 🗂️ Estrutura do Projeto
 
