@@ -1,4 +1,9 @@
 import { useTheme } from '@/contexts/ThemeContext';
+import {
+  areMkAuthCredentialsFormatValid,
+  validateMkAuthClientId,
+  validateMkAuthClientSecret,
+} from '@/lib/onboarding/mkAuthCredentials';
 import { useSetupStore } from '@/stores/onboarding/useSetupStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -42,12 +47,18 @@ export default function Step4Credentials() {
   const cursorTranslateY = useRef(new Animated.Value(20)).current;
   const cursorScale = useRef(new Animated.Value(1)).current;
   
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { control, handleSubmit, watch } = useForm<FormData>({
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
     defaultValues: {
       clientId: data.clientId || '',
       clientSecret: data.clientSecret || '',
     },
   });
+
+  const clientIdWatch = watch('clientId');
+  const clientSecretWatch = watch('clientSecret');
+  const canAdvance = areMkAuthCredentialsFormatValid(clientIdWatch, clientSecretWatch);
 
   // Animação de pulse no botão de ajuda
   const helpButtonPulse = useRef(new Animated.Value(1)).current;
@@ -296,8 +307,7 @@ export default function Step4Credentials() {
   }, [showHelpModal]);
 
   const onSubmit = (data: FormData) => {
-    // Salva credenciais na store
-    setCredentials(data.clientId, data.clientSecret);
+    setCredentials(data.clientId.trim(), data.clientSecret.trim());
     completeStep(2);
     
     router.push('/(onboarding)/(setup)/3-permissions');
@@ -367,37 +377,35 @@ export default function Step4Credentials() {
               <Controller
                 control={control}
                 name="clientId"
-                rules={{
-                  required: 'Por favor, informe o Client ID',
-                  minLength: {
-                    value: 10,
-                    message: 'Client ID muito curto. Verifique se copiou corretamente.'
-                  }
+                rules={{ validate: validateMkAuthClientId }}
+                render={({ field: { onChange, onBlur, value }, fieldState: { error, isDirty, isTouched } }) => {
+                  const showFieldError = (isDirty || isTouched) && error;
+                  return (
+                    <>
+                      <TextInput
+                        style={{ 
+                          backgroundColor: colors.screenBackground,
+                          borderColor: showFieldError ? '#ef4444' : colors.cardBorder,
+                          color: colors.cardTextPrimary,
+                        }}
+                        className="border-2 rounded-xl px-4 py-4 text-sm"
+                        placeholder="Client_Id_xxxxxxxxxxxx"
+                        placeholderTextColor={colors.cardTextSecondary}
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                      {showFieldError ? (
+                        <Text className="text-red-500 text-xs mt-2 ml-1">
+                          {error.message}
+                        </Text>
+                      ) : null}
+                    </>
+                  );
                 }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={{ 
-                      backgroundColor: colors.screenBackground,
-                      borderColor: errors.clientId ? '#ef4444' : colors.cardBorder,
-                      color: colors.cardTextPrimary,
-                    }}
-                    className="border-2 rounded-xl px-4 py-4 text-sm"
-                    placeholder="Client_Id_xxxxxxxxxxxx"
-                    placeholderTextColor={colors.cardTextSecondary}
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                )}
               />
-
-              {errors.clientId && (
-                <Text className="text-red-500 text-xs mt-2 ml-1">
-                  {errors.clientId.message}
-                </Text>
-              )}
             </View>
 
             {/* Client Secret Input */}
@@ -409,45 +417,47 @@ export default function Step4Credentials() {
               <Controller
                 control={control}
                 name="clientSecret"
-                rules={{
-                  required: 'Por favor, informe o Client Secret',
-                  minLength: {
-                    value: 10,
-                    message: 'Client Secret muito curto. Verifique se copiou corretamente.'
-                  }
+                rules={{ validate: validateMkAuthClientSecret }}
+                render={({ field: { onChange, onBlur, value }, fieldState: { error, isDirty, isTouched } }) => {
+                  const showFieldError = (isDirty || isTouched) && error;
+                  return (
+                    <>
+                      <TextInput
+                        style={{ 
+                          backgroundColor: colors.screenBackground,
+                          borderColor: showFieldError ? '#ef4444' : colors.cardBorder,
+                          color: colors.cardTextPrimary,
+                        }}
+                        className="border-2 rounded-xl px-4 py-4 text-sm"
+                        placeholder="Client_Secret_xxxxxxxxxxxx"
+                        placeholderTextColor={colors.cardTextSecondary}
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        secureTextEntry
+                      />
+                      {showFieldError ? (
+                        <Text className="text-red-500 text-xs mt-2 ml-1">
+                          {error.message}
+                        </Text>
+                      ) : null}
+                    </>
+                  );
                 }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={{ 
-                      backgroundColor: colors.screenBackground,
-                      borderColor: errors.clientSecret ? '#ef4444' : colors.cardBorder,
-                      color: colors.cardTextPrimary,
-                    }}
-                    className="border-2 rounded-xl px-4 py-4 text-sm"
-                    placeholder="Client_Secret_xxxxxxxxxxxx"
-                    placeholderTextColor={colors.cardTextSecondary}
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    secureTextEntry
-                  />
-                )}
               />
-
-              {errors.clientSecret && (
-                <Text className="text-red-500 text-xs mt-2 ml-1">
-                  {errors.clientSecret.message}
-                </Text>
-              )}
             </View>
 
             {/* Botão Avançar */}
             <TouchableOpacity
               onPress={handleSubmit(onSubmit)}
               className="py-3 rounded-xl items-center mt-3"
-              style={{ backgroundColor: '#10b981' }}
+              style={{
+                backgroundColor: canAdvance ? '#10b981' : colors.cardBorder,
+                opacity: canAdvance ? 1 : 0.65,
+              }}
+              disabled={!canAdvance}
               activeOpacity={0.8}
             >
               <Text className="text-base font-semibold" style={{ color: '#ffffff' }}>

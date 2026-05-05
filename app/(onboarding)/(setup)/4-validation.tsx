@@ -1,5 +1,12 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import {
+  areMkAuthCredentialsFormatValid,
+  getMkAuthClientIdFormatHint,
+  getMkAuthClientSecretFormatHint,
+  validateMkAuthClientId,
+  validateMkAuthClientSecret,
+} from '@/lib/onboarding/mkAuthCredentials';
+import {
   onboardingValidationService,
   RequiredPermission,
   ValidationResultType,
@@ -139,6 +146,20 @@ export default function ConnectionTest() {
       return;
     }
 
+    if (editingField === 'clientId') {
+      const check = validateMkAuthClientId(tempValue);
+      if (check !== true) {
+        Alert.alert('Formato inválido', check);
+        return;
+      }
+    } else if (editingField === 'clientSecret') {
+      const check = validateMkAuthClientSecret(tempValue);
+      if (check !== true) {
+        Alert.alert('Formato inválido', check);
+        return;
+      }
+    }
+
     if (editingField === 'url') {
       setServerUrl(tempValue.trim());
     } else if (editingField === 'clientId') {
@@ -162,6 +183,9 @@ export default function ConnectionTest() {
   // Helpers para UI
   const isValidating = phase === 'credentials' || phase === 'permissions';
   const statusColor = phase === 'success' ? '#10b981' : phase === 'error' ? '#ef4444' : '#f59e0b';
+  const credentialsFormatOk = areMkAuthCredentialsFormatValid(clientId, clientSecret);
+  const clientIdEditHint = editingField === 'clientId' ? getMkAuthClientIdFormatHint(tempValue) : null;
+  const clientSecretEditHint = editingField === 'clientSecret' ? getMkAuthClientSecretFormatHint(tempValue) : null;
 
   const getTitle = () => {
     switch (phase) {
@@ -332,46 +356,51 @@ export default function ConnectionTest() {
                   Client ID
                 </Text>
                 {editingField === 'clientId' ? (
-                  <View 
-                    style={{
-                      backgroundColor: colors.screenBackground,
-                      borderColor: '#10b981',
-                      borderWidth: 2,
-                    }}
-                    className="rounded-lg flex-row items-center"
-                  >
-                    <TextInput
-                      value={tempValue}
-                      onChangeText={setTempValue}
+                  <View>
+                    <View
                       style={{
-                        color: colors.cardTextPrimary,
-                        flex: 1,
+                        backgroundColor: colors.screenBackground,
+                        borderColor: clientIdEditHint ? '#ef4444' : '#10b981',
+                        borderWidth: 2,
                       }}
-                      className="p-4 text-sm font-mono"
-                      placeholder="Client ID"
-                      placeholderTextColor={colors.cardTextSecondary}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      autoFocus
-                      onSubmitEditing={saveEditing}
-                      returnKeyType="done"
-                    />
-                    <View className="flex-row pr-2">
-                      <TouchableOpacity
-                        onPress={cancelEditing}
-                        className="p-2"
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <Text style={{ color: '#ef4444' }} className="text-xl">✕</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={saveEditing}
-                        className="p-2"
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <Text style={{ color: '#10b981' }} className="text-xl">✓</Text>
-                      </TouchableOpacity>
+                      className="rounded-lg flex-row items-center"
+                    >
+                      <TextInput
+                        value={tempValue}
+                        onChangeText={setTempValue}
+                        style={{
+                          color: colors.cardTextPrimary,
+                          flex: 1,
+                        }}
+                        className="p-4 text-sm font-mono"
+                        placeholder="Client_Id_xxxxxxxxxxxx"
+                        placeholderTextColor={colors.cardTextSecondary}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        autoFocus
+                        onSubmitEditing={saveEditing}
+                        returnKeyType="done"
+                      />
+                      <View className="flex-row pr-2">
+                        <TouchableOpacity
+                          onPress={cancelEditing}
+                          className="p-2"
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          <Text style={{ color: '#ef4444' }} className="text-xl">✕</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={saveEditing}
+                          className="p-2"
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          <Text style={{ color: '#10b981' }} className="text-xl">✓</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
+                    {clientIdEditHint ? (
+                      <Text className="text-red-500 text-xs mt-1.5 ml-0.5">{clientIdEditHint}</Text>
+                    ) : null}
                   </View>
                 ) : (
                   <View
@@ -403,47 +432,52 @@ export default function ConnectionTest() {
                   Client Secret
                 </Text>
                 {editingField === 'clientSecret' ? (
-                  <View 
-                    style={{
-                      backgroundColor: colors.screenBackground,
-                      borderColor: '#10b981',
-                      borderWidth: 2,
-                    }}
-                    className="rounded-lg flex-row items-center"
-                  >
-                    <TextInput
-                      value={tempValue}
-                      onChangeText={setTempValue}
+                  <View>
+                    <View
                       style={{
-                        color: colors.cardTextPrimary,
-                        flex: 1,
+                        backgroundColor: colors.screenBackground,
+                        borderColor: clientSecretEditHint ? '#ef4444' : '#10b981',
+                        borderWidth: 2,
                       }}
-                      className="p-4 text-sm font-mono"
-                      placeholder="Client Secret"
-                      placeholderTextColor={colors.cardTextSecondary}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      secureTextEntry
-                      autoFocus
-                      onSubmitEditing={saveEditing}
-                      returnKeyType="done"
-                    />
-                    <View className="flex-row pr-2">
-                      <TouchableOpacity
-                        onPress={cancelEditing}
-                        className="p-2"
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <Text style={{ color: '#ef4444' }} className="text-xl">✕</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={saveEditing}
-                        className="p-2"
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <Text style={{ color: '#10b981' }} className="text-xl">✓</Text>
-                      </TouchableOpacity>
+                      className="rounded-lg flex-row items-center"
+                    >
+                      <TextInput
+                        value={tempValue}
+                        onChangeText={setTempValue}
+                        style={{
+                          color: colors.cardTextPrimary,
+                          flex: 1,
+                        }}
+                        className="p-4 text-sm font-mono"
+                        placeholder="Client_Secret_xxxxxxxxxxxx"
+                        placeholderTextColor={colors.cardTextSecondary}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        secureTextEntry
+                        autoFocus
+                        onSubmitEditing={saveEditing}
+                        returnKeyType="done"
+                      />
+                      <View className="flex-row pr-2">
+                        <TouchableOpacity
+                          onPress={cancelEditing}
+                          className="p-2"
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          <Text style={{ color: '#ef4444' }} className="text-xl">✕</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={saveEditing}
+                          className="p-2"
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          <Text style={{ color: '#10b981' }} className="text-xl">✓</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
+                    {clientSecretEditHint ? (
+                      <Text className="text-red-500 text-xs mt-1.5 ml-0.5">{clientSecretEditHint}</Text>
+                    ) : null}
                   </View>
                 ) : (
                   <View
@@ -538,7 +572,7 @@ export default function ConnectionTest() {
                 }}
                 className="rounded-xl py-3 items-center flex-row justify-center mt-3"
                 onPress={testConnection}
-                disabled={isValidating || !serverUrl || !clientId || !clientSecret}
+                disabled={isValidating || !serverUrl || !credentialsFormatOk}
                 activeOpacity={0.8}
               >
                 {isValidating && (
