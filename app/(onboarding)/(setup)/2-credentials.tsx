@@ -436,7 +436,6 @@ export default function Step4Credentials() {
                         onBlur={onBlur}
                         autoCapitalize="none"
                         autoCorrect={false}
-                        secureTextEntry
                       />
                       {showFieldError ? (
                         <Text className="text-red-500 text-xs mt-2 ml-1">

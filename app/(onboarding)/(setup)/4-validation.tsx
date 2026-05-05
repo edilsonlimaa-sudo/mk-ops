@@ -453,7 +453,6 @@ export default function ConnectionTest() {
                         placeholderTextColor={colors.cardTextSecondary}
                         autoCapitalize="none"
                         autoCorrect={false}
-                        secureTextEntry
                         autoFocus
                         onSubmitEditing={saveEditing}
                         returnKeyType="done"
@@ -488,7 +487,7 @@ export default function ConnectionTest() {
                     className="border rounded-lg p-3 flex-row items-center justify-between"
                   >
                     <Text style={{ color: colors.cardTextPrimary }} className="text-sm flex-1 font-mono" numberOfLines={1}>
-                      {'•'.repeat(clientSecret.length)}
+                      {clientSecret}
                     </Text>
                     <TouchableOpacity
                       onPress={() => startEditing('clientSecret')}
