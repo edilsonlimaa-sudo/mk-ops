@@ -10,7 +10,7 @@ import { useAgendaSync } from '@/hooks/agenda/useAgendaSync';
 import { isChamado } from '@/utils/agenda';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 /**
@@ -36,13 +36,16 @@ export default function AgendaScreen() {
   } = useAgendaSync(viewMode);
 
   // Busca dados reais da agenda
-  const { data: servicos, isLoading, error, refetch } = useAgenda();
+  const { data: servicos, isPending, error, refetch } = useAgenda();
 
   // Handler para pull-to-refresh (apenas modo dia)
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   // Transforma os serviços em formato para as listas
@@ -89,6 +92,9 @@ export default function AgendaScreen() {
     }).filter(item => item.dateKey !== ''); // Remove itens sem data válida
   }, [servicos]);
 
+  /** True após qualquer fetch bem-sucedido (inclui lista vazia). Evita tela de erro no refresh offline. */
+  const hasAgendaSnapshot = servicos !== undefined;
+
   // Função para navegar aos detalhes
   const handleItemPress = (item: any) => {
     if (item.isChamado) {
@@ -99,7 +105,7 @@ export default function AgendaScreen() {
   };
 
   // Estados de loading e erro
-  if (isLoading) {
+  if (isPending) {
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
         <View style={styles.centerContainer}>
@@ -110,7 +116,7 @@ export default function AgendaScreen() {
     );
   }
 
-  if (error) {
+  if (error && !hasAgendaSnapshot) {
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
         <View style={styles.centerContainer}>
@@ -118,6 +124,13 @@ export default function AgendaScreen() {
           <Text style={[styles.errorSubtext, { color: colors.cardTextSecondary }]}>
             {error.message || 'Tente novamente mais tarde'}
           </Text>
+          <TouchableOpacity
+            onPress={handleRefresh}
+            className="mt-4 px-4 py-2 rounded-lg"
+            style={{ backgroundColor: colors.tint }}
+          >
+            <Text style={{ color: '#ffffff', fontWeight: '600' }}>Tentar novamente</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -127,6 +140,28 @@ export default function AgendaScreen() {
     <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
       <ThemedView variant="header">
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
+        {error && hasAgendaSnapshot ? (
+          <View
+            className="mx-3 mt-2 mb-1 px-3 py-2 rounded-lg border flex-row items-center justify-between"
+            style={{
+              backgroundColor: '#f59e0b15',
+              borderColor: '#f59e0b55',
+            }}
+          >
+            <Text className="text-xs flex-1 mr-3" style={{ color: colors.text }}>
+              Sem conexão no momento. Exibindo últimos dados carregados.
+            </Text>
+            <TouchableOpacity
+              onPress={handleRefresh}
+              className="px-2 py-1 rounded"
+              style={{ backgroundColor: '#f59e0b' }}
+            >
+              <Text className="text-xs font-semibold" style={{ color: '#ffffff' }}>
+                Tentar
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
         <CollapsedCalendarV2 
           ref={calendarRef} 
           initialDateKey={activeDateKeyRef.current} 
