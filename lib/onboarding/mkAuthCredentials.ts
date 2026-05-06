@@ -19,20 +19,20 @@ export function areMkAuthCredentialsFormatValid(clientId: string, clientSecret: 
 
 export function validateMkAuthClientId(value: string): true | string {
   const t = value.trim();
-  if (!t) return 'Por favor, informe o Client ID';
-  if (/\s/.test(t)) return 'Não use espaços; copie a chave inteira em uma linha.';
+  if (!t) return 'Cole o Client ID copiado no painel MK-Auth (ícone de colar ao lado).';
+  if (/\s/.test(t)) return 'O texto colado não pode ter espaços; copie a chave inteira em uma linha.';
   if (!CLIENT_ID_RE.test(t)) {
-    return 'O Client ID deve estar no formato Client_Id_… (como no painel MK-Auth).';
+    return 'Cole o Client ID no formato Client_Id_…, igual ao painel MK-Auth.';
   }
   return true;
 }
 
 export function validateMkAuthClientSecret(value: string): true | string {
   const t = value.trim();
-  if (!t) return 'Por favor, informe o Client Secret';
-  if (/\s/.test(t)) return 'Não use espaços; copie a chave inteira em uma linha.';
+  if (!t) return 'Cole o Client Secret copiado no painel MK-Auth (ícone de colar ao lado).';
+  if (/\s/.test(t)) return 'O texto colado não pode ter espaços; copie a chave inteira em uma linha.';
   if (!CLIENT_SECRET_RE.test(t)) {
-    return 'O Client Secret deve estar no formato Client_Secret_… (como no painel MK-Auth).';
+    return 'Cole o Client Secret no formato Client_Secret_…, igual ao painel MK-Auth.';
   }
   return true;
 }

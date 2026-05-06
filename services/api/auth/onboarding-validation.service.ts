@@ -331,13 +331,13 @@ class OnboardingValidationService {
       };
     }
 
-    // Sem conexão de rede
+    // Erro de rede genérico (inclui casos de DNS/host inválido em alguns ambientes)
     if (message.includes('network') || code === 'err_network') {
       return {
         type: 'connection-error',
         success: false,
-        message: 'Sem conexão com a internet.',
-        details: 'Verifique sua conexão de rede.',
+        message: 'Não foi possível conectar ao servidor. Verifique a URL e tente novamente.',
+        details: 'A URL pode estar incorreta, o servidor pode estar indisponível ou sua rede pode estar instável.',
       };
     }
 

@@ -1,21 +1,61 @@
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   areMkAuthCredentialsFormatValid,
   validateMkAuthClientId,
   validateMkAuthClientSecret,
-} from '@/lib/onboarding/mkAuthCredentials';
-import { useSetupStore } from '@/stores/onboarding/useSetupStore';
-import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { Animated, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "@/lib/onboarding/mkAuthCredentials";
+import { useSetupStore } from "@/stores/onboarding/useSetupStore";
+import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import {
+  Alert,
+  Animated,
+  AppState,
+  Modal,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type FormData = {
   clientId: string;
   clientSecret: string;
 };
+
+async function pasteIntoField(
+  onChange: (v: string) => void,
+  onBlur: () => void,
+  onAfterPaste?: () => void,
+) {
+  const raw = await Clipboard.getStringAsync();
+  const t = raw?.trim() ?? "";
+  if (!t) {
+    Alert.alert(
+      "Nada para colar",
+      "Copie o valor no painel MK-Auth e use Colar de novo.",
+    );
+    return;
+  }
+  onChange(t);
+  onBlur();
+  onAfterPaste?.();
+}
+
+function clearField(
+  onChange: (v: string) => void,
+  onBlur: () => void,
+  onAfterClear?: () => void,
+) {
+  onChange("");
+  onBlur();
+  onAfterClear?.();
+}
 
 export default function Step4Credentials() {
   const { colors } = useTheme();
@@ -23,13 +63,13 @@ export default function Step4Credentials() {
   const { setCredentials, completeStep, data } = useSetupStore();
   const [showHelpModal, setShowHelpModal] = useState(false);
   const insets = useSafeAreaInsets();
-  
+
   // Estados para animação do mockup de LOGIN
   const [showLogin, setShowLogin] = useState(true);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isButtonPressed, setIsButtonPressed] = useState(false);
-  
+
   // Estados para animação do mockup de MENU
   const [menuOpen, setMenuOpen] = useState(false);
   const [provedorExpanded, setProvedorExpanded] = useState(false);
@@ -46,19 +86,68 @@ export default function Step4Credentials() {
   const cursorTranslateX = useRef(new Animated.Value(20)).current;
   const cursorTranslateY = useRef(new Animated.Value(20)).current;
   const cursorScale = useRef(new Animated.Value(1)).current;
-  
+
   const { control, handleSubmit, watch } = useForm<FormData>({
-    mode: 'onTouched',
-    reValidateMode: 'onChange',
+    mode: "onTouched",
+    reValidateMode: "onChange",
     defaultValues: {
-      clientId: data.clientId || '',
-      clientSecret: data.clientSecret || '',
+      clientId: data.clientId || "",
+      clientSecret: data.clientSecret || "",
     },
   });
 
-  const clientIdWatch = watch('clientId');
-  const clientSecretWatch = watch('clientSecret');
-  const canAdvance = areMkAuthCredentialsFormatValid(clientIdWatch, clientSecretWatch);
+  const clientIdWatch = watch("clientId");
+  const clientSecretWatch = watch("clientSecret");
+  const canAdvance = areMkAuthCredentialsFormatValid(
+    clientIdWatch,
+    clientSecretWatch,
+  );
+
+  const [hasClipboardContent, setHasClipboardContent] = useState(false);
+
+  const clipboardRetryTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const clearClipboardRetryTimers = useCallback(() => {
+    clipboardRetryTimers.current.forEach(clearTimeout);
+    clipboardRetryTimers.current = [];
+  }, []);
+
+  const refreshClipboard = useCallback(async () => {
+    try {
+      const t = await Clipboard.getStringAsync();
+      setHasClipboardContent(!!t?.trim());
+    } catch {
+      setHasClipboardContent(false);
+    }
+  }, []);
+
+  /** Volta de outros apps (ex.: WhatsApp) pode atrasar o clipboard no SO — relemos algumas vezes. */
+  const refreshClipboardWithRetries = useCallback(() => {
+    clearClipboardRetryTimers();
+    void refreshClipboard();
+    for (const ms of [120, 350, 700]) {
+      clipboardRetryTimers.current.push(
+        setTimeout(() => void refreshClipboard(), ms),
+      );
+    }
+  }, [clearClipboardRetryTimers, refreshClipboard]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshClipboardWithRetries();
+      return clearClipboardRetryTimers;
+    }, [clearClipboardRetryTimers, refreshClipboardWithRetries]),
+  );
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") refreshClipboardWithRetries();
+    });
+    return () => {
+      sub.remove();
+      clearClipboardRetryTimers();
+    };
+  }, [clearClipboardRetryTimers, refreshClipboardWithRetries]);
 
   // Animação de pulse no botão de ajuda
   const helpButtonPulse = useRef(new Animated.Value(1)).current;
@@ -77,7 +166,7 @@ export default function Step4Credentials() {
           duration: 800,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     pulseAnimation.start();
     return () => pulseAnimation.stop();
@@ -86,11 +175,11 @@ export default function Step4Credentials() {
   // Animação do mockup quando modal abre
   useEffect(() => {
     if (!showHelpModal) return;
-    
+
     // Reset e fade in
     mockupFadeAnim.setValue(0);
     mockupScaleAnim.setValue(0.95);
-    
+
     setTimeout(() => {
       Animated.parallel([
         Animated.timing(mockupFadeAnim, {
@@ -109,63 +198,71 @@ export default function Step4Credentials() {
 
     // Animação completa do mockup
     const runAnimation = () => {
-      timeoutsRef.current.forEach(t => clearTimeout(t));
+      timeoutsRef.current.forEach((t) => clearTimeout(t));
       timeoutsRef.current = [];
-      
+
       // Reset completo
       setShowLogin(true);
-      setUsername('');
-      setPassword('');
+      setUsername("");
+      setPassword("");
       setIsButtonPressed(false);
       setMenuOpen(false);
       setProvedorExpanded(false);
       setHighlightProvedor(false);
       setHighlightApiUsuario(false);
-      
+
       // Reset cursor
       cursorOpacity.setValue(0);
       cursorTranslateX.setValue(20);
       cursorTranslateY.setValue(20);
-      
+
       // === FASE 1: LOGIN ===
-      const usernameText = 'admin';
-      const passwordText = '••••••••';
+      const usernameText = "admin";
+      const passwordText = "••••••••";
       const loginStartDelay = 2500;
-      
+
       // Digita o username
       for (let i = 0; i <= usernameText.length; i++) {
-        const timeout = setTimeout(() => {
-          setUsername(usernameText.slice(0, i));
-        }, loginStartDelay + i * 150);
+        const timeout = setTimeout(
+          () => {
+            setUsername(usernameText.slice(0, i));
+          },
+          loginStartDelay + i * 150,
+        );
         timeoutsRef.current.push(timeout);
       }
-      
+
       // Depois digita a senha
-      const passwordStartDelay = loginStartDelay + (usernameText.length + 1) * 150 + 300;
+      const passwordStartDelay =
+        loginStartDelay + (usernameText.length + 1) * 150 + 300;
       for (let i = 0; i <= passwordText.length; i++) {
-        const timeout = setTimeout(() => {
-          setPassword(passwordText.slice(0, i));
-        }, passwordStartDelay + i * 100);
+        const timeout = setTimeout(
+          () => {
+            setPassword(passwordText.slice(0, i));
+          },
+          passwordStartDelay + i * 100,
+        );
         timeoutsRef.current.push(timeout);
       }
-      
+
       // Clica no botão
-      const buttonDelay = passwordStartDelay + (passwordText.length + 1) * 100 + 300;
+      const buttonDelay =
+        passwordStartDelay + (passwordText.length + 1) * 100 + 300;
       const buttonTimeout = setTimeout(() => {
         setIsButtonPressed(true);
       }, buttonDelay);
       timeoutsRef.current.push(buttonTimeout);
-      
+
       // === TRANSIÇÃO LOGIN -> MENU ===
       const menuTransitionDelay = buttonDelay + 800;
       const transitionTimeout = setTimeout(() => {
         setShowLogin(false);
       }, menuTransitionDelay);
       timeoutsRef.current.push(transitionTimeout);
-      
+
       // === FASE 2: NAVEGAÇÃO NO MENU ===
       const menuStartDelay = menuTransitionDelay + 400;
-      
+
       // Cursor aparece
       const t0 = setTimeout(() => {
         Animated.parallel([
@@ -204,11 +301,11 @@ export default function Step4Credentials() {
         ]).start();
       }, menuStartDelay + 300);
       timeoutsRef.current.push(t0_5);
-      
+
       // Abre menu
       const t1 = setTimeout(() => setMenuOpen(true), menuStartDelay + 400);
       timeoutsRef.current.push(t1);
-      
+
       // Cursor vai para Provedor
       const t1_5 = setTimeout(() => {
         Animated.parallel([
@@ -225,7 +322,7 @@ export default function Step4Credentials() {
         ]).start();
       }, menuStartDelay + 1000);
       timeoutsRef.current.push(t1_5);
-      
+
       // Destaca Provedor e clique
       const t2 = setTimeout(() => {
         setHighlightProvedor(true);
@@ -244,11 +341,14 @@ export default function Step4Credentials() {
         setTimeout(() => setProvedorExpanded(true), 200);
       }, menuStartDelay + 1600);
       timeoutsRef.current.push(t2);
-      
+
       // Remove destaque Provedor
-      const t3 = setTimeout(() => setHighlightProvedor(false), menuStartDelay + 2800);
+      const t3 = setTimeout(
+        () => setHighlightProvedor(false),
+        menuStartDelay + 2800,
+      );
       timeoutsRef.current.push(t3);
-      
+
       // Cursor vai para Api do usuario
       const t3_5 = setTimeout(() => {
         Animated.parallel([
@@ -265,7 +365,7 @@ export default function Step4Credentials() {
         ]).start();
       }, menuStartDelay + 2900);
       timeoutsRef.current.push(t3_5);
-      
+
       // Destaca Api do usuario
       const t4 = setTimeout(() => {
         setHighlightApiUsuario(true);
@@ -283,7 +383,7 @@ export default function Step4Credentials() {
         ]).start();
       }, menuStartDelay + 3200);
       timeoutsRef.current.push(t4);
-      
+
       // Cursor desaparece
       const t5 = setTimeout(() => {
         Animated.timing(cursorOpacity, {
@@ -293,7 +393,7 @@ export default function Step4Credentials() {
         }).start();
       }, menuStartDelay + 5100);
       timeoutsRef.current.push(t5);
-      
+
       // Reinicia
       const t6 = setTimeout(() => runAnimation(), menuStartDelay + 6000);
       timeoutsRef.current.push(t6);
@@ -302,181 +402,398 @@ export default function Step4Credentials() {
     runAnimation();
 
     return () => {
-      timeoutsRef.current.forEach(t => clearTimeout(t));
+      timeoutsRef.current.forEach((t) => clearTimeout(t));
     };
   }, [showHelpModal]);
 
   const onSubmit = (data: FormData) => {
     setCredentials(data.clientId.trim(), data.clientSecret.trim());
     completeStep(2);
-    
-    router.push('/(onboarding)/(setup)/3-permissions');
+
+    router.push("/(onboarding)/(setup)/3-permissions");
   };
 
   return (
     <>
-    <KeyboardAwareScrollView
-      style={{ flex: 1, backgroundColor: colors.screenBackground }}
-      contentContainerStyle={{
-        flexGrow: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 24,
-        paddingBottom: insets.bottom || 24,
-      }}
-      keyboardShouldPersistTaps="always"
-      enableOnAndroid={true}
-      extraScrollHeight={20}
-      showsVerticalScrollIndicator={false}
-    >
-      <View
-        className="border rounded-2xl p-6 w-full max-w-md"
-        style={{
-          backgroundColor: colors.cardBackground,
-          borderColor: colors.cardBorder,
+      <KeyboardAwareScrollView
+        style={{ flex: 1, backgroundColor: colors.screenBackground }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 24,
+          paddingBottom: insets.bottom || 24,
         }}
+        keyboardShouldPersistTaps="always"
+        enableOnAndroid={true}
+        extraScrollHeight={20}
+        showsVerticalScrollIndicator={false}
       >
-            {/* Ícone ilustrativo */}
-            <View className="items-center mb-4">
-              <View 
-                className="w-16 h-16 rounded-2xl items-center justify-center mb-3"
-                style={{ backgroundColor: '#10b981' + '15' }}
+        <View
+          className="border rounded-2xl p-6 w-full max-w-md"
+          style={{
+            backgroundColor: colors.cardBackground,
+            borderColor: colors.cardBorder,
+          }}
+        >
+          {/* Ícone ilustrativo */}
+          <View className="items-center mb-4">
+            <View
+              className="w-16 h-16 rounded-2xl items-center justify-center mb-3"
+              style={{ backgroundColor: "#10b981" + "15" }}
+            >
+              <Text className="text-4xl">🔑</Text>
+            </View>
+
+            {/* Badge de contexto */}
+            <View className="bg-green-500/10 rounded-full px-3 py-1">
+              <Text
+                style={{ color: "#10b981" }}
+                className="text-xs font-medium"
               >
-                <Text className="text-4xl">🔑</Text>
-              </View>
-              
-              {/* Badge de contexto */}
-              <View className="bg-green-500/10 rounded-full px-3 py-1">
-                <Text style={{ color: '#10b981' }} className="text-xs font-medium">
-                  Passo 2 de 4 • Credenciais
-                </Text>
-              </View>
+                Passo 2 de 4 • Credenciais
+              </Text>
             </View>
+          </View>
 
-            {/* Título dentro do card */}
-            <Text 
-              style={{ color: colors.cardTextPrimary }} 
-              className="text-xl font-bold mb-2 text-center"
+          {/* Título dentro do card */}
+          <Text
+            style={{ color: colors.cardTextPrimary }}
+            className="text-xl font-bold mb-2 text-center"
+          >
+            Credenciais da API
+          </Text>
+
+          <Text
+            style={{ color: colors.cardTextSecondary }}
+            className="text-sm mb-6 text-center"
+          >
+            Cole o Client ID e Client Secret do seu painel MK-Auth
+          </Text>
+
+          {/* Client ID */}
+          <View className="mb-4">
+            <Text
+              style={{ color: colors.cardTextSecondary }}
+              className="text-xs font-semibold mb-2 ml-1"
             >
-              Credenciais da API
+              CLIENT ID
             </Text>
 
-            <Text 
-              style={{ color: colors.cardTextSecondary }} 
-              className="text-sm mb-6 text-center"
-            >
-              Cole o Client ID e Client Secret do seu painel MK-Auth
-            </Text>
-
-            {/* Client ID Input */}
-            <View className="mb-4">
-              <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold mb-2 ml-1">
-                CLIENT ID
-              </Text>
-              
-              <Controller
-                control={control}
-                name="clientId"
-                rules={{ validate: validateMkAuthClientId }}
-                render={({ field: { onChange, onBlur, value }, fieldState: { error, isDirty, isTouched } }) => {
-                  const showFieldError = (isDirty || isTouched) && error;
-                  return (
-                    <>
-                      <TextInput
-                        style={{ 
-                          backgroundColor: colors.screenBackground,
-                          borderColor: showFieldError ? '#ef4444' : colors.cardBorder,
-                          color: colors.cardTextPrimary,
+            <Controller
+              control={control}
+              name="clientId"
+              rules={{ validate: validateMkAuthClientId }}
+              render={({
+                field: { onChange, onBlur, value },
+                fieldState: { error, isDirty, isTouched },
+              }) => {
+                const showFieldError = (isDirty || isTouched) && error;
+                const showClear = !!value;
+                const showPaste = !value && hasClipboardContent;
+                const showActions = showClear || showPaste;
+                return (
+                  <>
+                    <View
+                      style={{
+                        backgroundColor: colors.screenBackground,
+                        borderColor: showFieldError
+                          ? "#ef4444"
+                          : colors.cardBorder,
+                        minHeight: 56,
+                      }}
+                      className="border-2 rounded-xl px-4 py-3 flex-row items-center"
+                    >
+                      <ScrollView
+                        horizontal
+                        nestedScrollEnabled
+                        showsHorizontalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        style={{ flex: 1, marginRight: 4 }}
+                        contentContainerStyle={{
+                          alignItems: "center",
+                          minHeight: 24,
                         }}
-                        className="border-2 rounded-xl px-4 py-4 text-sm"
-                        placeholder="Client_Id_xxxxxxxxxxxx"
-                        placeholderTextColor={colors.cardTextSecondary}
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                      />
-                      {showFieldError ? (
-                        <Text className="text-red-500 text-xs mt-2 ml-1">
-                          {error.message}
+                      >
+                        <Text
+                          style={{
+                            color: value
+                              ? colors.cardTextPrimary
+                              : colors.cardTextSecondary,
+                            flexShrink: 0,
+                          }}
+                          className="text-sm font-mono"
+                          numberOfLines={1}
+                          selectable
+                        >
+                          {value || "Client_Id_xxxxxxxxxxxx"}
                         </Text>
+                      </ScrollView>
+                      {showActions ? (
+                        <View
+                          style={{
+                            width: 44,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {showClear ? (
+                            <TouchableOpacity
+                              onPress={() =>
+                                clearField(onChange, onBlur, refreshClipboard)
+                              }
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 10,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: colors.cardBackground,
+                                borderWidth: 1,
+                                borderColor: colors.cardBorder,
+                              }}
+                              activeOpacity={0.85}
+                              accessibilityLabel="Limpar Client ID"
+                              hitSlop={{
+                                top: 8,
+                                bottom: 8,
+                                left: 8,
+                                right: 8,
+                              }}
+                            >
+                              <Ionicons
+                                name="close-circle-outline"
+                                size={22}
+                                color={colors.cardTextSecondary}
+                              />
+                            </TouchableOpacity>
+                          ) : (
+                            <TouchableOpacity
+                              onPress={() =>
+                                void pasteIntoField(
+                                  onChange,
+                                  onBlur,
+                                  refreshClipboard,
+                                )
+                              }
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 10,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "#10b981",
+                              }}
+                              activeOpacity={0.85}
+                              accessibilityLabel="Colar Client ID da área de transferência"
+                              hitSlop={{
+                                top: 8,
+                                bottom: 8,
+                                left: 8,
+                                right: 8,
+                              }}
+                            >
+                              <Ionicons
+                                name="clipboard-outline"
+                                size={22}
+                                color="#ffffff"
+                              />
+                            </TouchableOpacity>
+                          )}
+                        </View>
                       ) : null}
-                    </>
-                  );
-                }}
-              />
-            </View>
-
-            {/* Client Secret Input */}
-            <View className="mb-4">
-              <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold mb-2 ml-1">
-                CLIENT SECRET
-              </Text>
-              
-              <Controller
-                control={control}
-                name="clientSecret"
-                rules={{ validate: validateMkAuthClientSecret }}
-                render={({ field: { onChange, onBlur, value }, fieldState: { error, isDirty, isTouched } }) => {
-                  const showFieldError = (isDirty || isTouched) && error;
-                  return (
-                    <>
-                      <TextInput
-                        style={{ 
-                          backgroundColor: colors.screenBackground,
-                          borderColor: showFieldError ? '#ef4444' : colors.cardBorder,
-                          color: colors.cardTextPrimary,
-                        }}
-                        className="border-2 rounded-xl px-4 py-4 text-sm"
-                        placeholder="Client_Secret_xxxxxxxxxxxx"
-                        placeholderTextColor={colors.cardTextSecondary}
-                        value={value}
-                        onChangeText={onChange}
-                        onBlur={onBlur}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                      />
-                      {showFieldError ? (
-                        <Text className="text-red-500 text-xs mt-2 ml-1">
-                          {error.message}
-                        </Text>
-                      ) : null}
-                    </>
-                  );
-                }}
-              />
-            </View>
-
-            {/* Botão Avançar */}
-            <TouchableOpacity
-              onPress={handleSubmit(onSubmit)}
-              className="py-3 rounded-xl items-center mt-3"
-              style={{
-                backgroundColor: canAdvance ? '#10b981' : colors.cardBorder,
-                opacity: canAdvance ? 1 : 0.65,
+                    </View>
+                    {showFieldError ? (
+                      <Text className="text-red-500 text-xs mt-2 ml-1">
+                        {error.message}
+                      </Text>
+                    ) : null}
+                  </>
+                );
               }}
-              disabled={!canAdvance}
-              activeOpacity={0.8}
+            />
+          </View>
+
+          {/* Client Secret */}
+          <View className="mb-4">
+            <Text
+              style={{ color: colors.cardTextSecondary }}
+              className="text-xs font-semibold mb-2 ml-1"
             >
-              <Text className="text-base font-semibold" style={{ color: '#ffffff' }}>
-                Avançar
+              CLIENT SECRET
+            </Text>
+
+            <Controller
+              control={control}
+              name="clientSecret"
+              rules={{ validate: validateMkAuthClientSecret }}
+              render={({
+                field: { onChange, onBlur, value },
+                fieldState: { error, isDirty, isTouched },
+              }) => {
+                const showFieldError = (isDirty || isTouched) && error;
+                const showClear = !!value;
+                const showPaste = !value && hasClipboardContent;
+                const showActions = showClear || showPaste;
+                return (
+                  <>
+                    <View
+                      style={{
+                        backgroundColor: colors.screenBackground,
+                        borderColor: showFieldError
+                          ? "#ef4444"
+                          : colors.cardBorder,
+                        minHeight: 56,
+                      }}
+                      className="border-2 rounded-xl px-4 py-3 flex-row items-center"
+                    >
+                      <ScrollView
+                        horizontal
+                        nestedScrollEnabled
+                        showsHorizontalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        style={{ flex: 1, marginRight: 4 }}
+                        contentContainerStyle={{
+                          alignItems: "center",
+                          minHeight: 24,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: value
+                              ? colors.cardTextPrimary
+                              : colors.cardTextSecondary,
+                            flexShrink: 0,
+                          }}
+                          className="text-sm font-mono"
+                          numberOfLines={1}
+                          selectable
+                        >
+                          {value || "Client_Secret_xxxxxxxxxxxx"}
+                        </Text>
+                      </ScrollView>
+                      {showActions ? (
+                        <View
+                          style={{
+                            width: 44,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {showClear ? (
+                            <TouchableOpacity
+                              onPress={() =>
+                                clearField(onChange, onBlur, refreshClipboard)
+                              }
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 10,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: colors.cardBackground,
+                                borderWidth: 1,
+                                borderColor: colors.cardBorder,
+                              }}
+                              activeOpacity={0.85}
+                              accessibilityLabel="Limpar Client Secret"
+                              hitSlop={{
+                                top: 8,
+                                bottom: 8,
+                                left: 8,
+                                right: 8,
+                              }}
+                            >
+                              <Ionicons
+                                name="close-circle-outline"
+                                size={22}
+                                color={colors.cardTextSecondary}
+                              />
+                            </TouchableOpacity>
+                          ) : (
+                            <TouchableOpacity
+                              onPress={() =>
+                                void pasteIntoField(
+                                  onChange,
+                                  onBlur,
+                                  refreshClipboard,
+                                )
+                              }
+                              style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 10,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "#10b981",
+                              }}
+                              activeOpacity={0.85}
+                              accessibilityLabel="Colar Client Secret da área de transferência"
+                              hitSlop={{
+                                top: 8,
+                                bottom: 8,
+                                left: 8,
+                                right: 8,
+                              }}
+                            >
+                              <Ionicons
+                                name="clipboard-outline"
+                                size={22}
+                                color="#ffffff"
+                              />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      ) : null}
+                    </View>
+                    {showFieldError ? (
+                      <Text className="text-red-500 text-xs mt-2 ml-1">
+                        {error.message}
+                      </Text>
+                    ) : null}
+                  </>
+                );
+              }}
+            />
+          </View>
+
+          {/* Botão Avançar */}
+          <TouchableOpacity
+            onPress={handleSubmit(onSubmit)}
+            className="py-3 rounded-xl items-center mt-3"
+            style={{
+              backgroundColor: canAdvance ? "#10b981" : colors.cardBorder,
+              opacity: canAdvance ? 1 : 0.65,
+            }}
+            disabled={!canAdvance}
+            activeOpacity={0.8}
+          >
+            <Text
+              className="text-base font-semibold"
+              style={{ color: "#ffffff" }}
+            >
+              Avançar
+            </Text>
+          </TouchableOpacity>
+
+          {/* CTA de ajuda com pulse */}
+          <Animated.View
+            style={{ transform: [{ scale: helpButtonPulse }], marginTop: 16 }}
+          >
+            <TouchableOpacity
+              className="items-center py-3 px-4"
+              onPress={() => setShowHelpModal(true)}
+            >
+              <Text
+                style={{ color: "#10b981" }}
+                className="text-sm font-medium"
+              >
+                💡 Como encontrar essas credenciais?
               </Text>
             </TouchableOpacity>
-
-            {/* CTA de ajuda com pulse */}
-            <Animated.View style={{ transform: [{ scale: helpButtonPulse }], marginTop: 16 }}>
-              <TouchableOpacity 
-                className="items-center py-3 px-4"
-                onPress={() => setShowHelpModal(true)}
-              >
-                <Text style={{ color: '#10b981' }} className="text-sm font-medium">
-                  💡 Como encontrar essas credenciais?
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
-          </View>
-    </KeyboardAwareScrollView>
+          </Animated.View>
+        </View>
+      </KeyboardAwareScrollView>
 
       {/* Modal de Ajuda */}
       <Modal
@@ -485,41 +802,67 @@ export default function Step4Credentials() {
         animationType="fade"
         onRequestClose={() => setShowHelpModal(false)}
       >
-        <View className="flex-1 justify-center items-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
-          <View 
+        <View
+          className="flex-1 justify-center items-center px-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+        >
+          <View
             style={{ backgroundColor: colors.cardBackground }}
             className="w-full rounded-2xl p-6 max-h-[85%]"
           >
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* Cabeçalho do modal */}
               <View className="items-center mb-4">
-                <Text style={{ color: colors.cardTextPrimary }} className="text-xl font-bold mb-2">
+                <Text
+                  style={{ color: colors.cardTextPrimary }}
+                  className="text-xl font-bold mb-2"
+                >
                   Onde encontrar?
                 </Text>
-                <Text style={{ color: colors.cardTextSecondary }} className="text-sm text-center">
+                <Text
+                  style={{ color: colors.cardTextSecondary }}
+                  className="text-sm text-center"
+                >
                   Siga o passo a passo abaixo no seu painel MK-Auth
                 </Text>
               </View>
 
               {/* Mockup animado: Login → Menu → Api do usuario */}
-              <Animated.View 
-                style={{ 
+              <Animated.View
+                style={{
                   backgroundColor: colors.cardBackground,
                   borderColor: colors.cardBorder,
                   opacity: mockupFadeAnim,
                   transform: [{ scale: mockupScaleAnim }],
-                }} 
+                }}
                 className="rounded-xl border-2 overflow-hidden mb-6"
               >
                 {/* Barra de navegador */}
-                <View style={{ backgroundColor: colors.screenBackground, borderBottomColor: colors.cardBorder }} className="px-3 py-2 flex-row items-center border-b">
+                <View
+                  style={{
+                    backgroundColor: colors.screenBackground,
+                    borderBottomColor: colors.cardBorder,
+                  }}
+                  className="px-3 py-2 flex-row items-center border-b"
+                >
                   <View className="flex-row space-x-1 mr-3">
                     <View className="w-2 h-2 rounded-full bg-red-400" />
                     <View className="w-2 h-2 rounded-full bg-yellow-400" />
                     <View className="w-2 h-2 rounded-full bg-green-400" />
                   </View>
-                  <View style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} className="flex-1 rounded px-2 py-1 border">
-                    <Text style={{ color: colors.cardTextSecondary }} className="text-xs">🔒 seuservidor.com.br/mk-auth</Text>
+                  <View
+                    style={{
+                      backgroundColor: colors.cardBackground,
+                      borderColor: colors.cardBorder,
+                    }}
+                    className="flex-1 rounded px-2 py-1 border"
+                  >
+                    <Text
+                      style={{ color: colors.cardTextSecondary }}
+                      className="text-xs"
+                    >
+                      🔒 seuservidor.com.br/mk-auth
+                    </Text>
                   </View>
                 </View>
 
@@ -528,43 +871,85 @@ export default function Step4Credentials() {
                   <View className="p-4" style={{ height: 330 }}>
                     {/* Logo/Header */}
                     <View className="items-center mb-6 mt-2">
-                      <View style={{ backgroundColor: '#3b82f6' }} className="w-12 h-12 rounded-lg items-center justify-center mb-2">
+                      <View
+                        style={{ backgroundColor: "#3b82f6" }}
+                        className="w-12 h-12 rounded-lg items-center justify-center mb-2"
+                      >
                         <Text className="text-white text-xl font-bold">MK</Text>
                       </View>
-                      <Text style={{ color: colors.cardTextPrimary }} className="font-semibold">MK-Auth</Text>
+                      <Text
+                        style={{ color: colors.cardTextPrimary }}
+                        className="font-semibold"
+                      >
+                        MK-Auth
+                      </Text>
                     </View>
 
                     {/* Form de login mockup */}
                     <View className="space-y-3">
                       <View>
-                        <Text style={{ color: colors.cardTextSecondary }} className="text-xs mb-1">Usuário</Text>
-                        <View style={{ backgroundColor: colors.screenBackground, borderColor: colors.cardBorder }} className="border rounded-lg px-3 py-2">
-                          <Text style={{ color: colors.cardTextPrimary }} className="text-sm">
+                        <Text
+                          style={{ color: colors.cardTextSecondary }}
+                          className="text-xs mb-1"
+                        >
+                          Usuário
+                        </Text>
+                        <View
+                          style={{
+                            backgroundColor: colors.screenBackground,
+                            borderColor: colors.cardBorder,
+                          }}
+                          className="border rounded-lg px-3 py-2"
+                        >
+                          <Text
+                            style={{ color: colors.cardTextPrimary }}
+                            className="text-sm"
+                          >
                             {username}
-                            {username && username.length < 5 && <Text style={{ color: '#3b82f6' }}>|</Text>}
-                          </Text>
-                        </View>
-                      </View>
-                      
-                      <View>
-                        <Text style={{ color: colors.cardTextSecondary }} className="text-xs mb-1">Senha</Text>
-                        <View style={{ backgroundColor: colors.screenBackground, borderColor: colors.cardBorder }} className="border rounded-lg px-3 py-2">
-                          <Text style={{ color: colors.cardTextPrimary }} className="text-sm">
-                            {password}
-                            {password && password.length < 8 && <Text style={{ color: '#3b82f6' }}>|</Text>}
+                            {username && username.length < 5 && (
+                              <Text style={{ color: "#3b82f6" }}>|</Text>
+                            )}
                           </Text>
                         </View>
                       </View>
 
-                      <View 
-                        style={{ 
-                          backgroundColor: '#3b82f6',
+                      <View>
+                        <Text
+                          style={{ color: colors.cardTextSecondary }}
+                          className="text-xs mb-1"
+                        >
+                          Senha
+                        </Text>
+                        <View
+                          style={{
+                            backgroundColor: colors.screenBackground,
+                            borderColor: colors.cardBorder,
+                          }}
+                          className="border rounded-lg px-3 py-2"
+                        >
+                          <Text
+                            style={{ color: colors.cardTextPrimary }}
+                            className="text-sm"
+                          >
+                            {password}
+                            {password && password.length < 8 && (
+                              <Text style={{ color: "#3b82f6" }}>|</Text>
+                            )}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View
+                        style={{
+                          backgroundColor: "#3b82f6",
                           transform: [{ scale: isButtonPressed ? 0.95 : 1 }],
-                          opacity: isButtonPressed ? 0.8 : 1
-                        }} 
+                          opacity: isButtonPressed ? 0.8 : 1,
+                        }}
                         className="rounded-lg py-2 mt-2"
                       >
-                        <Text className="text-white text-center font-semibold">Entrar →</Text>
+                        <Text className="text-white text-center font-semibold">
+                          Entrar →
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -574,7 +959,10 @@ export default function Step4Credentials() {
                 {!showLogin && (
                   <>
                     {/* Header do painel */}
-                    <View style={{ backgroundColor: '#3b82f6' }} className="p-2 flex-row items-center">
+                    <View
+                      style={{ backgroundColor: "#3b82f6" }}
+                      className="p-2 flex-row items-center"
+                    >
                       <TouchableOpacity className="mr-2">
                         <View className="w-5 h-4 justify-between">
                           <View className="h-0.5 bg-white rounded" />
@@ -582,38 +970,51 @@ export default function Step4Credentials() {
                           <View className="h-0.5 bg-white rounded" />
                         </View>
                       </TouchableOpacity>
-                      <Text className="text-white font-semibold text-sm">MK-Auth Admin</Text>
+                      <Text className="text-white font-semibold text-sm">
+                        MK-Auth Admin
+                      </Text>
                     </View>
 
                     {/* Conteúdo com menu lateral */}
                     <View className="flex-row" style={{ height: 300 }}>
                       {/* Menu lateral */}
-                      <View 
-                        style={{ 
+                      <View
+                        style={{
                           backgroundColor: colors.screenBackground,
                           width: menuOpen ? 180 : 0,
-                          borderRightColor: colors.cardBorder
-                        }} 
+                          borderRightColor: colors.cardBorder,
+                        }}
                         className="border-r overflow-hidden"
                       >
                         <View className="p-3 space-y-1">
                           {/* Dashboard */}
-                          <View 
-                            style={{ backgroundColor: colors.cardBackground }} 
+                          <View
+                            style={{ backgroundColor: colors.cardBackground }}
                             className="px-3 py-2 rounded-lg"
                           >
-                            <Text style={{ color: colors.cardTextPrimary }} className="text-sm">📊 Dashboard</Text>
+                            <Text
+                              style={{ color: colors.cardTextPrimary }}
+                              className="text-sm"
+                            >
+                              📊 Dashboard
+                            </Text>
                           </View>
 
                           {/* Provedor - highlighted */}
-                          <View 
-                            style={{ 
-                              backgroundColor: highlightProvedor ? '#3b82f6' : colors.cardBackground 
-                            }} 
+                          <View
+                            style={{
+                              backgroundColor: highlightProvedor
+                                ? "#3b82f6"
+                                : colors.cardBackground,
+                            }}
                             className="px-3 py-2 rounded-lg"
                           >
-                            <Text 
-                              style={{ color: highlightProvedor ? '#ffffff' : colors.cardTextPrimary }} 
+                            <Text
+                              style={{
+                                color: highlightProvedor
+                                  ? "#ffffff"
+                                  : colors.cardTextPrimary,
+                              }}
                               className="text-sm font-semibold"
                             >
                               📁 Provedor
@@ -622,15 +1023,21 @@ export default function Step4Credentials() {
 
                           {/* Api do usuario - submenu */}
                           {provedorExpanded && (
-                            <View 
-                              style={{ 
-                                backgroundColor: highlightApiUsuario ? '#3b82f6' : colors.screenBackground,
-                                marginLeft: 12
-                              }} 
+                            <View
+                              style={{
+                                backgroundColor: highlightApiUsuario
+                                  ? "#3b82f6"
+                                  : colors.screenBackground,
+                                marginLeft: 12,
+                              }}
                               className="px-3 py-2 rounded-lg"
                             >
-                              <Text 
-                                style={{ color: highlightApiUsuario ? '#ffffff' : colors.cardTextSecondary }} 
+                              <Text
+                                style={{
+                                  color: highlightApiUsuario
+                                    ? "#ffffff"
+                                    : colors.cardTextSecondary,
+                                }}
                                 className="text-xs font-semibold"
                               >
                                 🔑 Api do usuario
@@ -639,30 +1046,46 @@ export default function Step4Credentials() {
                           )}
 
                           {/* Clientes */}
-                          <View 
-                            style={{ backgroundColor: colors.cardBackground }} 
+                          <View
+                            style={{ backgroundColor: colors.cardBackground }}
                             className="px-3 py-2 rounded-lg"
                           >
-                            <Text style={{ color: colors.cardTextPrimary }} className="text-sm">👥 Clientes</Text>
+                            <Text
+                              style={{ color: colors.cardTextPrimary }}
+                              className="text-sm"
+                            >
+                              👥 Clientes
+                            </Text>
                           </View>
 
                           {/* Configurações */}
-                          <View 
-                            style={{ backgroundColor: colors.cardBackground }} 
+                          <View
+                            style={{ backgroundColor: colors.cardBackground }}
                             className="px-3 py-2 rounded-lg"
                           >
-                            <Text style={{ color: colors.cardTextPrimary }} className="text-sm">⚙️ Configurações</Text>
+                            <Text
+                              style={{ color: colors.cardTextPrimary }}
+                              className="text-sm"
+                            >
+                              ⚙️ Configurações
+                            </Text>
                           </View>
                         </View>
                       </View>
 
                       {/* Área de conteúdo */}
                       <View className="flex-1 p-4 justify-center items-center">
-                        <Text style={{ color: colors.cardTextSecondary }} className="text-sm text-center">
-                          {!menuOpen && '👈 Clique no menu'}
-                          {menuOpen && !highlightProvedor && !highlightApiUsuario && 'Selecione uma opção'}
-                          {highlightProvedor && 'Clique em Provedor'}
-                          {highlightApiUsuario && '✓ Api do usuario'}
+                        <Text
+                          style={{ color: colors.cardTextSecondary }}
+                          className="text-sm text-center"
+                        >
+                          {!menuOpen && "👈 Clique no menu"}
+                          {menuOpen &&
+                            !highlightProvedor &&
+                            !highlightApiUsuario &&
+                            "Selecione uma opção"}
+                          {highlightProvedor && "Clique em Provedor"}
+                          {highlightApiUsuario && "✓ Api do usuario"}
                         </Text>
                       </View>
                     </View>
@@ -670,32 +1093,32 @@ export default function Step4Credentials() {
                     {/* Cursor animado */}
                     <Animated.View
                       style={{
-                        position: 'absolute',
+                        position: "absolute",
                         left: 0,
                         top: 0,
                         opacity: cursorOpacity,
                         transform: [
                           { translateX: cursorTranslateX },
                           { translateY: cursorTranslateY },
-                          { scale: cursorScale }
+                          { scale: cursorScale },
                         ],
                       }}
                       pointerEvents="none"
                     >
-                      <View 
-                        style={{ 
-                          width: 24, 
-                          height: 24, 
-                          backgroundColor: '#3b82f6',
+                      <View
+                        style={{
+                          width: 24,
+                          height: 24,
+                          backgroundColor: "#3b82f6",
                           borderRadius: 12,
                           borderWidth: 2,
-                          borderColor: '#ffffff',
-                          shadowColor: '#000',
+                          borderColor: "#ffffff",
+                          shadowColor: "#000",
                           shadowOffset: { width: 0, height: 2 },
                           shadowOpacity: 0.3,
                           shadowRadius: 3,
                           elevation: 5,
-                        }} 
+                        }}
                       />
                     </Animated.View>
                   </>
@@ -705,26 +1128,48 @@ export default function Step4Credentials() {
               {/* Steps textuais */}
               <View className="space-y-3 mb-6">
                 <View className="flex-row">
-                  <Text style={{ color: '#10b981' }} className="font-bold mr-2">1.</Text>
-                  <Text style={{ color: colors.cardTextPrimary }} className="flex-1">
+                  <Text style={{ color: "#10b981" }} className="font-bold mr-2">
+                    1.
+                  </Text>
+                  <Text
+                    style={{ color: colors.cardTextPrimary }}
+                    className="flex-1"
+                  >
                     Faça login no seu painel MK-Auth
                   </Text>
                 </View>
                 <View className="flex-row">
-                  <Text style={{ color: '#10b981' }} className="font-bold mr-2">2.</Text>
-                  <Text style={{ color: colors.cardTextPrimary }} className="flex-1">
-                    Clique no menu lateral e vá em <Text className="font-semibold">Provedor</Text>
+                  <Text style={{ color: "#10b981" }} className="font-bold mr-2">
+                    2.
+                  </Text>
+                  <Text
+                    style={{ color: colors.cardTextPrimary }}
+                    className="flex-1"
+                  >
+                    Clique no menu lateral e vá em{" "}
+                    <Text className="font-semibold">Provedor</Text>
                   </Text>
                 </View>
                 <View className="flex-row">
-                  <Text style={{ color: '#10b981' }} className="font-bold mr-2">3.</Text>
-                  <Text style={{ color: colors.cardTextPrimary }} className="flex-1">
-                    Selecione <Text className="font-semibold">Api do usuario</Text>
+                  <Text style={{ color: "#10b981" }} className="font-bold mr-2">
+                    3.
+                  </Text>
+                  <Text
+                    style={{ color: colors.cardTextPrimary }}
+                    className="flex-1"
+                  >
+                    Selecione{" "}
+                    <Text className="font-semibold">Api do usuario</Text>
                   </Text>
                 </View>
                 <View className="flex-row">
-                  <Text style={{ color: '#10b981' }} className="font-bold mr-2">4.</Text>
-                  <Text style={{ color: colors.cardTextPrimary }} className="flex-1">
+                  <Text style={{ color: "#10b981" }} className="font-bold mr-2">
+                    4.
+                  </Text>
+                  <Text
+                    style={{ color: colors.cardTextPrimary }}
+                    className="flex-1"
+                  >
                     Copie o Client ID e Client Secret
                   </Text>
                 </View>
@@ -732,7 +1177,7 @@ export default function Step4Credentials() {
 
               {/* Botão fechar */}
               <TouchableOpacity
-                style={{ backgroundColor: '#10b981' }}
+                style={{ backgroundColor: "#10b981" }}
                 className="rounded-xl py-3 items-center"
                 onPress={() => setShowHelpModal(false)}
               >

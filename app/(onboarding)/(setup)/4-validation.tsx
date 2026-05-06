@@ -142,7 +142,13 @@ export default function ConnectionTest() {
 
   const saveEditing = () => {
     if (!tempValue.trim()) {
-      Alert.alert('Erro', 'O campo não pode estar vazio.');
+      if (editingField === 'clientId') {
+        Alert.alert('Erro', 'Cole o Client ID copiado no painel MK-Auth.');
+      } else if (editingField === 'clientSecret') {
+        Alert.alert('Erro', 'Cole o Client Secret copiado no painel MK-Auth.');
+      } else {
+        Alert.alert('Erro', 'O campo não pode estar vazio.');
+      }
       return;
     }
 
