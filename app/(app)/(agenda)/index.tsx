@@ -8,6 +8,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAgenda } from '@/hooks/agenda';
 import { useAgendaSync } from '@/hooks/agenda/useAgendaSync';
 import { isChamado } from '@/utils/agenda';
+import { agendaFetchFailureMessage } from '@/utils/agendaFetchFailureMessage';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -120,9 +121,8 @@ export default function AgendaScreen() {
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
         <View style={styles.centerContainer}>
-          <Text style={[styles.errorText, { color: colors.text }]}>Erro ao carregar agenda</Text>
-          <Text style={[styles.errorSubtext, { color: colors.cardTextSecondary }]}>
-            {error.message || 'Tente novamente mais tarde'}
+          <Text style={[styles.errorText, { color: colors.text }]}>
+            {agendaFetchFailureMessage(error, 'initial')}
           </Text>
           <TouchableOpacity
             onPress={handleRefresh}
@@ -142,22 +142,27 @@ export default function AgendaScreen() {
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
         {error && hasAgendaSnapshot ? (
           <View
-            className="mx-3 mt-2 mb-1 px-3 py-2 rounded-lg border flex-row items-center justify-between"
+            className="mx-3 mt-2 mb-1 px-3 py-2 rounded-lg border flex-row items-start justify-between gap-2"
             style={{
               backgroundColor: '#f59e0b15',
               borderColor: '#f59e0b55',
             }}
           >
-            <Text className="text-xs flex-1 mr-3" style={{ color: colors.text }}>
-              Sem conexão no momento. Exibindo últimos dados carregados.
-            </Text>
+            <View className="flex-1">
+              <Text className="text-xs leading-snug" style={{ color: colors.text }}>
+                {agendaFetchFailureMessage(error, 'refresh')}
+              </Text>
+              <Text className="text-xs leading-snug mt-1" style={{ color: colors.cardTextSecondary }}>
+                Os dados exibidos são os últimos carregados.
+              </Text>
+            </View>
             <TouchableOpacity
               onPress={handleRefresh}
-              className="px-2 py-1 rounded"
+              className="px-2 py-1 rounded shrink-0"
               style={{ backgroundColor: '#f59e0b' }}
             >
               <Text className="text-xs font-semibold" style={{ color: '#ffffff' }}>
-                Tentar
+                Tentar novamente
               </Text>
             </TouchableOpacity>
           </View>
@@ -204,12 +209,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   errorText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    marginBottom: 8,
-  },
-  errorSubtext: {
-    fontSize: 14,
+    marginBottom: 16,
     textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: 8,
   },
 });
