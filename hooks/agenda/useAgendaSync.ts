@@ -86,6 +86,9 @@ export function useAgendaSync(viewMode: ViewMode) {
     activeDateKeyRef.current = todayKey;
     todayFabRef.current?.hide();
 
+    // Evita que o onScroll da lista sobrescreva o "hoje" durante scroll programático
+    isProgrammaticScrollRef.current = true;
+
     // Sincroniza calendário sem animação
     calendarRef.current?.setActiveDateInstant(todayKey);
 
@@ -95,6 +98,11 @@ export function useAgendaSync(viewMode: ViewMode) {
     } else {
       dayListRef.current?.setDateKey(todayKey);
     }
+
+    // Reabilita callback após estabilizar o scroll
+    setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+    }, 350);
   };
 
   return {
