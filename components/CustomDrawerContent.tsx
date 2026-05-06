@@ -1,5 +1,5 @@
 import { useTheme } from '@/contexts/ThemeContext';
-import { logout } from '@/lib/auth';
+import { disconnectCompletely } from '@/lib/auth';
 import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/useUserStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,12 +40,11 @@ export function CustomDrawerContent(props: any) {
           props.navigation.closeDrawer();
           // Aguarda animação do drawer completar antes de mudar estado
           await new Promise(resolve => setTimeout(resolve, 300));
-          await clearIdentification();
-          await logout();
+          await disconnectCompletely();
         },
       },
     ]);
-  }, [props.navigation, clearIdentification, logout]);
+  }, [props.navigation]);
 
   const handleSwitchUser = useCallback(async () => {
     Alert.alert('Trocar Usuário', 'Deseja fazer login com outro usuário?', [

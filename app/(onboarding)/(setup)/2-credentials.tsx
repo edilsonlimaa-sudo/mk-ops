@@ -7,8 +7,8 @@ import {
 import { useSetupStore } from "@/stores/onboarding/useSetupStore";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
@@ -102,52 +102,6 @@ export default function Step4Credentials() {
     clientIdWatch,
     clientSecretWatch,
   );
-
-  const [hasClipboardContent, setHasClipboardContent] = useState(false);
-
-  const clipboardRetryTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  const clearClipboardRetryTimers = useCallback(() => {
-    clipboardRetryTimers.current.forEach(clearTimeout);
-    clipboardRetryTimers.current = [];
-  }, []);
-
-  const refreshClipboard = useCallback(async () => {
-    try {
-      const t = await Clipboard.getStringAsync();
-      setHasClipboardContent(!!t?.trim());
-    } catch {
-      setHasClipboardContent(false);
-    }
-  }, []);
-
-  /** Volta de outros apps (ex.: WhatsApp) pode atrasar o clipboard no SO — relemos algumas vezes. */
-  const refreshClipboardWithRetries = useCallback(() => {
-    clearClipboardRetryTimers();
-    void refreshClipboard();
-    for (const ms of [120, 350, 700]) {
-      clipboardRetryTimers.current.push(
-        setTimeout(() => void refreshClipboard(), ms),
-      );
-    }
-  }, [clearClipboardRetryTimers, refreshClipboard]);
-
-  useFocusEffect(
-    useCallback(() => {
-      refreshClipboardWithRetries();
-      return clearClipboardRetryTimers;
-    }, [clearClipboardRetryTimers, refreshClipboardWithRetries]),
-  );
-
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") refreshClipboardWithRetries();
-    });
-    return () => {
-      sub.remove();
-      clearClipboardRetryTimers();
-    };
-  }, [clearClipboardRetryTimers, refreshClipboardWithRetries]);
 
   // Animação de pulse no botão de ajuda
   const helpButtonPulse = useRef(new Animated.Value(1)).current;
@@ -490,7 +444,7 @@ export default function Step4Credentials() {
               }) => {
                 const showFieldError = (isDirty || isTouched) && error;
                 const showClear = !!value;
-                const showPaste = !value && hasClipboardContent;
+                const showPaste = !value;
                 const showActions = showClear || showPaste;
                 return (
                   <>
@@ -540,7 +494,7 @@ export default function Step4Credentials() {
                           {showClear ? (
                             <TouchableOpacity
                               onPress={() =>
-                                clearField(onChange, onBlur, refreshClipboard)
+                                clearField(onChange, onBlur)
                               }
                               style={{
                                 width: 40,
@@ -573,7 +527,6 @@ export default function Step4Credentials() {
                                 void pasteIntoField(
                                   onChange,
                                   onBlur,
-                                  refreshClipboard,
                                 )
                               }
                               style={{
@@ -633,7 +586,7 @@ export default function Step4Credentials() {
               }) => {
                 const showFieldError = (isDirty || isTouched) && error;
                 const showClear = !!value;
-                const showPaste = !value && hasClipboardContent;
+                const showPaste = !value;
                 const showActions = showClear || showPaste;
                 return (
                   <>
@@ -683,7 +636,7 @@ export default function Step4Credentials() {
                           {showClear ? (
                             <TouchableOpacity
                               onPress={() =>
-                                clearField(onChange, onBlur, refreshClipboard)
+                                clearField(onChange, onBlur)
                               }
                               style={{
                                 width: 40,
@@ -716,7 +669,6 @@ export default function Step4Credentials() {
                                 void pasteIntoField(
                                   onChange,
                                   onBlur,
-                                  refreshClipboard,
                                 )
                               }
                               style={{

@@ -3,6 +3,9 @@ import { authService } from '@/services/api/auth';
 import { getTokenExpiration } from '@/services/api/core/token/jwtDecoder';
 import { authStorage } from '@/services/storage/authStorage';
 import { useAuthStore } from '@/stores/auth';
+import { useOnboardingStore } from '@/stores/onboarding/useOnboardingStore';
+import { useSetupStore } from '@/stores/onboarding/useSetupStore';
+import { useUserStore } from '@/stores/useUserStore';
 
 /**
  * Realiza login e estabelece sessão autenticada.
@@ -80,6 +83,30 @@ export async function logout(): Promise<void> {
   });
   
   console.log('📝 [auth.session] Estado limpo');
+}
+
+/**
+ * Desconexão completa do aplicativo.
+ *
+ * Este método:
+ * - Limpa identificação do usuário
+ * - Executa logout da API (token, credenciais e cache)
+ * - Reseta onboarding e setup para estado de primeira execução
+ */
+export async function disconnectCompletely(): Promise<void> {
+  console.log('🧨 [auth.session] Iniciando desconexão completa...');
+
+  // 1. Limpa usuário identificado (logout parcial usa apenas isso)
+  await useUserStore.getState().clearIdentification();
+  console.log('🧼 [auth.session] Identificação do usuário limpa');
+
+  // 2. Limpa sessão de API + cache sensível
+  await logout();
+
+  // 3. Reseta fluxo de onboarding e setup (persistidos em AsyncStorage)
+  useSetupStore.getState().resetSetup();
+  useOnboardingStore.getState().resetOnboarding();
+  console.log('♻️ [auth.session] Onboarding e setup resetados');
 }
 
 /**

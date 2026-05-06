@@ -14,7 +14,7 @@
  */
 
 // Sessão (login/logout)
-export { getSavedCredentials, login, logout } from './session';
+export { disconnectCompletely, getSavedCredentials, login, logout } from './session';
 
 // Token (refresh)
 export { isExpired, refreshToken } from './token';

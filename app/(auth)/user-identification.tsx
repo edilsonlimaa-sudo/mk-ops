@@ -2,22 +2,20 @@ import { ImmersiveLoadingScreen } from '@/components/ImmersiveLoadingScreen';
 import { PasswordModal } from '@/components/PasswordModal';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUsuarios } from '@/hooks/usuario';
-import { logout } from '@/lib/auth';
+import { disconnectCompletely } from '@/lib/auth';
 import { validatePassword } from '@/services/api/usuario';
 import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/useUserStore';
 import { Usuario } from '@/types/usuario';
-import { Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Stack } from 'expo-router';
+import { useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ValidationState = 'idle' | 'validating' | 'success' | 'error';
-type InitialLoadState = 'loading' | 'success' | 'done';
 
 export default function UserIdentification() {
   console.log('👤 [UserIdentification] Componente renderizado');
-  const { flow = 'login' } = useLocalSearchParams<{ flow?: 'login' | 'switchUser' }>();
   const { theme, colors } = useTheme();
   const { identifyUser } = useUserStore();
   const ipMkAuth = useAuthStore(state => state.ipMkAuth);
@@ -28,24 +26,9 @@ export default function UserIdentification() {
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [validationState, setValidationState] = useState<ValidationState>('idle');
 
-  // Se flow=switchUser (troca de usuário), pula o intro imersivo
-  const [initialLoadState, setInitialLoadState] = useState<InitialLoadState>(
-    flow === 'switchUser' ? 'done' : 'loading'
-  );
-
-  // Controla o loading inicial (quando vem da tela de login)
-  useEffect(() => {
-    if (initialLoadState === 'loading') {
-      // Quando carregar os usuários, mostra o green check
-      if (!isLoading && !isError && usuarios.length > 0) {
-        setInitialLoadState('success');
-      }
-    }
-  }, [isLoading, isError, usuarios, initialLoadState]);
-
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
     console.log('🚪 [UserIdentification] Desconectando...');
-    logout();
+    await disconnectCompletely();
   };
 
   const handleSelectUser = (usuario: Usuario) => {
@@ -90,26 +73,6 @@ export default function UserIdentification() {
       // Mantém selectedUsuario para poder tentar novamente
     }
   };
-
-  // Se ainda está no loading inicial, não renderiza nada (tela de loading vai cobrir)
-  if (initialLoadState !== 'done') {
-    return (
-      <>
-        <Stack.Screen options={{ headerShown: false }} />
-        {/* Loading Screen Fullscreen - Carregamento Inicial */}
-        <ImmersiveLoadingScreen
-          visible={true}
-          state={initialLoadState}
-          loadingTitle="Buscando funcionários"
-          loadingSubtitle="Aguarde um momento..."
-          successTitle="Conectado com sucesso!"
-          successSubtitle="Funcionários carregados..."
-          errorTitle="" // Not used in initial load
-          onAnimationComplete={() => setInitialLoadState('done')}
-        />
-      </>
-    );
-  }
 
   if (isLoading) {
     return (
