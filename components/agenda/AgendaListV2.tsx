@@ -1,5 +1,5 @@
 import { useTheme } from '@/contexts/ThemeContext';
-import { FlatListItem, useFlatAgendaData } from '@/hooks/agenda/useFlatAgendaData';
+import { FlatListItem, getAgendaItemHeight, useFlatAgendaData } from '@/hooks/agenda/useFlatAgendaData';
 import { generateCalendarDays } from '@/utils/agenda';
 import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import { FlatList, Text, View } from 'react-native';
@@ -31,6 +31,7 @@ export interface AgendaListV2Ref {
 export const AgendaListV2 = forwardRef<AgendaListV2Ref, AgendaListV2Props>(({ items = [], initialDateKey, onActiveHeaderChange, onItemPress }, ref) => {
   console.log('[AgendaListV2] Re-render, items:', items.length);
   const { colors } = useTheme();
+  const itemHeight = getAgendaItemHeight();
   const flatListRef = useRef<FlatList>(null);
   const lastEmittedDateKeyRef = useRef<string | null>(null);
 
@@ -117,7 +118,7 @@ export const AgendaListV2 = forwardRef<AgendaListV2Ref, AgendaListV2Props>(({ it
 
     // type === 'item'
     return (
-      <View style={{ height: 132 }}>
+      <View style={{ height: itemHeight }}>
         <ListItem
           title={item.data.title}
           subtitle={item.data.subtitle}

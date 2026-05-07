@@ -12,6 +12,7 @@ import {
     TouchableWithoutFeedback,
     View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface EditModalProps {
   visible: boolean;
@@ -43,6 +44,7 @@ export function EditModal({
   saveButtonColor,
 }: EditModalProps) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const inputRef = useRef<TextInput>(null);
   
@@ -76,7 +78,10 @@ export function EditModal({
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
               <View 
                 className="rounded-t-3xl p-6"
-                style={{ backgroundColor: colors.cardBackground }}
+                style={{
+                  backgroundColor: colors.cardBackground,
+                  paddingBottom: Math.max(insets.bottom + 16, 24),
+                }}
               >
                 <View className="flex-row items-center justify-between mb-4">
                   <Text 

@@ -1,5 +1,5 @@
 import { useTheme } from '@/contexts/ThemeContext';
-import { FlatListItem, useFlatAgendaData } from '@/hooks/agenda/useFlatAgendaData';
+import { FlatListItem, getAgendaItemHeight, useFlatAgendaData } from '@/hooks/agenda/useFlatAgendaData';
 import { forwardRef, useImperativeHandle, useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { ListItem } from './ListItem';
@@ -31,6 +31,7 @@ export const DayListV2 = forwardRef<DayListV2Ref, DayListV2Props>(
     const [currentDateKey, setCurrentDateKey] = useState(initialDateKey);
     console.log('[DayListV2] Re-render, items:', items.length, 'dateKey:', currentDateKey);
     const { colors } = useTheme();
+    const itemHeight = getAgendaItemHeight();
 
     // Expõe método imperativo para mudar o dia
     useImperativeHandle(ref, () => ({
@@ -84,7 +85,7 @@ export const DayListV2 = forwardRef<DayListV2Ref, DayListV2Props>(
 
       // type === 'item'
       return (
-        <View style={{ height: 132 }}>
+        <View style={{ height: itemHeight }}>
           <ListItem
             title={item.data.title}
             subtitle={item.data.subtitle}

@@ -1,6 +1,7 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, FlatList, Modal, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface SelectionModalProps<T> {
   visible: boolean;
@@ -24,6 +25,7 @@ export function SelectionModal<T>({
   emptyMessage = 'Nenhum item disponível',
 }: SelectionModalProps<T>) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Modal
@@ -61,6 +63,7 @@ export function SelectionModal<T>({
               renderItem={renderItem}
               showsVerticalScrollIndicator={true}
               ItemSeparatorComponent={() => <View style={{ height: 0 }} />}
+              contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 16, 24) }}
             />
           )}
         </View>

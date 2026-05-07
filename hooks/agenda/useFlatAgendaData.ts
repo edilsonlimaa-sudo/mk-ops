@@ -1,5 +1,6 @@
 import { generateCalendarDays } from '@/utils/agenda';
 import { useMemo } from 'react';
+import { PixelRatio } from 'react-native';
 
 interface AgendaItem {
   id: string;
@@ -16,12 +17,19 @@ export type FlatListItem =
   | { type: 'item'; data: AgendaItem }
   | { type: 'empty'; dateKey: string };
 
+export function getAgendaItemHeight() {
+  const fontScale = PixelRatio.getFontScale();
+  if (fontScale >= 1.15) return 144;
+  if (fontScale >= 1.05) return 138;
+  return 132;
+}
+
 export function useFlatAgendaData(items: AgendaItem[], dateKeys: string[]) {
   return useMemo(() => {
     // Constantes de altura fixas
     const HEADER_HEIGHT = 36;
     const EMPTY_HEIGHT = 46;
-    const ITEM_HEIGHT = 132;
+    const ITEM_HEIGHT = getAgendaItemHeight();
 
     const allDays = generateCalendarDays();
     const result: FlatListItem[] = [];
