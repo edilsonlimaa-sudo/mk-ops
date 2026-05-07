@@ -10,7 +10,7 @@ import { useAgendaSync } from '@/hooks/agenda/useAgendaSync';
 import { isChamado } from '@/utils/agenda';
 import { agendaFetchFailureMessage } from '@/utils/agendaFetchFailureMessage';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,6 +23,16 @@ export default function AgendaScreen() {
   const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('day');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const isNavigatingToDetailsRef = useRef(false);
+  const navigationUnlockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (navigationUnlockTimeoutRef.current) {
+        clearTimeout(navigationUnlockTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Hook de sincronização entre calendário e listas
   const {
@@ -98,6 +108,19 @@ export default function AgendaScreen() {
 
   // Função para navegar aos detalhes
   const handleItemPress = (item: any) => {
+    if (isNavigatingToDetailsRef.current) {
+      return;
+    }
+
+    isNavigatingToDetailsRef.current = true;
+    if (navigationUnlockTimeoutRef.current) {
+      clearTimeout(navigationUnlockTimeoutRef.current);
+    }
+    navigationUnlockTimeoutRef.current = setTimeout(() => {
+      isNavigatingToDetailsRef.current = false;
+      navigationUnlockTimeoutRef.current = null;
+    }, 900);
+
     if (item.isChamado) {
       router.push(`/detalhes/chamado/${item.uuid}`);
     } else {
