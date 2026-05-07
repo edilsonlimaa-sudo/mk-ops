@@ -14,6 +14,7 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface FinalizacaoModalProps {
   visible: boolean;
@@ -33,6 +34,7 @@ export function FinalizacaoModal({
   editaInstalacaoMutation,
 }: FinalizacaoModalProps) {
   const { colors, theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const finalizacaoScrollRef = useRef<ScrollView>(null);
   
   // Estados para finalização
@@ -191,7 +193,10 @@ export function FinalizacaoModal({
         </View>
 
         <ScrollView ref={finalizacaoScrollRef} className="flex-1" showsVerticalScrollIndicator={false}>
-          <View className="px-6 py-6">
+          <View
+            className="px-6 py-6"
+            style={{ paddingBottom: Math.max(insets.bottom + 16, 32) }}
+          >
             {/* Card 1: Visita */}
             <View 
               style={{ backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }} 
