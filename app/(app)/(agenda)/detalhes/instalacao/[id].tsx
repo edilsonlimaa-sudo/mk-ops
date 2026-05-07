@@ -19,7 +19,7 @@ import { formatarDataCompleta, formatarNome } from '@/utils/instalacao';
 import { Ionicons } from '@expo/vector-icons';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -53,6 +53,16 @@ export default function InstalacaoDetalhesScreen() {
   const [quickActionOptions, setQuickActionOptions] = useState<Array<{ label: string; value: string; icon: string; action: () => void }>>([]);
   const [quickActionModalTitle, setQuickActionModalTitle] = useState('');
   const [senhaVisivel, setSenhaVisivel] = useState(false);
+  const isNavigatingToClientRef = useRef(false);
+  const navigationUnlockTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (navigationUnlockTimeoutRef.current) {
+        clearTimeout(navigationUnlockTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!id) {
     return (
@@ -260,6 +270,21 @@ export default function InstalacaoDetalhesScreen() {
     return labels[editField || 'visita'];
   };
 
+  const handleOpenClientInfo = () => {
+    if (isNavigatingToClientRef.current) return;
+
+    isNavigatingToClientRef.current = true;
+    if (navigationUnlockTimeoutRef.current) {
+      clearTimeout(navigationUnlockTimeoutRef.current);
+    }
+    navigationUnlockTimeoutRef.current = setTimeout(() => {
+      isNavigatingToClientRef.current = false;
+      navigationUnlockTimeoutRef.current = null;
+    }, 900);
+
+    router.push(`/detalhes/instalacao/cliente-info?id=${instalacao.uuid_solic}`);
+  };
+
   return (
     <>
       <Stack.Screen
@@ -287,7 +312,7 @@ export default function InstalacaoDetalhesScreen() {
 
               {/* Cliente - Destaque Principal */}
               <TouchableOpacity
-                onPress={() => router.push(`/detalhes/instalacao/cliente-info?id=${instalacao.uuid_solic}`)}
+                onPress={handleOpenClientInfo}
                 className="mb-4 active:opacity-80"
               >
                 <Text style={{ color: colors.cardTextSecondary }} className="text-xs font-semibold uppercase tracking-wide mb-1">Cliente</Text>
