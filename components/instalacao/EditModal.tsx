@@ -1,11 +1,13 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
+    Keyboard,
     KeyboardAvoidingView,
     Modal,
     Platform,
+    ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
@@ -46,6 +48,7 @@ export function EditModal({
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [senhaVisivel, setSenhaVisivel] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const inputRef = useRef<TextInput>(null);
   
   // Callback ref que foca automaticamente quando o input é montado
@@ -58,6 +61,23 @@ export function EditModal({
         node.focus();
       }, 200);
     }
+  }, []);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates?.height ?? 0);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
   }, []);
   
   if (!visible) return null;
@@ -81,84 +101,92 @@ export function EditModal({
                 style={{
                   backgroundColor: colors.cardBackground,
                   paddingBottom: Math.max(insets.bottom + 16, 24),
+                  maxHeight: '90%',
+                  marginBottom: Platform.OS === 'android' ? Math.max(keyboardHeight - insets.bottom, 0) : 0,
                 }}
               >
-                <View className="flex-row items-center justify-between mb-4">
-                  <Text 
-                    className="text-base font-bold"
-                    style={{ color: colors.cardTextPrimary }}
-                  >
-                    {title}
-                  </Text>
-                  <TouchableOpacity onPress={onClose}>
-                    <Ionicons name="close" size={24} color={colors.cardTextSecondary} />
-                  </TouchableOpacity>
-                </View>
-
-                <View className="relative mb-4">
-                  <TextInput
-                    ref={setInputRef}
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder={placeholder}
-                    placeholderTextColor={colors.searchInputPlaceholder}
-                    multiline={multiline}
-                    numberOfLines={multiline ? 4 : 1}
-                    keyboardType={keyboardType}
-                    secureTextEntry={secureTextEntry && !senhaVisivel}
-                    className="rounded-lg p-3 text-base"
-                    style={[
-                      { 
-                        backgroundColor: colors.searchInputBackground,
-                        borderWidth: 1,
-                        borderColor: colors.cardBorder,
-                        color: colors.cardTextPrimary,
-                      },
-                      multiline ? { height: 100, textAlignVertical: 'top' } : { paddingRight: secureTextEntry ? 50 : 12 }
-                    ]}
-                  />
-                  
-                  {secureTextEntry && (
-                    <TouchableOpacity
-                      onPress={() => setSenhaVisivel(!senhaVisivel)}
-                      className="absolute right-3 top-3 p-1"
-                      style={{ top: multiline ? 12 : 12 }}
-                    >
-                      <Ionicons 
-                        name={senhaVisivel ? "eye-off" : "eye"} 
-                        size={20} 
-                        color={colors.cardTextSecondary} 
-                      />
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                <View className="flex-row gap-3">
-                  <TouchableOpacity
-                    onPress={onClose}
-                    className="flex-1 py-3 rounded-lg"
-                    style={{ backgroundColor: colors.filterPillInactive }}
-                  >
+                <ScrollView
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{ paddingBottom: 8 }}
+                >
+                  <View className="flex-row items-center justify-between mb-4">
                     <Text 
-                      className="font-semibold text-center"
-                      style={{ color: colors.filterPillTextInactive }}
+                      className="text-base font-bold"
+                      style={{ color: colors.cardTextPrimary }}
                     >
-                      Cancelar
+                      {title}
                     </Text>
-                  </TouchableOpacity>
+                    <TouchableOpacity onPress={onClose}>
+                      <Ionicons name="close" size={24} color={colors.cardTextSecondary} />
+                    </TouchableOpacity>
+                  </View>
 
-                  <TouchableOpacity
-                    onPress={onSave}
-                    disabled={isPending}
-                    className={`flex-1 py-3 rounded-lg ${saveButtonColor || 'bg-blue-600'}`}
-                  >
-                    {isPending ? (
-                      <ActivityIndicator size="small" color="white" />
-                    ) : (
-                      <Text className="text-white font-semibold text-center">Salvar</Text>
+                  <View className="relative mb-4">
+                    <TextInput
+                      ref={setInputRef}
+                      value={value}
+                      onChangeText={onChange}
+                      placeholder={placeholder}
+                      placeholderTextColor={colors.searchInputPlaceholder}
+                      multiline={multiline}
+                      numberOfLines={multiline ? 4 : 1}
+                      keyboardType={keyboardType}
+                      secureTextEntry={secureTextEntry && !senhaVisivel}
+                      className="rounded-lg p-3 text-base"
+                      style={[
+                        { 
+                          backgroundColor: colors.searchInputBackground,
+                          borderWidth: 1,
+                          borderColor: colors.cardBorder,
+                          color: colors.cardTextPrimary,
+                        },
+                        multiline ? { height: 100, textAlignVertical: 'top' } : { paddingRight: secureTextEntry ? 50 : 12 }
+                      ]}
+                    />
+                    
+                    {secureTextEntry && (
+                      <TouchableOpacity
+                        onPress={() => setSenhaVisivel(!senhaVisivel)}
+                        className="absolute right-3 top-3 p-1"
+                        style={{ top: multiline ? 12 : 12 }}
+                      >
+                        <Ionicons 
+                          name={senhaVisivel ? "eye-off" : "eye"} 
+                          size={20} 
+                          color={colors.cardTextSecondary} 
+                        />
+                      </TouchableOpacity>
                     )}
-                  </TouchableOpacity>
-                </View>
+                  </View>
+
+                  <View className="flex-row gap-3">
+                    <TouchableOpacity
+                      onPress={onClose}
+                      className="flex-1 py-3 rounded-lg"
+                      style={{ backgroundColor: colors.filterPillInactive }}
+                    >
+                      <Text 
+                        className="font-semibold text-center"
+                        style={{ color: colors.filterPillTextInactive }}
+                      >
+                        Cancelar
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={onSave}
+                      disabled={isPending}
+                      className={`flex-1 py-3 rounded-lg ${saveButtonColor || 'bg-blue-600'}`}
+                    >
+                      {isPending ? (
+                        <ActivityIndicator size="small" color="white" />
+                      ) : (
+                        <Text className="text-white font-semibold text-center">Salvar</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </ScrollView>
               </View>
             </TouchableWithoutFeedback>
           </KeyboardAvoidingView>
