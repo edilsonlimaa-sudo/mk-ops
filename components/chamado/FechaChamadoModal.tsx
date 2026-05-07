@@ -15,6 +15,7 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface FechaChamadoModalProps {
   visible: boolean;
@@ -51,6 +52,7 @@ export function FechaChamadoModal({
   fechaChamadoMutation,
 }: FechaChamadoModalProps) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const motivoInputRef = useRef<TextInput>(null);
   const scrollRef = useRef<ScrollView>(null);
   const [motivoSelecionado, setMotivoSelecionado] = useState<string>('');
@@ -188,7 +190,10 @@ export function FechaChamadoModal({
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="px-6 py-6 pb-8">
+          <View
+            className="px-6 py-6"
+            style={{ paddingBottom: Math.max(insets.bottom + 16, 32) }}
+          >
             {/* Dicas */}
             <View className="bg-blue-50 rounded-xl p-4 border border-blue-200 mb-4">
               <View className="flex-row items-start gap-2 mb-3">
