@@ -33,8 +33,8 @@ export default function LimitacoesScreen() {
                 Por que essas limitações?
               </Text>
               <Text className="text-sm leading-6" style={{ color: colors.cardTextPrimary }}>
-                O aplicativo se conecta diretamente à API do MK-Auth. As funcionalidades disponíveis
-                dependem do que a API permite.
+                O Mk-Ops só faz o que a API do seu MK-Auth expõe. Permissões de OAuth, versão do painel
+                e regras do provedor podem mudar o que é aceito em cada rota.
               </Text>
             </View>
           </View>
@@ -50,30 +50,38 @@ export default function LimitacoesScreen() {
           </View>
 
           <LimitationSection
-            title="Pode Editar"
+            title="No app (hoje)"
             type="allowed"
             items={[
-              { field: 'Assunto', description: 'Alterar título/descrição' },
-              { field: 'Prioridade', description: 'Mudar nível de prioridade' },
-              { field: 'Status', description: 'Fechar ou reabrir chamado' },
+              {
+                field: 'Detalhes e histórico',
+                description: 'Visualizar dados do chamado e linha do tempo de relatos.',
+              },
+              {
+                field: 'Fechar',
+                description: 'Chamado aberto pode ser fechado com motivo (modal no final da tela).',
+              },
+              {
+                field: 'Reabrir',
+                description: 'Chamado fechado pode ser reaberto pelo botão na tela, se a API permitir.',
+              },
             ]}
             colors={colors}
             theme={theme}
           />
 
           <LimitationSection
-            title="NÃO Pode Editar"
+            title="Não há no app"
             type="blocked"
             items={[
               {
-                field: 'Data da Visita',
-                description: 'A API não permite alterar a data agendada',
+                field: 'Editar assunto ou prioridade',
+                description: 'Não existe edição inline desses campos na tela de chamado.',
               },
               {
-                field: 'Técnico',
-                description: 'Não é possível atribuir ou mudar o técnico',
+                field: 'Alterar técnico ou data de visita',
+                description: 'Use o painel web do MK-Auth se a operação for necessária.',
               },
-              { field: 'Cliente', description: 'Não pode alterar o cliente vinculado' },
             ]}
             colors={colors}
             theme={theme}
@@ -90,26 +98,45 @@ export default function LimitacoesScreen() {
           </View>
 
           <LimitationSection
-            title="Pode Editar"
+            title="No app (edição)"
             type="allowed"
             items={[
-              { field: 'Data da Visita', description: 'Alterar data e hora agendadas' },
-              { field: 'Técnico', description: 'Atribuir ou mudar o técnico' },
-              { field: 'Plano', description: 'Alterar o plano contratado' },
-              { field: 'Observações', description: 'Adicionar ou editar notas' },
-              { field: 'Contatos', description: 'Editar e-mail, telefone e celular' },
+              {
+                field: 'Agenda e responsável',
+                description: 'Data/hora da visita e técnico, quando a tela oferecer edição.',
+              },
+              {
+                field: 'Plano, contatos e endereço',
+                description: 'Plano, e-mail, telefones, endereço completo e CEP, entre outros.',
+              },
+              {
+                field: 'Acesso e equipamento',
+                description: 'Login, senha (com cuidado), IP, MAC, comodato, equipamento.',
+              },
+              {
+                field: 'Valores e observações',
+                description: 'Valor, vencimento, observações; coordenadas com mapa onde existir.',
+              },
+              {
+                field: 'Finalização',
+                description: 'Fluxo de finalizar instalação quando disponível na tela.',
+              },
             ]}
             colors={colors}
             theme={theme}
           />
 
           <LimitationSection
-            title="NÃO Pode Editar"
+            title='O que a API não aceitar'
             type="blocked"
             items={[
               {
-                field: 'Reabrir',
-                description: 'API não disponibiliza endpoint para reabertura',
+                field: 'Campos rejeitados',
+                description: 'O servidor pode devolver erro para um campo; nesse caso ajuste no painel ou peça ao administrador.',
+              },
+              {
+                field: 'Reversão de finalização',
+                description: 'Reabrir ou alterar instalação já finalizada depende da API — pode ser só pelo painel web.',
               },
             ]}
             colors={colors}
@@ -133,14 +160,19 @@ export default function LimitacoesScreen() {
               borderColor: theme === 'dark' ? 'rgba(139, 92, 246, 0.3)' : '#e9d5ff',
             }}>
             <View className="flex-row items-center mb-3">
-              <Ionicons name="eye" size={20} color="#8b5cf6" />
+              <Ionicons name="create-outline" size={20} color="#8b5cf6" />
               <Text className="text-base font-bold ml-2" style={{ color: colors.cardTextPrimary }}>
-                Somente Leitura
+                Edição e limites
               </Text>
             </View>
-            <Text className="text-sm leading-6" style={{ color: colors.cardTextPrimary }}>
-              Todos os dados de clientes são somente para consulta. O app não permite criar, editar
-              ou excluir clientes.
+            <Text className="text-sm leading-6 mb-3" style={{ color: colors.cardTextPrimary }}>
+              Nos detalhes do cliente (rotas da Agenda), vários campos podem ser alterados quando aparecem
+              com ícone de edição — por exemplo dados de contato, endereço, coordenadas e observações. O
+              que for salvo depende do endpoint{' '}
+              <Text className="font-semibold">/api/cliente/editar</Text> do seu MK-Auth.
+            </Text>
+            <Text className="text-sm leading-6" style={{ color: colors.cardTextSecondary }}>
+              O app não oferece criar cliente novo nem excluir cadastro; isso permanece no painel web.
             </Text>
           </View>
         </View>
@@ -157,7 +189,7 @@ export default function LimitacoesScreen() {
           <WorkaroundItem
             icon="globe"
             title="Use o Painel Web"
-            description="Para operações não suportadas, acesse o MK-Auth pelo navegador."
+            description="Para operações que o app não cobre (cadastro em massa, exclusões, regras avançadas), use o MK-Auth no navegador."
             colors={colors}
           />
           <WorkaroundItem

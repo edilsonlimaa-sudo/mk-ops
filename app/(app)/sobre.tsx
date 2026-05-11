@@ -34,10 +34,13 @@ export default function SobreScreen() {
             <Ionicons name="phone-portrait" size={48} color="#3b82f6" />
           </View>
           <Text className="text-2xl font-bold mb-1" style={{ color: colors.cardTextPrimary }}>
-            MK Auth Mobile
+            {Constants.expoConfig?.name || 'Mk-Ops'}
           </Text>
           <Text className="text-base" style={{ color: colors.cardTextSecondary }}>
             v{appVersion} (Build {buildNumber})
+          </Text>
+          <Text className="text-sm mt-2 text-center px-2" style={{ color: colors.cardTextSecondary }}>
+            Operações de campo integradas à API do MK-Auth do seu provedor.
           </Text>
         </View>
 
@@ -49,8 +52,10 @@ export default function SobreScreen() {
             borderColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe',
           }}>
           <Text className="text-base leading-6" style={{ color: colors.cardTextPrimary }}>
-            Aplicativo móvel oficial para técnicos gerenciarem atendimentos, conectando-se
-            diretamente ao servidor MK-Auth do seu provedor.
+            O Mk-Ops é um app para técnicos em campo: agenda de instalações e chamados, detalhes do
+            cliente, busca e ações do dia a dia, sempre falando com o{' '}
+            <Text className="font-bold">mesmo MK-Auth</Text> que o provedor já utiliza — sem
+            servidor intermediário.
           </Text>
         </View>
 
@@ -59,19 +64,22 @@ export default function SobreScreen() {
           <View className="flex-row items-center mb-4">
             <Ionicons name="link" size={24} color="#3b82f6" />
             <Text className="text-lg font-bold ml-2" style={{ color: colors.cardTextPrimary }}>
-              Como Funciona
+              Fluxo no aparelho
             </Text>
           </View>
 
           <View className="rounded-2xl p-5" style={{ backgroundColor: colors.searchInputBackground }}>
             <Text className="text-sm leading-6 mb-3" style={{ color: colors.cardTextPrimary }}>
-              O aplicativo se conecta <Text className="font-bold">diretamente</Text> ao servidor
-              MK-Auth do seu provedor usando as credenciais fornecidas no login.
+              Na primeira vez, o app guia o <Text className="font-bold">cadastro do servidor</Text>,{' '}
+              <Text className="font-bold">credenciais da API</Text> (Client ID / Secret),{' '}
+              <Text className="font-bold">permissões</Text> esperadas no MK-Auth e um teste de
+              conexão. Depois você <Text className="font-bold">identifica o usuário</Text> (login do
+              técnico) e passa a usar a <Text className="font-bold">Agenda</Text> (menu lateral),
+              busca no topo e o tema claro/escuro quando quiser.
             </Text>
             <Text className="text-sm leading-6" style={{ color: colors.cardTextPrimary }}>
-              Todas as consultas e operações são feitas em{' '}
-              <Text className="font-bold">tempo real</Text> através da API REST oficial do MK-Auth,
-              sem intermediários.
+              Os dados vêm da API do seu MK-Auth; o app mantém cache local (React Query) para lista e
+              detalhes já abertos — com internet as alterações são enviadas ao servidor.
             </Text>
           </View>
         </View>
@@ -88,22 +96,22 @@ export default function SobreScreen() {
           <View className="space-y-3">
             <SecurityItem
               icon="lock-closed"
-              title="Sem Cópia de Dados"
-              description="Não copiamos, armazenamos ou mantemos backup dos dados do seu MK-Auth. Tudo permanece apenas no seu servidor."
+              title="Dados no seu MK-Auth"
+              description="O provedor continua dono dos dados: o app consulta e altera via API no servidor que você configurou. Não há nuvem nossa entre técnico e MK-Auth."
               colors={colors}
               theme={theme}
             />
             <SecurityItem
               icon="server"
-              title="Sem Acesso ao Servidor"
-              description="Não temos acesso ao seu servidor. Apenas o aplicativo instalado no celular do técnico se conecta."
+              title="Conexão direta"
+              description="Somente o app no seu celular usa a URL e as credenciais informadas no setup. A equipe do Mk-Ops não acessa seu servidor."
               colors={colors}
               theme={theme}
             />
             <SecurityItem
               icon="phone-portrait"
-              title="Cache Local Temporário"
-              description="Para funcionar offline, o app mantém um cache temporário no celular. Esse cache é criptografado e apagado ao fazer logout."
+              title="Cache e sessão"
+              description="Listas e detalhes já carregados podem ser lidos sem rede por um tempo (cache). Tokens e dados sensíveis seguem as práticas do app (Secure Store onde aplicável). Ao desconectar, a sessão com a API é encerrada."
               colors={colors}
               theme={theme}
             />
@@ -125,9 +133,15 @@ export default function SobreScreen() {
             style={{ backgroundColor: colors.searchInputBackground }}>
             <View className="flex-row items-center">
               <Ionicons name="mail" size={20} color={colors.cardTextSecondary} />
-              <Text className="text-sm ml-3" style={{ color: colors.cardTextPrimary }}>
-                suporte@mkauthmobile.com
-              </Text>
+              <View className="flex-1 ml-3">
+                <Text className="text-sm" style={{ color: colors.cardTextPrimary }}>
+                  suporte@mkauthmobile.com
+                </Text>
+                <Text className="text-xs mt-1" style={{ color: colors.cardTextSecondary }}>
+                  Dúvidas sobre o app. Problemas de rede, permissões ou faturamento: fale com o seu
+                  provedor.
+                </Text>
+              </View>
             </View>
           </TouchableOpacity>
         </View>
@@ -135,10 +149,10 @@ export default function SobreScreen() {
         {/* Copyright */}
         <View className="items-center py-8 mb-4">
           <Text className="text-sm mb-2" style={{ color: colors.cardTextSecondary }}>
-            © 2025 MK Auth Mobile
+            © {new Date().getFullYear()} Mk-Ops
           </Text>
           <Text className="text-xs" style={{ color: colors.cardTextSecondary }}>
-            Integração segura e transparente
+            Integração com a API do MK-Auth
           </Text>
         </View>
         </ScrollView>

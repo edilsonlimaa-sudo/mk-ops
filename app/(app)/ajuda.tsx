@@ -24,28 +24,42 @@ export default function AjudaScreen() {
           <View className="flex-row items-center mb-4">
             <Ionicons name="rocket" size={24} color="#10b981" />
             <Text className="text-lg font-bold ml-2" style={{ color: colors.cardTextPrimary }}>
-              Guia Rápido
+              Guia rápido
             </Text>
           </View>
 
           <GuideItem
+            icon="settings-outline"
+            title="Primeira configuração"
+            description="Na primeira abertura: URL do MK-Auth, Client ID e Client Secret, checagem de permissões no painel e teste de conexão. Depois, identifique o usuário (login do técnico)."
+            colors={colors}
+            theme={theme}
+          />
+          <GuideItem
             icon="calendar"
-            title="Ver seus atendimentos"
-            description="Acesse a 'Agenda' no menu. Visualize chamados e instalações agendados."
+            title="Agenda e detalhes"
+            description="No menu lateral, abra a Agenda. Toque em instalação ou chamado para ver detalhes, histórico e ações (editar o que o app e a API permitirem)."
             colors={colors}
             theme={theme}
           />
           <GuideItem
             icon="search"
-            title="Buscar um cliente"
-            description="Use o ícone de busca no topo. Busque por nome, CPF, telefone ou login."
+            title="Busca"
+            description="Use o ícone de busca no topo da Agenda para localizar cliente por nome, CPF, telefone ou login."
+            colors={colors}
+            theme={theme}
+          />
+          <GuideItem
+            icon="person"
+            title="Cliente"
+            description="Nos detalhes do cliente há abas (ex.: geral, endereço, observações). Campos com ícone de edição podem ser alterados quando a API aceitar."
             colors={colors}
             theme={theme}
           />
           <GuideItem
             icon="checkmark-done"
-            title="Fechar um chamado"
-            description="Abra os detalhes do chamado, role até o final e toque 'Fechar Chamado'."
+            title="Chamado aberto ou fechado"
+            description="Em chamado aberto: use Fechar chamado e informe o motivo. Em chamado fechado: é possível Reabrir, se a API permitir."
             colors={colors}
             theme={theme}
           />
@@ -62,20 +76,20 @@ export default function AjudaScreen() {
 
           <ProblemItem
             icon="wifi"
-            problem="Não consigo conectar"
-            solution="Verifique o IP do servidor MK-Auth. Confirme se o servidor está online."
+            problem="Não conecta ou erro de permissão"
+            solution="Confira a URL do MK-Auth, se o servidor está acessível pela internet do celular e se o Client ID/Secret estão corretos. No painel, habilite os controllers e métodos indicados no passo de permissões do setup."
             colors={colors}
           />
           <ProblemItem
             icon="refresh-circle"
-            problem="Dados desatualizados"
-            solution="Puxe para baixo nas listas para forçar atualização."
+            problem="Lista desatualizada"
+            solution="Puxe para baixo na Agenda (ou na tela) para recarregar. Abra de novo o item para buscar detalhes frescos na API."
             colors={colors}
           />
           <ProblemItem
             icon="log-out"
-            problem="Fui desconectado"
-            solution="O token expira por segurança. Faça login novamente."
+            problem="Sessão encerrada ou troca de usuário"
+            solution="Toque em Desconectar no menu lateral para limpar a sessão com a API. Use Trocar usuário para outro login, se precisar."
             colors={colors}
           />
         </View>
@@ -94,19 +108,19 @@ export default function AjudaScreen() {
             </Text>
           </View>
           <Text className="text-sm leading-6 mb-3" style={{ color: colors.cardTextPrimary }}>
-            O app funciona parcialmente sem internet:
+            Sem internet o app usa o que já está em cache no aparelho (React Query):
           </Text>
           <View className="space-y-2">
             <View className="flex-row items-start">
               <Ionicons name="checkmark-circle" size={18} color="#10b981" className="mt-0.5" />
               <Text className="text-sm ml-2 flex-1" style={{ color: colors.cardTextPrimary }}>
-                Visualizar dados já consultados (cache local)
+                Abrir de novo listas e telas que você já carregou (leitura)
               </Text>
             </View>
             <View className="flex-row items-start">
               <Ionicons name="close-circle" size={18} color="#ef4444" className="mt-0.5" />
               <Text className="text-sm ml-2 flex-1" style={{ color: colors.cardTextPrimary }}>
-                Buscar novos dados ou fazer atualizações
+                Salvar alterações, fechar/reabrir chamado, buscar cliente novo — exige conexão
               </Text>
             </View>
           </View>
@@ -123,17 +137,22 @@ export default function AjudaScreen() {
 
           <TipItem
             icon="flash"
-            tip="Puxe para baixo em qualquer lista para atualizar rapidamente"
+            tip="Puxe para baixo na Agenda para sincronizar com o servidor."
             colors={colors}
           />
           <TipItem
             icon="copy"
-            tip="Pressione e segure em telefones e CPFs para copiar"
+            tip="Em várias linhas de informação, pressione e segure para copiar o valor."
+            colors={colors}
+          />
+          <TipItem
+            icon="moon"
+            tip="No menu lateral, em Tema, escolha Claro, Escuro ou Automático (sistema)."
             colors={colors}
           />
           <TipItem
             icon="sync"
-            tip="Consulte dados importantes antes de sair para área sem cobertura"
+            tip="Antes de ir para área sem sinal, abra os detalhes que precisar para deixá-los em cache."
             colors={colors}
           />
         </View>
