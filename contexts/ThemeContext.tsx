@@ -1,5 +1,6 @@
 import { Colors } from '@/constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
@@ -16,6 +17,24 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+/**
+ * Alinha o esquema do NativeWind (`dark:` etc.) ao modo escolhido no app.
+ * Sem isso, o NativeWind segue o sistema e o ThemeContext pode ficar em claro — texto branco na drawer.
+ */
+function NativeWindSchemeSync({ mode }: { mode: ThemeMode }) {
+  const { setColorScheme } = useNativeWindColorScheme();
+
+  useEffect(() => {
+    if (mode === 'auto') {
+      setColorScheme('system');
+    } else {
+      setColorScheme(mode);
+    }
+  }, [mode, setColorScheme]);
+
+  return null;
+}
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>('auto'); // Padrão: seguir sistema
@@ -63,6 +82,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   return (
     <ThemeContext.Provider value={{ theme: effectiveTheme, colors, mode, setMode, isLoaded }}>
+      <NativeWindSchemeSync mode={mode} />
       {children}
     </ThemeContext.Provider>
   );

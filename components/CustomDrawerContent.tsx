@@ -9,8 +9,25 @@ import { router, usePathname } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 
+/** Tipografia da drawer; cores sempre de `colors` (ThemeContext). */
+const drawerFont = {
+  userName: { fontSize: 20, fontWeight: '600' as const },
+  userLogin: { fontSize: 14, fontWeight: '500' as const },
+  menuItem: { fontSize: 14, fontWeight: '500' as const, marginLeft: 12 },
+  section: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  themeSub: { fontSize: 12 },
+  footer: { fontSize: 12, textAlign: 'center' as const },
+};
+
 export function CustomDrawerContent(props: any) {
-  const { colors, mode, setMode, theme } = useTheme();
+  const { colors, mode, setMode } = useTheme();
   const ipMkAuth = useAuthStore(state => state.ipMkAuth);
   const { currentUser, clearIdentification } = useUserStore();
   const pathname = usePathname();
@@ -38,7 +55,6 @@ export function CustomDrawerContent(props: any) {
         style: 'destructive',
         onPress: async () => {
           props.navigation.closeDrawer();
-          // Aguarda animação do drawer completar antes de mudar estado
           await new Promise(resolve => setTimeout(resolve, 300));
           await disconnectCompletely();
         },
@@ -54,23 +70,23 @@ export function CustomDrawerContent(props: any) {
         style: 'default',
         onPress: async () => {
           props.navigation.closeDrawer();
-          // Aguarda animação do drawer completar antes de mudar estado
           await new Promise(resolve => setTimeout(resolve, 300));
           await clearIdentification();
-          // AppLayout detecta mudança e redireciona automaticamente
         },
       },
     ]);
   }, [props.navigation, clearIdentification]);
 
+  const ink = colors.text;
+  const muted = colors.cardTextSecondary;
+  const active = colors.tabBarActiveTint;
+  const inactiveIcon = colors.tabBarInactiveTint;
+
   return (
     <DrawerContentScrollView
       {...props}
-      className="bg-white dark:bg-gray-900"
-      contentContainerStyle={{ flex: 1 }}
-      contentContainerClassName="flex-1"
-      style={{ paddingBottom: 0 }}>
-      {/* Header */}
+      style={[props.style, { paddingBottom: 0, backgroundColor: colors.cardBackground }]}
+      contentContainerStyle={{ flex: 1, backgroundColor: colors.cardBackground }}>
       <Pressable
         onPress={() => {
           props.navigation.closeDrawer();
@@ -79,21 +95,20 @@ export function CustomDrawerContent(props: any) {
         className="p-6 pt-12 active:opacity-70">
         <View className="flex-row items-center">
           <View className="w-12 h-12 rounded-full bg-blue-500 items-center justify-center mr-3">
-            <Text className="text-white text-base font-semibold">{initials}</Text>
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>{initials}</Text>
           </View>
           <View className="flex-1">
-            <Text className="text-xl font-semibold text-gray-900 dark:text-white">
+            <Text style={[drawerFont.userName, { color: ink }]} numberOfLines={1}>
               {currentUser?.nome?.split(' ')[0] || 'Usuário'}
             </Text>
-            <Text className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <Text style={[drawerFont.userLogin, { color: muted }]} numberOfLines={1}>
               @{currentUser?.login}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+          <Ionicons name="chevron-forward" size={20} color={inactiveIcon} />
         </View>
       </Pressable>
 
-      {/* Menu */}
       <View className="flex-1 px-6 pt-2">
         <Pressable
           onPress={() => {
@@ -102,12 +117,20 @@ export function CustomDrawerContent(props: any) {
           }}
           className="py-2 flex-row items-center justify-between active:opacity-60">
           <View className="flex-row items-center flex-1">
-            <Ionicons name="calendar-outline" size={20} color={pathname === '/' ? '#3b82f6' : '#6b7280'} />
-            <Text className={`text-sm font-medium ml-3 ${pathname === '/' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>
+            <Ionicons
+              name="calendar-outline"
+              size={20}
+              color={pathname === '/' ? active : inactiveIcon}
+            />
+            <Text style={[drawerFont.menuItem, { color: pathname === '/' ? active : ink }]}>
               Agenda
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={pathname === '/' ? '#3b82f6' : '#9ca3af'} />
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={pathname === '/' ? active : colors.searchInputPlaceholder}
+          />
         </Pressable>
 
         <Pressable
@@ -117,12 +140,20 @@ export function CustomDrawerContent(props: any) {
           }}
           className="py-2 flex-row items-center justify-between active:opacity-60">
           <View className="flex-row items-center flex-1">
-            <Ionicons name="information-circle-outline" size={20} color={pathname === '/sobre' ? '#3b82f6' : '#6b7280'} />
-            <Text className={`text-sm font-medium ml-3 ${pathname === '/sobre' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color={pathname === '/sobre' ? active : inactiveIcon}
+            />
+            <Text style={[drawerFont.menuItem, { color: pathname === '/sobre' ? active : ink }]}>
               Sobre
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={pathname === '/sobre' ? '#3b82f6' : '#9ca3af'} />
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={pathname === '/sobre' ? active : colors.searchInputPlaceholder}
+          />
         </Pressable>
 
         <Pressable
@@ -132,12 +163,20 @@ export function CustomDrawerContent(props: any) {
           }}
           className="py-2 flex-row items-center justify-between active:opacity-60">
           <View className="flex-row items-center flex-1">
-            <Ionicons name="help-circle-outline" size={20} color={pathname === '/ajuda' ? '#3b82f6' : '#6b7280'} />
-            <Text className={`text-sm font-medium ml-3 ${pathname === '/ajuda' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>
+            <Ionicons
+              name="help-circle-outline"
+              size={20}
+              color={pathname === '/ajuda' ? active : inactiveIcon}
+            />
+            <Text style={[drawerFont.menuItem, { color: pathname === '/ajuda' ? active : ink }]}>
               Ajuda
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={pathname === '/ajuda' ? '#3b82f6' : '#9ca3af'} />
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={pathname === '/ajuda' ? active : colors.searchInputPlaceholder}
+          />
         </Pressable>
 
         <Pressable
@@ -147,88 +186,70 @@ export function CustomDrawerContent(props: any) {
           }}
           className="py-2 flex-row items-center justify-between active:opacity-60">
           <View className="flex-row items-center flex-1">
-            <Ionicons name="warning-outline" size={20} color={pathname === '/limitacoes' ? '#3b82f6' : '#6b7280'} />
-            <Text className={`text-sm font-medium ml-3 ${pathname === '/limitacoes' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>
+            <Ionicons
+              name="warning-outline"
+              size={20}
+              color={pathname === '/limitacoes' ? active : inactiveIcon}
+            />
+            <Text style={[drawerFont.menuItem, { color: pathname === '/limitacoes' ? active : ink }]}>
               Limitações da API
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={pathname === '/limitacoes' ? '#3b82f6' : '#9ca3af'} />
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={pathname === '/limitacoes' ? active : colors.searchInputPlaceholder}
+          />
         </Pressable>
 
-        <Text className="text-xs uppercase tracking-wide font-semibold mb-2 mt-4 text-gray-500 dark:text-gray-400">
-          Tema
-        </Text>
+        <Text style={[drawerFont.section, { color: muted }]}>Tema</Text>
 
-        <Pressable
-          onPress={() => setMode('light')}
-          className="py-2 flex-row items-center active:opacity-60">
-          <Ionicons name="sunny" size={20} color="#6b7280" />
+        <Pressable onPress={() => setMode('light')} className="py-2 flex-row items-center active:opacity-60">
+          <Ionicons name="sunny" size={20} color={inactiveIcon} />
           <View className="flex-1 ml-3">
-            <Text className={`text-sm font-medium ${mode === 'light' ? 'text-blue-500' : 'text-gray-900 dark:text-white'}`}>
+            <Text style={[drawerFont.menuItem, { marginLeft: 0 }, { color: mode === 'light' ? active : ink }]}>
               Claro
             </Text>
-            <Text className="text-xs text-gray-500 dark:text-gray-400">
-              Sempre modo claro
-            </Text>
+            <Text style={[drawerFont.themeSub, { color: muted }]}>Sempre modo claro</Text>
           </View>
         </Pressable>
 
-        <Pressable
-          onPress={() => setMode('dark')}
-          className="py-2 flex-row items-center active:opacity-60">
-          <Ionicons name="moon" size={20} color="#6b7280" />
+        <Pressable onPress={() => setMode('dark')} className="py-2 flex-row items-center active:opacity-60">
+          <Ionicons name="moon" size={20} color={inactiveIcon} />
           <View className="flex-1 ml-3">
-            <Text className={`text-sm font-medium ${mode === 'dark' ? 'text-blue-500' : 'text-gray-900 dark:text-white'}`}>
+            <Text style={[drawerFont.menuItem, { marginLeft: 0 }, { color: mode === 'dark' ? active : ink }]}>
               Escuro
             </Text>
-            <Text className="text-xs text-gray-500 dark:text-gray-400">
-              Sempre modo escuro
-            </Text>
+            <Text style={[drawerFont.themeSub, { color: muted }]}>Sempre modo escuro</Text>
           </View>
         </Pressable>
 
-        <Pressable
-          onPress={() => setMode('auto')}
-          className="py-2 flex-row items-center active:opacity-60">
-          <Ionicons name="phone-portrait-outline" size={20} color="#6b7280" />
+        <Pressable onPress={() => setMode('auto')} className="py-2 flex-row items-center active:opacity-60">
+          <Ionicons name="phone-portrait-outline" size={20} color={inactiveIcon} />
           <View className="flex-1 ml-3">
-            <Text className={`text-sm font-medium ${mode === 'auto' ? 'text-blue-500' : 'text-gray-900 dark:text-white'}`}>
+            <Text style={[drawerFont.menuItem, { marginLeft: 0 }, { color: mode === 'auto' ? active : ink }]}>
               Automático
             </Text>
-            <Text className="text-xs text-gray-500 dark:text-gray-400">
-              Usa o tema do sistema
-            </Text>
+            <Text style={[drawerFont.themeSub, { color: muted }]}>Usa o tema do sistema</Text>
           </View>
         </Pressable>
 
-        <Text className="text-xs uppercase tracking-wide font-semibold mb-2 mt-4 text-gray-500 dark:text-gray-400">
-          Conta
-        </Text>
+        <Text style={[drawerFont.section, { color: muted }]}>Conta</Text>
 
         <View>
-          <Pressable
-            onPress={handleSwitchUser}
-            className="py-2 flex-row items-center active:opacity-60">
-            <Ionicons name="swap-horizontal" size={20} color="#6b7280" />
+          <Pressable onPress={handleSwitchUser} className="py-2 flex-row items-center active:opacity-60">
+            <Ionicons name="swap-horizontal" size={20} color={inactiveIcon} />
             <View className="flex-1 ml-3">
-              <Text className="text-sm font-medium text-gray-900 dark:text-white">
-                Trocar Usuário
-              </Text>
-              <Text className="text-xs text-gray-500 dark:text-gray-400">
-                Mudar de conta
-              </Text>
+              <Text style={[drawerFont.menuItem, { marginLeft: 0 }, { color: ink }]}>Trocar Usuário</Text>
+              <Text style={[drawerFont.themeSub, { color: muted }]}>Mudar de conta</Text>
             </View>
           </Pressable>
 
-          <Pressable
-            onPress={handleLogout}
-            className="py-2 flex-row items-center active:opacity-60">
+          <Pressable onPress={handleLogout} className="py-2 flex-row items-center active:opacity-60">
             <Ionicons name="log-out-outline" size={20} color="#ef4444" />
             <View className="flex-1 ml-3">
-              <Text className="text-sm font-medium text-red-600">
-                Desconectar
-              </Text>
-              <Text className="text-xs text-gray-500 dark:text-gray-400">
+              <Text style={[drawerFont.menuItem, { marginLeft: 0 }, { color: '#dc2626' }]}>Desconectar</Text>
+              <Text style={[drawerFont.themeSub, { color: muted }]}>
                 {ipMkAuth?.replace('https://', '').replace('http://', '') || 'Não conectado'}
               </Text>
             </View>
@@ -236,9 +257,8 @@ export function CustomDrawerContent(props: any) {
         </View>
       </View>
 
-      {/* Footer */}
       <View className="pt-4 pb-2">
-        <Text className="text-xs text-center text-gray-400 dark:text-gray-500">
+        <Text style={[drawerFont.footer, { color: colors.searchInputPlaceholder }]}>
           v{appVersion} • {ipMkAuth?.replace('https://', '').replace('http://', '') || 'Não conectado'}
         </Text>
       </View>
