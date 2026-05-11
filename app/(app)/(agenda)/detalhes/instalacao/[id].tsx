@@ -21,13 +21,14 @@ import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
 export default function InstalacaoDetalhesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [planoModalVisible, setPlanoModalVisible] = useState(false);
   const [funcionarioModalVisible, setFuncionarioModalVisible] = useState(false);
   const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
@@ -293,7 +294,14 @@ export default function InstalacaoDetalhesScreen() {
         }}
       />
       <SafeAreaView style={{ backgroundColor: colors.screenBackground }} className="flex-1" edges={['bottom']}>
-        <ScrollView ref={mainScrollRef} className="flex-1" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          ref={mainScrollRef}
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: Math.max(insets.bottom + 16, 28),
+          }}
+        >
           <View className="p-4">
             {/* HERO SECTION - Informações Críticas */}
             <View 
