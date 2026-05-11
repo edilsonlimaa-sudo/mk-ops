@@ -12,7 +12,7 @@ import {
     TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
-    View
+    View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -50,7 +50,7 @@ export function EditModal({
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const inputRef = useRef<TextInput>(null);
-  
+
   // Callback ref que foca automaticamente quando o input é montado
   const setInputRef = useCallback((node: TextInput | null) => {
     if (node) {
@@ -82,9 +82,6 @@ export function EditModal({
   
   if (!visible) return null;
 
-  /** Android: KAV com behavior "height" costuma falhar em modal transparente; usamos margem pelo teclado. */
-  const androidKeyboardLift = Platform.OS === 'android' ? keyboardHeight : 0;
-
   return (
     <Modal
       visible={visible}
@@ -92,36 +89,40 @@ export function EditModal({
       transparent
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View className="flex-1 bg-black/50">
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            enabled={Platform.OS === 'ios'}
-            keyboardVerticalOffset={0}
-            className="flex-1 justify-end"
-          >
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View 
-                className="rounded-t-3xl p-6"
-                style={{
-                  backgroundColor: colors.cardBackground,
-                  paddingBottom: Math.max(insets.bottom + 16, 24),
-                  maxHeight: '90%',
-                  marginBottom: androidKeyboardLift,
-                }}
-              >
-                <ScrollView
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}
-                  nestedScrollEnabled
-                  contentContainerStyle={{
-                    flexGrow: 1,
-                    paddingBottom: Math.max(
-                      8,
-                      insets.bottom + (keyboardHeight > 0 ? 24 : 8)
-                    ),
+      {/*
+        Um único KeyboardAvoidingView em volta do conteúdo (iOS + Android).
+        Com softwareKeyboardLayoutMode "resize" no app, evita empilhar com marginBottom
+        no sheet; o padding do KAV empurra o conteúdo para cima do teclado.
+      */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior="padding"
+        enabled
+        keyboardVerticalOffset={0}
+      >
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View className="flex-1 bg-black/50">
+            <View className="flex-1 justify-end">
+              <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                <View
+                  className="rounded-t-3xl p-6"
+                  style={{
+                    backgroundColor: colors.cardBackground,
+                    paddingBottom: Math.max(insets.bottom + 16, 24),
+                    maxHeight: '90%',
                   }}
                 >
+                  <ScrollView
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    nestedScrollEnabled
+                    contentContainerStyle={{
+                      paddingBottom: Math.max(
+                        12,
+                        insets.bottom + (keyboardHeight > 0 ? 20 : 8)
+                      ),
+                    }}
+                  >
                   <View className="flex-row items-center justify-between mb-4">
                     <Text 
                       className="text-base font-bold"
@@ -198,12 +199,13 @@ export function EditModal({
                       )}
                     </TouchableOpacity>
                   </View>
-                </ScrollView>
-              </View>
-            </TouchableWithoutFeedback>
-          </KeyboardAvoidingView>
-        </View>
-      </TouchableWithoutFeedback>
+                  </ScrollView>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
