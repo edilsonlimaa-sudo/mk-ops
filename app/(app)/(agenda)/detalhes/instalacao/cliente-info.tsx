@@ -4,7 +4,7 @@ import { InfoSection } from '@/components/ui/info-section';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useEditaInstalacao, useInstalacaoDetail } from '@/hooks/instalacao';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -173,11 +173,17 @@ export default function ClienteInstalacaoScreen() {
   };
 
   return (
-    <SafeAreaView
-        style={{ backgroundColor: colors.screenBackground }}
-        className="flex-1"
-        edges={['bottom']}
-      >
+    <>
+      <Stack.Screen
+        options={{
+          title: 'Detalhes do Cliente',
+        }}
+      />
+      <SafeAreaView
+          style={{ backgroundColor: colors.screenBackground }}
+          className="flex-1"
+          edges={['bottom']}
+        >
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="p-4">
             {/* HERO SECTION - Nome do Cliente */}
@@ -439,5 +445,6 @@ export default function ClienteInstalacaoScreen() {
           saveButtonColor="bg-blue-600"
         />
       </SafeAreaView>
+    </>
   );
 }
