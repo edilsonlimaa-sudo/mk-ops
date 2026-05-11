@@ -10,11 +10,13 @@ import { useClienteContext } from '@/lib/cliente/ClienteContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Linking, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
 function GeralTab() {
     const { cliente, openEditModal, refetch, isFetching } = useClienteContext();
     const { colors } = useTheme();
+    const insets = useSafeAreaInsets();
     const [quickActionModalVisible, setQuickActionModalVisible] = useState(false);
     const [quickActionOptions, setQuickActionOptions] = useState<Array<{ label: string; value: string; icon: string; action: () => void }>>([]);
     const [quickActionModalTitle, setQuickActionModalTitle] = useState('');
@@ -158,6 +160,9 @@ function GeralTab() {
             className="flex-1" 
             showsVerticalScrollIndicator={false}
             style={{ backgroundColor: colors.screenBackground }}
+            contentContainerStyle={{
+                paddingBottom: Math.max(insets.bottom + 16, 28),
+            }}
             refreshControl={
                 <RefreshControl refreshing={isFetching} onRefresh={refetch} />
             }
