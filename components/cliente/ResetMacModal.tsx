@@ -1,11 +1,12 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import type { UseMutationResult } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Animated,
     Modal,
+    Platform,
     ScrollView,
     Text,
     TouchableOpacity,
@@ -35,6 +36,7 @@ export function ResetMacModal({
 }: ResetMacModalProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const [comoFuncionaExpanded, setComoFuncionaExpanded] = useState(false);
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -59,6 +61,12 @@ export function ResetMacModal({
       fadeAnim.setValue(0);
     }
   }, [visible, scaleAnim, fadeAnim]);
+
+  useEffect(() => {
+    if (!visible) {
+      setComoFuncionaExpanded(false);
+    }
+  }, [visible]);
 
   const handleResetar = () => {
     updateClientMutation.mutate(
@@ -153,7 +161,8 @@ export function ResetMacModal({
 
         <ScrollView 
           className="flex-1" 
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator
+          persistentScrollbar={Platform.OS === 'android'}
           contentContainerStyle={{
             paddingBottom: Math.max(120 + insets.bottom + 24, 160),
           }}
@@ -203,96 +212,97 @@ export function ResetMacModal({
               )}
             </View>
 
-            {/* Como Funciona */}
-            <View 
-              className="rounded-2xl p-5 mb-4"
+            {/* Como funciona — expansível: menos altura inicial + convite explícito a ver o passo a passo */}
+            <View
+              className="rounded-2xl mb-4 overflow-hidden"
               style={{ backgroundColor: colors.cardBackground, borderWidth: 1, borderColor: colors.cardBorder }}
             >
-              <View className="flex-row items-center mb-4">
+              <TouchableOpacity
+                onPress={() => setComoFuncionaExpanded((v) => !v)}
+                activeOpacity={0.75}
+                className="flex-row items-center p-5"
+                accessibilityRole="button"
+                accessibilityState={{ expanded: comoFuncionaExpanded }}
+                accessibilityLabel={
+                  comoFuncionaExpanded
+                    ? 'Recolher explicação de como funciona o reset de MAC'
+                    : 'Expandir explicação de como funciona o reset de MAC'
+                }
+              >
                 <View className="bg-blue-100 w-10 h-10 rounded-full items-center justify-center mr-3">
                   <Ionicons name="information-circle" size={20} color="#3b82f6" />
                 </View>
-                <Text 
-                  className="text-base font-bold"
-                  style={{ color: colors.cardTextPrimary }}
-                >
-                  Como funciona?
-                </Text>
-              </View>
+                <View className="flex-1">
+                  <Text className="text-base font-bold" style={{ color: colors.cardTextPrimary }}>
+                    Como funciona?
+                  </Text>
+                  <Text className="text-xs mt-1" style={{ color: colors.cardTextSecondary }}>
+                    {comoFuncionaExpanded
+                      ? 'Toque para recolher'
+                      : 'Toque para ver os 3 passos do reset e a detecção automática'}
+                  </Text>
+                </View>
+                <Ionicons
+                  name={comoFuncionaExpanded ? 'chevron-up' : 'chevron-down'}
+                  size={22}
+                  color={colors.cardTextSecondary}
+                />
+              </TouchableOpacity>
 
-              <View className="gap-4">
-                {/* Passo 1 */}
-                <View className="flex-row items-start gap-3">
-                  <View 
-                    className="w-6 h-6 rounded-full items-center justify-center mt-0.5"
-                    style={{ backgroundColor: colors.tabBarActiveTint }}
-                  >
-                    <Text className="text-white text-xs font-bold">1</Text>
+              {comoFuncionaExpanded ? (
+                <View className="px-5 pt-5 pb-5 gap-4 border-t" style={{ borderTopColor: colors.cardBorder }}>
+                  <View className="flex-row items-start gap-3">
+                    <View
+                      className="w-6 h-6 rounded-full items-center justify-center mt-0.5"
+                      style={{ backgroundColor: colors.tabBarActiveTint }}
+                    >
+                      <Text className="text-white text-xs font-bold">1</Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-semibold mb-1" style={{ color: colors.cardTextPrimary }}>
+                        App limpa o MAC
+                      </Text>
+                      <Text className="text-sm" style={{ color: colors.cardTextSecondary }}>
+                        O aplicativo vai resetar o campo MAC no banco de dados do MK-Auth
+                      </Text>
+                    </View>
                   </View>
-                  <View className="flex-1">
-                    <Text 
-                      className="font-semibold mb-1"
-                      style={{ color: colors.cardTextPrimary }}
+
+                  <View className="flex-row items-start gap-3">
+                    <View
+                      className="w-6 h-6 rounded-full items-center justify-center mt-0.5"
+                      style={{ backgroundColor: colors.tabBarActiveTint }}
                     >
-                      App limpa o MAC
-                    </Text>
-                    <Text 
-                      className="text-sm"
-                      style={{ color: colors.cardTextSecondary }}
+                      <Text className="text-white text-xs font-bold">2</Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-semibold mb-1" style={{ color: colors.cardTextPrimary }}>
+                        Automação detecta
+                      </Text>
+                      <Text className="text-sm" style={{ color: colors.cardTextSecondary }}>
+                        Em alguns segundos, a automação do MK-Auth vai detectar automaticamente o novo MAC na rede
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View className="flex-row items-start gap-3">
+                    <View
+                      className="w-6 h-6 rounded-full items-center justify-center mt-0.5"
+                      style={{ backgroundColor: colors.tabBarActiveTint }}
                     >
-                      O aplicativo vai resetar o campo MAC no banco de dados do MK-Auth
-                    </Text>
+                      <Text className="text-white text-xs font-bold">3</Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="font-semibold mb-1" style={{ color: colors.cardTextPrimary }}>
+                        Você atualiza a tela
+                      </Text>
+                      <Text className="text-sm" style={{ color: colors.cardTextSecondary }}>
+                        Puxe para baixo para atualizar e ver o novo MAC detectado
+                      </Text>
+                    </View>
                   </View>
                 </View>
-
-                {/* Passo 2 */}
-                <View className="flex-row items-start gap-3">
-                  <View 
-                    className="w-6 h-6 rounded-full items-center justify-center mt-0.5"
-                    style={{ backgroundColor: colors.tabBarActiveTint }}
-                  >
-                    <Text className="text-white text-xs font-bold">2</Text>
-                  </View>
-                  <View className="flex-1">
-                    <Text 
-                      className="font-semibold mb-1"
-                      style={{ color: colors.cardTextPrimary }}
-                    >
-                      Automação detecta
-                    </Text>
-                    <Text 
-                      className="text-sm"
-                      style={{ color: colors.cardTextSecondary }}
-                    >
-                      Em alguns segundos, a automação do MK-Auth vai detectar automaticamente o novo MAC na rede
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Passo 3 */}
-                <View className="flex-row items-start gap-3">
-                  <View 
-                    className="w-6 h-6 rounded-full items-center justify-center mt-0.5"
-                    style={{ backgroundColor: colors.tabBarActiveTint }}
-                  >
-                    <Text className="text-white text-xs font-bold">3</Text>
-                  </View>
-                  <View className="flex-1">
-                    <Text 
-                      className="font-semibold mb-1"
-                      style={{ color: colors.cardTextPrimary }}
-                    >
-                      Você atualiza a tela
-                    </Text>
-                    <Text 
-                      className="text-sm"
-                      style={{ color: colors.cardTextSecondary }}
-                    >
-                      Puxe para baixo para atualizar e ver o novo MAC detectado
-                    </Text>
-                  </View>
-                </View>
-              </View>
+              ) : null}
             </View>
 
             {/* Dica Importante */}
