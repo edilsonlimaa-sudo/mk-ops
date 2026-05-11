@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import MapView, { PROVIDER_DEFAULT } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface CoordinatesMapModalProps {
   visible: boolean;
@@ -134,7 +135,11 @@ export function CoordinatesMapModal({
       onRequestClose={onClose}
       presentationStyle="pageSheet"
     >
-      <View className="flex-1" style={{ backgroundColor: colors.screenBackground }}>
+      <SafeAreaView
+        className="flex-1"
+        style={{ backgroundColor: colors.screenBackground }}
+        edges={['top', 'bottom']}
+      >
         {/* Header */}
         <View 
           className="px-4 py-4 flex-row items-center justify-between"
@@ -283,7 +288,7 @@ export function CoordinatesMapModal({
             )}
           </Pressable>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
