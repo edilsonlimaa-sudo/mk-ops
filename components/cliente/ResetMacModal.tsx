@@ -12,6 +12,7 @@ import {
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ResetMacModalProps {
   visible: boolean;
@@ -33,6 +34,7 @@ export function ResetMacModal({
   onSuccess,
 }: ResetMacModalProps) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -152,7 +154,9 @@ export function ResetMacModal({
         <ScrollView 
           className="flex-1" 
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
+          contentContainerStyle={{
+            paddingBottom: Math.max(120 + insets.bottom + 24, 160),
+          }}
         >
           <View className="px-6 py-6">
             {/* Informações do Cliente */}
@@ -311,8 +315,13 @@ export function ResetMacModal({
 
         {/* Botões de Ação */}
         <View 
-          className="absolute bottom-0 left-0 right-0 px-6 py-4"
-          style={{ backgroundColor: colors.cardBackground, borderTopWidth: 1, borderTopColor: colors.cardBorder }}
+          className="absolute bottom-0 left-0 right-0 px-6 pt-4"
+          style={{
+            backgroundColor: colors.cardBackground,
+            borderTopWidth: 1,
+            borderTopColor: colors.cardBorder,
+            paddingBottom: Math.max(insets.bottom + 16, 28),
+          }}
         >
           <TouchableOpacity
             onPress={handleResetar}
