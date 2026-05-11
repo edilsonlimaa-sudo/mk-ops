@@ -81,7 +81,10 @@ export function EditModal({
   }, []);
   
   if (!visible) return null;
-  
+
+  /** Android: KAV com behavior "height" costuma falhar em modal transparente; usamos margem pelo teclado. */
+  const androidKeyboardLift = Platform.OS === 'android' ? keyboardHeight : 0;
+
   return (
     <Modal
       visible={visible}
@@ -91,8 +94,10 @@ export function EditModal({
     >
       <TouchableWithoutFeedback onPress={onClose}>
         <View className="flex-1 bg-black/50">
-          <KeyboardAvoidingView 
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            enabled={Platform.OS === 'ios'}
+            keyboardVerticalOffset={0}
             className="flex-1 justify-end"
           >
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
@@ -102,13 +107,20 @@ export function EditModal({
                   backgroundColor: colors.cardBackground,
                   paddingBottom: Math.max(insets.bottom + 16, 24),
                   maxHeight: '90%',
-                  marginBottom: Platform.OS === 'android' ? Math.max(keyboardHeight - insets.bottom, 0) : 0,
+                  marginBottom: androidKeyboardLift,
                 }}
               >
                 <ScrollView
                   keyboardShouldPersistTaps="handled"
                   showsVerticalScrollIndicator={false}
-                  contentContainerStyle={{ paddingBottom: 8 }}
+                  nestedScrollEnabled
+                  contentContainerStyle={{
+                    flexGrow: 1,
+                    paddingBottom: Math.max(
+                      8,
+                      insets.bottom + (keyboardHeight > 0 ? 24 : 8)
+                    ),
+                  }}
                 >
                   <View className="flex-row items-center justify-between mb-4">
                     <Text 
