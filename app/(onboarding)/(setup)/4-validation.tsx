@@ -1,16 +1,17 @@
 import { useTheme } from '@/contexts/ThemeContext';
 import {
-  areMkAuthCredentialsFormatValid,
-  getMkAuthClientIdFormatHint,
-  getMkAuthClientSecretFormatHint,
-  validateMkAuthClientId,
-  validateMkAuthClientSecret,
+    areMkAuthCredentialsFormatValid,
+    getMkAuthClientIdFormatHint,
+    getMkAuthClientSecretFormatHint,
+    validateMkAuthClientId,
+    validateMkAuthClientSecret,
 } from '@/lib/onboarding/mkAuthCredentials';
 import {
-  onboardingValidationService,
-  RequiredPermission,
-  ValidationResultType,
+    onboardingValidationService,
+    RequiredPermission,
+    ValidationResultType,
 } from '@/services/api/auth/onboarding-validation.service';
+import { useLicenseStore } from '@/stores/license/useLicenseStore';
 import { useOnboardingStore } from '@/stores/onboarding/useOnboardingStore';
 import { useSetupStore } from '@/stores/onboarding/useSetupStore';
 import { useRouter } from 'expo-router';
@@ -19,7 +20,7 @@ import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type ValidationPhase = 'idle' | 'credentials' | 'permissions' | 'success' | 'error';
+type ValidationPhase = 'idle' | 'credentials' | 'permissions' | 'license' | 'success' | 'error';
 type EditingField = 'url' | 'clientId' | 'clientSecret' | null;
 
 export default function ConnectionTest() {
@@ -28,6 +29,7 @@ export default function ConnectionTest() {
   const insets = useSafeAreaInsets();
   const { data, setServerUrl: updateServerUrl, setCredentials } = useSetupStore();
   const { completeSetup } = useOnboardingStore();
+  const { checkLicense } = useLicenseStore();
 
   // Usar dados da store (sem valores default falsos)
   const [serverUrl, setServerUrl] = useState(data.serverUrl || '');
@@ -103,6 +105,39 @@ export default function ConnectionTest() {
         setErrorType('unknown-error');
         setErrorMessage('Algumas permissões não estão configuradas.');
         setMissingPermissions(permissionsResult.missingPermissions);
+        return;
+      }
+
+      // Fase 3: Validar licença
+      console.log('🔑 [4-validation] Fase 3: Validando licença...');
+      setPhase('license');
+
+      try {
+        const licenseResult = await checkLicense(serverUrl);
+        console.log('🔑 [4-validation] Resultado licença:', licenseResult.status);
+
+        if (!licenseResult.valid) {
+          setPhase('error');
+          setErrorType('unknown-error');
+          if (licenseResult.status === 'not_found') {
+            setErrorMessage('Servidor não possui licença ativa para o MK-Ops.');
+            setErrorDetails('Entre em contato com o suporte para adquirir uma licença.');
+          } else if (licenseResult.status === 'suspended') {
+            setErrorMessage('Licença suspensa.');
+            setErrorDetails('Entre em contato com o suporte para regularizar sua situação.');
+          } else {
+            setErrorMessage('Licença expirada.');
+            setErrorDetails('Renove sua licença para continuar usando o MK-Ops.');
+          }
+          return;
+        }
+      } catch (licenseError) {
+        // Se não conseguiu validar (offline + sem cache), bloquear
+        console.error('❌ [4-validation] Erro ao validar licença:', licenseError);
+        setPhase('error');
+        setErrorType('unknown-error');
+        setErrorMessage('Não foi possível verificar a licença.');
+        setErrorDetails('Verifique sua conexão com a internet e tente novamente.');
         return;
       }
 
@@ -187,7 +222,7 @@ export default function ConnectionTest() {
   };
 
   // Helpers para UI
-  const isValidating = phase === 'credentials' || phase === 'permissions';
+  const isValidating = phase === 'credentials' || phase === 'permissions' || phase === 'license';
   const statusColor = phase === 'success' ? '#10b981' : phase === 'error' ? '#ef4444' : '#f59e0b';
   const credentialsFormatOk = areMkAuthCredentialsFormatValid(clientId, clientSecret);
   const clientIdEditHint = editingField === 'clientId' ? getMkAuthClientIdFormatHint(tempValue) : null;
@@ -197,6 +232,7 @@ export default function ConnectionTest() {
     switch (phase) {
       case 'credentials': return 'Validando Credenciais...';
       case 'permissions': return 'Verificando Permissões...';
+      case 'license': return 'Verificando Licença...';
       case 'success': return 'Configuração Válida!';
       case 'error': return 'Falha na Validação';
       default: return 'Validar Configuração';
@@ -210,6 +246,7 @@ export default function ConnectionTest() {
         return currentPermission 
           ? `${permissionProgress.current}/${permissionProgress.total}: ${currentPermission.description}`
           : 'Verificando permissões da API...';
+      case 'license': return 'Verificando licença de uso do MK-Ops...';
       case 'success': return 'Redirecionando para o aplicativo...';
       case 'error': return 'Verifique os dados e tente novamente';
       default: return 'Revise suas configurações antes de testar';
