@@ -1,11 +1,14 @@
 import { CustomDrawerContent } from '@/components/CustomDrawerContent';
+import { LicenseExpiringBanner } from '@/components/license/LicenseExpiringBanner';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useLicenseValidation } from '@/hooks/license/useLicenseValidation';
 import { useThemedHeader } from '@/hooks/ui';
 import { useAuthStore } from '@/stores/auth';
 import { useUserStore } from '@/stores/useUserStore';
 import { useRouter } from 'expo-router';
 import { Drawer } from 'expo-router/drawer';
 import { useEffect } from 'react';
+import { View } from 'react-native';
 
 /**
  * Layout de app - Guard: precisa estar TOTALMENTE autenticado (API + identificado)
@@ -17,6 +20,7 @@ export default function AppLayout() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isIdentified = useUserStore((state) => state.isIdentified);
+  const { accessBlocked, checkIfNeeded } = useLicenseValidation();
 
   // Guard reativo: observa mudanças de autenticação/identificação durante sessão
   useEffect(() => {
@@ -34,9 +38,34 @@ export default function AppLayout() {
     }
   }, [isAuthenticated, isIdentified]);
 
+  // Validação de licença: 1x por dia na primeira abertura
+  useEffect(() => {
+    if (!isAuthenticated || !isIdentified) return;
+
+    checkIfNeeded().then((result) => {
+      if (result && !result.valid) {
+        console.log('🔒 [AppLayout] Licença inválida após verificação, redirecionando...');
+        router.replace('/(blocked)/license-expired');
+      }
+    }).catch((err) => {
+      // Offline sem cache válido
+      console.warn('⚠️ [AppLayout] Não foi possível verificar licença:', err);
+    });
+  }, [isAuthenticated, isIdentified]);
+
+  // Guard de licença reativo (quando já estava no app e licença expira)
+  useEffect(() => {
+    if (accessBlocked) {
+      console.log('🔒 [AppLayout] Licença bloqueada, redirecionando para /(blocked)/license-expired');
+      router.replace('/(blocked)/license-expired');
+    }
+  }, [accessBlocked]);
+
   console.log('✅ [AppLayout] Totalmente autenticado, renderizando app');
   return (
-    <Drawer
+    <View style={{ flex: 1 }}>
+      <LicenseExpiringBanner />
+      <Drawer
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         drawerActiveTintColor: colors.tabBarActiveTint,
@@ -99,5 +128,6 @@ export default function AppLayout() {
         }}
       />
     </Drawer>
+    </View>
   );
 }

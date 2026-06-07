@@ -3,6 +3,7 @@ import { authService } from '@/services/api/auth';
 import { getTokenExpiration } from '@/services/api/core/token/jwtDecoder';
 import { authStorage } from '@/services/storage/authStorage';
 import { useAuthStore } from '@/stores/auth';
+import { useLicenseStore } from '@/stores/license/useLicenseStore';
 import { useOnboardingStore } from '@/stores/onboarding/useOnboardingStore';
 import { useSetupStore } from '@/stores/onboarding/useSetupStore';
 import { useUserStore } from '@/stores/useUserStore';
@@ -107,6 +108,10 @@ export async function disconnectCompletely(): Promise<void> {
   useSetupStore.getState().resetSetup();
   useOnboardingStore.getState().resetOnboarding();
   console.log('♻️ [auth.session] Onboarding e setup resetados');
+
+  // 4. Limpa cache de licença (novo servidor pode ser diferente)
+  await useLicenseStore.getState().clearLicense();
+  console.log('🔓 [auth.session] Cache de licença limpo');
 }
 
 /**
