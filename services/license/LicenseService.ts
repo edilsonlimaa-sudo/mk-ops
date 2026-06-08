@@ -8,12 +8,12 @@ import { LicenseCacheData, LicenseValidationRequest, LicenseValidationResponse }
  * Trocar para false quando o backend estiver pronto.
  *
  * Contrato da API:
- *   POST https://license.mkops.com/api/v1/license/validate
+ *   POST https://licenses.mk-ops.com.br/api/v1/license/validate
  *   Body:  { mkAuthAddress: string }
  *   Response: LicenseValidationResponse
  */
-const MOCK_MODE = true;
-const API_BASE_URL = 'https://license.mkops.com/api/v1';
+const MOCK_MODE = false;
+const API_BASE_URL = 'https://licenses.mk-ops.com.br/api/v1';
 
 /**
  * LicenseService — responsável por validar licenças corporativas.
