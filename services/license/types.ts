@@ -1,6 +1,6 @@
 /**
  * Contrato da API de Licenciamento (extraído do frontend)
- * Servidor: https://license.mkops.com/api/v1
+ * Servidor: https://licenses.mk-ops.com.br/api/v1
  */
 
 /** Status possíveis de uma licença */

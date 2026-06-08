@@ -8,7 +8,7 @@
 ## Base URL
 
 ```
-https://license.mkops.com/api/v1
+https://licenses.mk-ops.com.br/api/v1
 ```
 
 ---
