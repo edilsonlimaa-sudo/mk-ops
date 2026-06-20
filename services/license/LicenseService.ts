@@ -1,4 +1,5 @@
 import { normalizeMkAuthAddress } from '@/utils/license';
+import axios from 'axios';
 import { mockValidateLicense } from './mock';
 import { licenseStorage } from './storage';
 import { LicenseCacheData, LicenseValidationRequest, LicenseValidationResponse } from './types';
@@ -39,18 +40,12 @@ class LicenseService {
         response = await mockValidateLicense(request);
       } else {
         // 🌐 REAL: Chama API quando backend estiver pronto
-        const res = await fetch(`${API_BASE_URL}/license/validate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(request),
-          signal: AbortSignal.timeout(10_000), // 10s timeout
-        });
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        response = await res.json();
+        const res = await axios.post<LicenseValidationResponse>(
+          `${API_BASE_URL}/license/validate`,
+          request,
+          { timeout: 10_000 } // 10s timeout
+        );
+        response = res.data;
       }
 
       // Salvar em cache (independente do resultado)
