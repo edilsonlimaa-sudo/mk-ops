@@ -2,10 +2,10 @@ import { ThemedStatusBar } from '@/components/ui/themed-status-bar';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { useProactiveTokenRefresh } from '@/hooks/auth';
 import { restoreAuth } from '@/lib/auth';
-import { queryClient } from '@/lib/queryClient';
+import { mmkvPersister, queryClient } from '@/lib/queryClient';
 import { useLicenseStore } from '@/stores/license/useLicenseStore';
 import { useUserStore } from '@/stores/useUserStore';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
@@ -49,11 +49,14 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{ persister: mmkvPersister }}
+        >
           <RootLayoutInner />
           <ThemedStatusBar />
           <Toast />
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
