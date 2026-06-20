@@ -7,8 +7,8 @@ import { agendaKeys } from './keys';
  * Includes both open AND closed items for a complete timeline view
  * 
  * Features:
- * - Automatic caching in memory
- * - 5min stale time (agenda changes frequently)
+ * - Persistent cache with MMKV (instant loading on app restart)
+ * - 5min stale time (agenda changes frequently, but cache helps offline)
  * - Manual refetch available via refetch()
  * - Loading and error states
  * - Returns all chamados and instalacoes sorted by visita date
@@ -20,8 +20,7 @@ export const useAgenda = () => {
     queryKey: agendaKeys.all,
     queryFn: () => fetchAgendaCompleta(),
     staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes (memory only)
-    persister: undefined, // Disable persistence
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours - persisted cache
   });
 };
 

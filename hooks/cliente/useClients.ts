@@ -4,15 +4,16 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { clienteKeys } from './keys';
 
 /**
- * Hook to fetch and cache all clients (memory only - too large for persistence)
+ * Hook to fetch and cache all clients with MMKV persistence
  * 
  * Features:
- * - Automatic caching in memory
+ * - Persistent cache with MMKV (survives app restarts)
  * - 30min stale time (won't refetch unless data is old)
  * - Manual refetch available via refetch()
  * - Loading and error states
+ * - Handles large datasets efficiently (~3000+ records)
  * 
- * Note: Persistence is disabled due to large dataset size (3000+ records)
+ * Note: Now uses MMKV which has no size limits (unlike AsyncStorage's 6MB limit)
  * 
  * @returns React Query result with clients data
  */
@@ -21,8 +22,7 @@ export const useClients = () => {
     queryKey: clienteKeys.list(),
     queryFn: fetchAllClients,
     staleTime: 1000 * 60 * 30, // 30 minutes
-    gcTime: 1000 * 60 * 60 * 24, // 24 hours (memory only)
-    persister: undefined, // Disable persistence - dataset too large
+    gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days - persisted cache
   });
 };
 

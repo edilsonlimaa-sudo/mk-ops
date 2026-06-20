@@ -13,7 +13,7 @@ import { historicoKeys } from './keys';
  * - Only 4 API requests total
  * 
  * Features:
- * - Automatic caching in memory
+ * - Persistent cache with MMKV (instant loading on app restart)
  * - 10min stale time (same as useChamadosFechados for consistency)
  * - Manual refetch available via refetch()
  * - Loading and error states
@@ -26,8 +26,7 @@ export const useHistorico = () => {
     queryKey: historicoKeys.all,
     queryFn: () => fetchRecentHistorico(),
     staleTime: 1000 * 60 * 10, // 10 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes (memory only)
-    persister: undefined, // Disable persistence
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours - persisted cache
   });
 };
 
