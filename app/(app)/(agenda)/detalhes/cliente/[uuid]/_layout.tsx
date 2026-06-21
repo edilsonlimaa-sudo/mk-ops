@@ -1,5 +1,6 @@
 import { EditModal } from '@/components/instalacao/EditModal';
 import { Badge } from '@/components/ui/badge';
+import { OfflineBanner } from '@/components/ui/offline-banner';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useClientDetail, useUpdateClient } from '@/hooks/cliente';
 import { ClienteContext } from '@/lib/cliente/ClienteContext';
@@ -73,26 +74,27 @@ export default function ClienteDetalhesLayout() {
     return (
       <>
         <Stack.Screen options={{ title: 'Cliente' }} />
-        <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
           <View className="flex-1 justify-center items-center">
-            <ActivityIndicator size="large" color="#3b82f6" />
-            <Text className="text-gray-600 mt-4">Carregando cliente...</Text>
+            <ActivityIndicator size="large" color={colors.tabBarActiveTint} />
+            <Text style={{ color: colors.cardTextSecondary }} className="mt-4">Carregando cliente...</Text>
           </View>
         </SafeAreaView>
       </>
     );
   }
 
-  if (error) {
+  // OFFLINE-FIRST: Only show error if no cached data available
+  if (error && !cliente) {
     return (
       <>
         <Stack.Screen options={{ title: 'Erro' }} />
-        <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
           <View className="flex-1 justify-center items-center p-6">
             <Text className="text-red-500 text-lg font-semibold mb-2">
               Erro ao carregar cliente
             </Text>
-            <Text className="text-gray-600 text-center mb-4">
+            <Text style={{ color: colors.cardTextSecondary }} className="text-center mb-4">
               {error.message}
             </Text>
           </View>
@@ -105,9 +107,9 @@ export default function ClienteDetalhesLayout() {
     return (
       <>
         <Stack.Screen options={{ title: 'Cliente' }} />
-        <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
           <View className="flex-1 justify-center items-center p-6">
-            <Text className="text-gray-500 text-lg">Cliente não encontrado</Text>
+            <Text style={{ color: colors.cardTextSecondary }} className="text-lg">Cliente não encontrado</Text>
           </View>
         </SafeAreaView>
       </>
@@ -133,6 +135,19 @@ export default function ClienteDetalhesLayout() {
       <ClienteContext.Provider value={{ cliente, openEditModal, refetch, isFetching }}>
         <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
           <ErrorBoundary>
+            <OfflineBanner />
+            {/* Show warning banner if offline but has cached data */}
+            {error && cliente && (
+              <View
+                className="px-4 py-2 mx-4 mt-2 rounded-lg flex-row items-center gap-2"
+                style={{ backgroundColor: '#f59e0b15', borderWidth: 1, borderColor: '#f59e0b55' }}
+              >
+                <Ionicons name="information-circle-outline" size={18} color="#f59e0b" />
+                <Text className="flex-1 text-xs" style={{ color: colors.text }}>
+                  Exibindo dados básicos em cache - alguns detalhes podem estar desatualizados
+                </Text>
+              </View>
+            )}
             {/* HERO */}
             <View className="px-4 pt-4 pb-4" style={{ backgroundColor: colors.headerBackground }}>
               <View className="flex-row items-center mb-3">

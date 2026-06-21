@@ -8,6 +8,11 @@ import { clienteKeys } from './keys';
  * Uses initialData from the clients list cache for instant rendering
  * Falls back to API call if client is not in cache (deep links, cross-navigation)
  * 
+ * OFFLINE-FIRST:
+ * - If offline and has cache: returns cached data (may be partial)
+ * - If offline and no cache: shows error
+ * - If online: fetches fresh detailed data
+ * 
  * @param uuid - Client UUID (uuid_cliente field)
  * @returns Query result with client data
  */
@@ -22,6 +27,16 @@ export function useClientDetail(uuid: string) {
     initialData: () => {
       const clients = queryClient.getQueryData<Client[]>(clienteKeys.list());
       return clients?.find(c => c.uuid_cliente === uuid);
+    },
+    
+    // Retry logic: don't retry on network errors (offline)
+    retry: (failureCount, error: any) => {
+      // Don't retry if network error (offline) - just use cached data
+      if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
+        return false;
+      }
+      // Retry once for other errors
+      return failureCount < 1;
     },
     
     // Client details should be fresher than the list
