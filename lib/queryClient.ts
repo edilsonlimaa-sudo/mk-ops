@@ -57,11 +57,19 @@ export const mmkvPersister: Persister = {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2,
+      retry: (failureCount, error: any) => {
+        // Não retenta se for erro de rede (offline) - retorna cache imediatamente
+        if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
+          return false;
+        }
+        // Retenta até 2x para outros erros (500, timeout, etc)
+        return failureCount < 2;
+      },
       staleTime: 1000 * 60 * 30, // 30 minutes - data stays fresh longer
       gcTime: 1000 * 60 * 60 * 24 * 7, // 7 days - cache persists for a week
       refetchOnWindowFocus: false, // Avoid refetch on app focus
       refetchOnReconnect: true, // Refetch when internet reconnects
+      networkMode: 'offlineFirst', // ✅ CRITICAL: Always return cache first, network is a bonus
     },
   },
 });
