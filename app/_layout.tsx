@@ -1,6 +1,7 @@
 import { ThemedStatusBar } from '@/components/ui/themed-status-bar';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { useProactiveTokenRefresh } from '@/hooks/auth';
+import { useNetworkStatus } from '@/hooks/ui';
 import { restoreAuth } from '@/lib/auth';
 import { mmkvPersister, queryClient } from '@/lib/queryClient';
 import { useLicenseStore } from '@/stores/license/useLicenseStore';
@@ -24,6 +25,9 @@ export default function RootLayout() {
 
   // CAMADA 2: Refresh proativo ao voltar do background
   useProactiveTokenRefresh();
+
+  // Ativa detecção de conectividade e integração com React Query
+  useNetworkStatus();
 
   // Bootstrap: Restaura sessão ao abrir o app
   useEffect(() => {
