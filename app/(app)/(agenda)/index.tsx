@@ -3,10 +3,12 @@ import { AgendaListV2 } from '@/components/agenda/AgendaListV2';
 import { CollapsedCalendarV2 } from '@/components/agenda/CollapsedCalendarV2';
 import { DayListV2 } from '@/components/agenda/DayListV2';
 import { TodayFab } from '@/components/agenda/TodayFab';
+import { OfflineBanner } from '@/components/ui/offline-banner';
 import { ThemedView } from '@/components/ui/themed-view';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAgenda } from '@/hooks/agenda';
 import { useAgendaSync } from '@/hooks/agenda/useAgendaSync';
+import { useOnlineStatus } from '@/hooks/ui/useOnlineStatus';
 import { isChamado } from '@/utils/agenda';
 import { agendaFetchFailureMessage } from '@/utils/agendaFetchFailureMessage';
 import { useRouter } from 'expo-router';
@@ -20,6 +22,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
  */
 export default function AgendaScreen() {
   const { colors } = useTheme();
+  // Lê status de conectividade (listener global no _layout.tsx)
+  const isOnline = useOnlineStatus();
   const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('day');
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -161,6 +165,7 @@ export default function AgendaScreen() {
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
+      <OfflineBanner isOnline={isOnline} />
       <ThemedView variant="header">
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
         {error && hasAgendaSnapshot ? (
