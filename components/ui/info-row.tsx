@@ -1,4 +1,5 @@
 import { useTheme } from '@/contexts/ThemeContext';
+import { useOnlineStatus } from '@/hooks/ui/useOnlineStatus';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
@@ -74,9 +75,13 @@ export function EditableInfoRow({
   editable = true,
 }: EditableInfoRowProps) {
   const { colors } = useTheme();
+  const isOnline = useOnlineStatus();
 
   // Proteção contra valores undefined/null
   const safeValue = value ?? '';
+
+  // Calcula se pode editar (precisa estar online E editable)
+  const canEdit = editable && isOnline;
 
   const copiarValor = async () => {
     if (!safeValue) return;
@@ -94,6 +99,21 @@ export function EditableInfoRow({
     }
   };
 
+  const handleEdit = () => {
+    if (!isOnline) {
+      Toast.show({
+        type: 'info',
+        text1: 'Ação indisponível offline',
+        text2: 'Conecte-se à internet para editar',
+        position: 'top',
+        visibilityTime: 3000,
+        topOffset: 60,
+      });
+      return;
+    }
+    onEdit?.();
+  };
+
   if (!editable || !onEdit) {
     return <InfoRow label={label} value={safeValue} />;
   }
@@ -106,13 +126,15 @@ export function EditableInfoRow({
         className="flex-row justify-between items-center py-2"
         style={({ pressed }) => ({
           backgroundColor: pressed ? colors.searchInputBackground : 'transparent',
+          opacity: canEdit ? 1 : 0.5,
         })}
       >
         <Text className="text-sm" style={{ color: colors.cardTextSecondary }}>
           {label}
         </Text>
         <TouchableOpacity
-          onPress={onEdit}
+          onPress={handleEdit}
+          disabled={!canEdit}
           className="flex-row items-center gap-2 flex-1 justify-end ml-4"
         >
           <Text
@@ -121,7 +143,11 @@ export function EditableInfoRow({
           >
             {safeValue}
           </Text>
-          <Ionicons name="create-outline" size={16} color={colors.cardTextSecondary} />
+          <Ionicons 
+            name="create-outline" 
+            size={16} 
+            color={canEdit ? colors.cardTextSecondary : colors.cardBorder} 
+          />
         </TouchableOpacity>
       </Pressable>
     </View>
