@@ -7,6 +7,7 @@ import { OfflineBanner } from '@/components/ui/offline-banner';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useChamadoDetail, useFechaChamado, useReabrirChamado } from '@/hooks/chamado';
 import { useFuncionarios } from '@/hooks/funcionario';
+import { useOnlineStatus } from '@/hooks/ui/useOnlineStatus';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -26,6 +27,7 @@ export default function ChamadoDetalhesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, theme } = useTheme();
+  const isOnline = useOnlineStatus();
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [fecharModalVisible, setFecharModalVisible] = useState(false);
   const fechaChamadoMutation = useFechaChamado();
@@ -359,8 +361,22 @@ export default function ChamadoDetalhesScreen() {
             {/* Botão de Ação Principal */}
             {chamado.status === 'aberto' && (
               <TouchableOpacity
-                onPress={() => setFecharModalVisible(true)}
-                disabled={fechaChamadoMutation.isPending}
+                onPress={() => {
+                  if (!isOnline) {
+                    Toast.show({
+                      type: 'info',
+                      text1: 'Ação indisponível offline',
+                      text2: 'Conecte-se à internet para fechar o chamado',
+                      position: 'top',
+                      visibilityTime: 3000,
+                      topOffset: 60,
+                    });
+                    return;
+                  }
+                  setFecharModalVisible(true);
+                }}
+                disabled={fechaChamadoMutation.isPending || !isOnline}
+                style={{ opacity: !isOnline ? 0.5 : 1 }}
                 className="bg-green-600 py-4 rounded-2xl shadow-lg mb-6"
               >
                 <View className="flex-row items-center justify-center">
@@ -375,6 +391,17 @@ export default function ChamadoDetalhesScreen() {
             {chamado.status === 'fechado' && (
               <TouchableOpacity
                 onPress={() => {
+                  if (!isOnline) {
+                    Toast.show({
+                      type: 'info',
+                      text1: 'Ação indisponível offline',
+                      text2: 'Conecte-se à internet para reabrir o chamado',
+                      position: 'top',
+                      visibilityTime: 3000,
+                      topOffset: 60,
+                    });
+                    return;
+                  }
                   Alert.alert(
                     'Reabrir Chamado',
                     'Tem certeza que deseja reabrir este chamado?',
@@ -409,7 +436,8 @@ export default function ChamadoDetalhesScreen() {
                     ]
                   );
                 }}
-                disabled={reabrirChamadoMutation.isPending}
+                disabled={reabrirChamadoMutation.isPending || !isOnline}
+                style={{ opacity: !isOnline ? 0.5 : 1 }}
                 className="bg-blue-600 py-4 rounded-2xl shadow-lg mb-6"
               >
                 <View className="flex-row items-center justify-center">
