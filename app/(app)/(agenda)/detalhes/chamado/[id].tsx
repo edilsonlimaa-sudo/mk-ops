@@ -3,6 +3,7 @@ import { ClientSearchModal } from '@/components/ClientSearchModal';
 import { Badge } from '@/components/ui/badge';
 import { InfoRow } from '@/components/ui/info-row';
 import { InfoSection } from '@/components/ui/info-section';
+import { OfflineBanner } from '@/components/ui/offline-banner';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useChamadoDetail, useFechaChamado, useReabrirChamado } from '@/hooks/chamado';
 import { useFuncionarios } from '@/hooks/funcionario';
@@ -126,6 +127,7 @@ export default function ChamadoDetalhesScreen() {
         }}
       />
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.screenBackground }} edges={['bottom']}>
+        <OfflineBanner />
         <ScrollView ref={scrollRef} className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="p-4">
             {/* HERO SECTION - Informações Críticas */}

@@ -1,6 +1,7 @@
 import { EditModal } from '@/components/instalacao/EditModal';
 import { EditableInfoRow, InfoRow } from '@/components/ui/info-row';
 import { InfoSection } from '@/components/ui/info-section';
+import { OfflineBanner } from '@/components/ui/offline-banner';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useEditaInstalacao, useInstalacaoDetail } from '@/hooks/instalacao';
 import { Ionicons } from '@expo/vector-icons';
@@ -136,7 +137,8 @@ export default function ClienteInstalacaoScreen() {
     );
   }
 
-  if (error) {
+  // OFFLINE-FIRST: Only show error if no cached data available
+  if (error && !instalacao) {
     return (
       <View
         style={{ backgroundColor: colors.screenBackground }}
@@ -177,6 +179,8 @@ export default function ClienteInstalacaoScreen() {
       <Stack.Screen
         options={{
           title: 'Detalhes do Cliente',
+          headerStyle: { backgroundColor: colors.headerBackground },
+          headerTintColor: colors.headerText,
         }}
       />
       <SafeAreaView
@@ -184,6 +188,19 @@ export default function ClienteInstalacaoScreen() {
           className="flex-1"
           edges={['bottom']}
         >
+        <OfflineBanner />
+        {/* Show warning banner if offline but has cached data */}
+        {error && instalacao && (
+          <View
+            className="px-4 py-2 mx-4 mt-2 rounded-lg flex-row items-center gap-2"
+            style={{ backgroundColor: '#f59e0b15', borderWidth: 1, borderColor: '#f59e0b55' }}
+          >
+            <Ionicons name="information-circle-outline" size={18} color="#f59e0b" />
+            <Text className="flex-1 text-xs" style={{ color: colors.text }}>
+              Exibindo dados básicos em cache - alguns detalhes podem estar desatualizados
+            </Text>
+          </View>
+        )}
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="p-4">
             {/* HERO SECTION - Nome do Cliente */}

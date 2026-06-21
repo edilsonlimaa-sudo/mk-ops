@@ -10,6 +10,7 @@ import {
 import { FinalizacaoModal } from '@/components/instalacao/modals/FinalizacaoModal';
 import { Badge } from '@/components/ui/badge';
 import { InfoSection } from '@/components/ui/info-section';
+import { OfflineBanner } from '@/components/ui/offline-banner';
 import { QuickActionButton } from '@/components/ui/quick-action-button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFuncionarios } from '@/hooks/funcionario';
@@ -294,6 +295,7 @@ export default function InstalacaoDetalhesScreen() {
         }}
       />
       <SafeAreaView style={{ backgroundColor: colors.screenBackground }} className="flex-1" edges={['bottom']}>
+        <OfflineBanner />
         <ScrollView
           ref={mainScrollRef}
           className="flex-1"
